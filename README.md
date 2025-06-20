@@ -1,6 +1,6 @@
 [The files included herein represent the complete set of outputs and the scripts required the analysis.]
 
-![Presentation1](https://github.com/user-attachments/assets/804a7154-8a0e-4d67-ae8d-ae96d51c38a1)
+![SIBECOL_Vagenas_final](https://github.com/user-attachments/assets/8e65fb05-0cf6-4e98-8ded-87e96478d692)
 
 # aSDMs
 Development and Evaluation of aquatic Species Distribution Models (aSDMs)
