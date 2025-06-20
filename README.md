@@ -19,3 +19,8 @@ SDMs, freshwater ecosystems, fish, climate, hydrology
  
 #### DOI:  [Pending]
 
+### Figures - Main Manuscript
+
+Figure 1. Spatial distribution of species richness of the dataset used for the development of the aSDMs through a (A) global (GBIF | 50 arc-minute grid) to (B) regional (MITECO, SNIPAD, GBIF | 10 arc-minute grid) for the endemics and widespread freshwater fish species of the study area. Colors represent gradients of species richness (low = yellow; high = red). The finer resolution (B) highlights richness patterns in the Iberian Peninsula.
+
+![Figure1_cropped_jpg](https://github.com/user-attachments/assets/b655c959-c405-4b5d-a443-8130f5ef321d)
