@@ -26,6 +26,7 @@ SDMs, freshwaters, fish, hydrology, climate, watersheds, hierarchical, aquatic s
 ```
 
 # Data
+The baseline layers required for the analysis can be downloaded from here: https://saco.csic.es/s/SYTM8qZrnY2HG5q
 
 # Figures
 
