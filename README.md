@@ -24,9 +24,9 @@ SDMs, freshwater ecosystems, fish, climate, hydrology
 └── Scripts                   # Primary analysis script (.txt files)
 ```
 
-#Data
+# Data
 
-#Figures
+# Figures
 
 ![Figure1_cropped_jpg](https://github.com/user-attachments/assets/b655c959-c405-4b5d-a443-8130f5ef321d)
 Figure 1. Spatial distribution of species richness of the dataset used for the development of the aSDMs through a (A) global (GBIF | 50 arc-minute grid) to (B) regional (MITECO, SNIPAD, GBIF | 10 arc-minute grid) for the endemics and widespread freshwater fish species of the study area. Colors represent gradients of species richness (low = yellow; high = red). The finer resolution (B) highlights richness patterns in the Iberian Peninsula.
@@ -40,13 +40,13 @@ Figure 3. Classification flowchart based on recursive partitioning. Each tree us
 ![Figure4_jpg_cropped](https://github.com/user-attachments/assets/eee40ddf-cef8-4e8b-8110-b4582e1864c1)
 Figure 4. Stacked aSDMs for endemic (N=39) and non-endemic/introduced species (N=53) across the study area. The maps represent stacked outputs derived through aSDMs using the dominant pre-constrained h5 spatial strategy, based on climate (left) and hydrological (right) covariate sets. Boxes indicate the high-resolution (~1x1 km) aSDMs projected across the hydrographic network. Highlighted zoomed-in areas are illustrative examples for visual comparison and do not represent specific ecological patterns.
 
-#Supplemntary
+# Supplemntary
 
-#Outputs
+# Outputs
 
-#Scripts
+# Scripts
 
-#Author: Georgios Vagenas
+# Author: Georgios Vagenas
 Affiliation: Biogeography and Global Change Department, National Museum of Natural Sciences, CSIC, C/ Jose Gutierrez Abascal, 2, Madrid 28006, Spain
 
 
