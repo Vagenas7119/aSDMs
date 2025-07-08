@@ -2,7 +2,7 @@
 
 The files included herein represent the complete set of outputs and the scripts required for the analysis.
 
-![SIBECOL_Vagenas_final](https://github.com/user-attachments/assets/8e65fb05-0cf6-4e98-8ded-87e96478d692)
+![SIBECOL_Vagenas_scroped](https://github.com/user-attachments/assets/2a56da26-b665-4091-b802-3541cb3330a8)
 
 ```
 # Project structure
