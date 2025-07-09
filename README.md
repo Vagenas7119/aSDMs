@@ -35,18 +35,18 @@ All the information related to the Supplementary material of this study can be a
 The structure of the scripts for the primary analysis set is structured as: 
 
 ```
-├── Post_Alien/               # The repository contains two sets of scripts for unconstrained models for: i) Widespread species - Global aSDMs "Post_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Post_Regional_Alien"
-├── Post_Endemics/            # The repository contains one set of scripts for unconstrained models for: i) Endemic species - Regional aSDMs "Post_Regional_Endemics" 
-├── Pre_Alien/                # The repository contains two sets of scripts for contrained models at various scales for: i) Widespread species - Global aSDMs "Pre_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Pre_Regional_Alien"
-└── Pre_Endemics/            # The repository contains one set of scripts for contrained models at various scales for: i) Endemic species - Regional aSDMs "Pre_Regional_Endemics" 
+├── Post_Alien/       # i) Widespread species - Global aSDMs "Post_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Post_Regional_Alien"
+├── Post_Endemics/    # i) Endemic species - Regional aSDMs "Post_Regional_Endemics" 
+├── Pre_Alien/        # i) Widespread species - Global aSDMs "Pre_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Pre_Regional_Alien"
+└── Pre_Endemics/     # i) Endemic species - Regional aSDMs "Pre_Regional_Endemics" 
 ```
 
 # Outputs
 The repository represents a stand-alone analysis package and contains the full set of initial data and the required script to generate the figures of the study:
 ```
-├── input/                    # Contains the input information based on the raster files of the stacked suitability maps across species, spatial strategies, covariates and model configurations
-├── metrics_vagenas_et_al/    # Contains all the performance metrics for all the produced aSDM models in form of multiple data tables
-└── Scipt_Metanalysis/           # Represents the stand-alone script to "run" the analysis which requires a working directory including the two sub-files above in order to generate all the outputs/figure of the present manuscript
+├── input/                 # Stacked suitability maps across species, spatial strategies, covariates and model configurations
+├── metrics_vagenas_et_al/ # Performance metrics for all the produced aSDM models
+└── Scipt_Metanalysis/     # Stand-alone script to "run" the analysis, requires the two sub-files to generate all the outputs/figure of the manuscript
 ```
 
 # Figures
@@ -66,6 +66,6 @@ The repository represents a stand-alone analysis package and contains the full s
 # Author: Georgios Vagenas
 Affiliation: Biogeography and Global Change Department, National Museum of Natural Sciences, CSIC, C/ Jose Gutierrez Abascal, 2, Madrid 28006, Spain
 
-#Last modified: 09/07/2025
+**Last modified: 09/07/2025**
 
 
