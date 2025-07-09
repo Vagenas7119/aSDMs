@@ -54,10 +54,10 @@ The repository represents a stand-alone analysis package and contains the full s
 ![Figure1_cropped_jpg](https://github.com/user-attachments/assets/b655c959-c405-4b5d-a443-8130f5ef321d)
 **Figure 1**. Spatial distribution of species richness of the dataset used for the development of the aSDMs through a (A) global (GBIF | 50 arc-minute grid) to (B) regional (MITECO, SNIPAD, GBIF | 10 arc-minute grid) approach for the 92 endemics and widespread freshwater fish species of the study area. Colors represent gradients of species richness (low = yellow; high = red). The finer resolution (B) highlights richness patterns in the Iberian Peninsula.
 
-![Figure_1_v13](https://github.com/user-attachments/assets/1c169e20-9673-494c-a66c-65a2674d9639)
+![Figure2_v3](https://github.com/user-attachments/assets/61a6ebd4-7fda-469f-a94f-a6e7fce59020)
 **Figure 2.** Flowchart illustrating the implementation and evaluation workflow for aquatic Species Distribution Models (aSDMs), comprising nine sequential stages (i.e., I-IX), from input data preparation and modelling through to performance evaluation and the generation of stacked suitability maps.
 
-![Figure3_jpg](https://github.com/user-attachments/assets/fdedcc87-2717-442b-8759-81a66303ade9)
+![Figure3](https://github.com/user-attachments/assets/83ad4567-7767-41c0-9c7c-6b902f796804)
 **Figure 3.** Flowchart showing how model performance (AUC, CBI, TSS) varies based on different combinations of spatial strategies, layers, and predictors. High-performing models (aSDMs) are highlighted in green.
 
 ![Figure4_jpg_cropped](https://github.com/user-attachments/assets/eee40ddf-cef8-4e8b-8110-b4582e1864c1)
@@ -66,6 +66,6 @@ The repository represents a stand-alone analysis package and contains the full s
 # Author: Georgios Vagenas
 Affiliation: Biogeography and Global Change Department, National Museum of Natural Sciences, CSIC, C/ Jose Gutierrez Abascal, 2, Madrid 28006, Spain
 
-
+#Last modified: 09/07/2025
 
 
