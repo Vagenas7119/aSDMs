@@ -19,14 +19,29 @@ SDMs, freshwaters, fish, hydrology, climate, watersheds, hierarchical, aquatic s
 # Project structure
 ```
 ├── data/                     # Local data files (bioclimatic variables, hydrological baseline layers etc.)
-├── figures/                  # Manuscript figures
 ├── supplementary/            # Output - Supplementary Figures
+├── Scripts                   # Main analysis script 
 ├── outputs/                  # Input data - Code - Generation of Manuscript figures 
-└── Scripts                   # Main analysis script (.txt files)
+└── figures/                  # Manuscript figures
 ```
 
 # Data
 The baseline layers required for the analysis can be downloaded from here: https://saco.csic.es/s/SYTM8qZrnY2HG5q
+
+# Supplementary
+All the information related to the Supplementary material of this study can be accessed by the following link: https://saco.csic.es/s/3p7n9p724kYr5jN
+
+# Scripts
+The structure of the scripts for the primary analysis set is structured as: 
+
+```
+├── data/                     # Local data files (bioclimatic variables, hydrological baseline layers etc.)
+├── supplementary/            # Output - Supplementary Figures
+├── Scripts                   # Main analysis script 
+└── figures/                  # Manuscript figures
+```
+
+# Outputs
 
 # Figures
 
@@ -41,12 +56,6 @@ The baseline layers required for the analysis can be downloaded from here: https
 
 ![Figure4_jpg_cropped](https://github.com/user-attachments/assets/eee40ddf-cef8-4e8b-8110-b4582e1864c1)
 **Figure 4.** Stacked aSDMs for endemic (N=39) and non-endemic/introduced species (N=53) across the study area. The maps represent stacked outputs derived through aSDMs using the superior pre-constrained h5 spatial strategy, based on climate (left) and hydrological (right) predictor sets. Boxes indicate the high-resolution (~1x1 km) aSDMs projected across the hydrographic network. Highlighted zoomed-in areas are illustrative examples for visual comparison and do not represent specific ecological patterns.
-
-# Supplementary
-All the information related to the Supplementary material of this study can be accessed by the following link: https://saco.csic.es/s/3p7n9p724kYr5jN
-# Outputs
-
-# Scripts
 
 # Author: Georgios Vagenas
 Affiliation: Biogeography and Global Change Department, National Museum of Natural Sciences, CSIC, C/ Jose Gutierrez Abascal, 2, Madrid 28006, Spain
