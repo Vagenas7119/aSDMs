@@ -1,0 +1,3076 @@
+# Load required libraries
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(tidyr)
+library(ggsignif)  # For adding statistical significance to boxplots
+
+# Set working directory (change to your actual directory)
+setwd("C:/Users/geo_v/Desktop/Metanalysis/metrics_vagenas_et_al/")
+
+# List of main folders (replace with your actual main folders)
+main_folders <- list.dirs(".", full.names = TRUE, recursive = TRUE)
+
+# Initialize an empty data frame to store all data
+all_data <- data.frame()
+
+# Loop through each main folder
+for (folder in main_folders) {
+  
+  # Get the subfolders "pre" and "post"
+  subfolders <- list.dirs(folder, full.names = TRUE, recursive = TRUE)
+  
+  # Loop through each subfolder (pre and post)
+  for (subfolder in subfolders) {
+    
+    # Get the CSV files in the subfolder
+    csv_files <- list.files(subfolder, pattern = "\\.csv$", full.names = TRUE)
+    
+    # Loop through each CSV file
+    for (csv in csv_files) {
+      # Read CSV with semicolon delimiter
+      data <- read_delim(csv, delim = ",")
+      
+      # Add folder and subfolder info as new columns
+      data$folder <- basename(folder)
+      data$subfolder <- basename(subfolder)
+      
+      # Combine this file's data into the all_data data frame
+      all_data <- bind_rows(all_data, data)
+    }
+  }
+}
+
+
+perform_comparisons <- function(data, species_value = NULL, cov_value = NULL) {
+  # Filter the data based on species and cov (ensuring 'alien' and 'endemics' species are selected)
+  filtered_data <- data %>%
+    filter(species %in% c("alien", "endemics") & cov == cov_value)
+  
+  # Check if both "alien" and "endemics" species are present after filtering
+  species_levels <- unique(filtered_data$species)
+  if (length(species_levels) < 2) {
+    cat("Not enough species for comparison after filtering. Available species: ", paste(species_levels, collapse = ", "), "\n")
+    return(NULL)  # Return NULL to indicate no comparison can be made
+  }
+  
+  # Perform pairwise comparisons (e.g., t-test) between alien and endemic species
+  comparisons <- combn(species_levels, 2, simplify = FALSE)
+  results <- data.frame(Var1 = character(0), Var2 = character(0), p_value = numeric(0), stringsAsFactors = FALSE)
+  
+  for (comparison in comparisons) {
+    # Perform t-test between alien and endemic
+    group1 <- comparison[1]
+    group2 <- comparison[2]
+    
+    data_group1 <- filtered_data %>% filter(species == group1) %>% pull(value)
+    data_group2 <- filtered_data %>% filter(species == group2) %>% pull(value)
+    
+    test_result <- t.test(data_group1, data_group2)
+    
+    # Save the result
+    results <- rbind(results, data.frame(Var1 = group1, Var2 = group2, p_value = test_result$p.value))
+  }
+  
+  # Add significance annotations based on p-values
+  results$significance <- ifelse(results$p_value < 0.001, "***", 
+                                 ifelse(results$p_value < 0.01, "**", 
+                                        ifelse(results$p_value < 0.05, "*", "ns")))
+  
+  return(results)
+}
+
+
+
+
+add_stat_significance <- function(plot, comparisons, data) {
+  # Filter the data for the 'e_AUC' and 'CBI' metrics
+  data_e_AUC_CBI <- data %>% filter(metric %in% c("e_AUC", "CBI"))
+  
+  # Get the maximum and minimum values of the y-axis data (avoiding NA values)
+  min_y <- min(data_e_AUC_CBI$value, na.rm = TRUE)
+  max_y <- max(data_e_AUC_CBI$value, na.rm = TRUE)
+  
+  # Initialize a starting y_position below the boxplots (somewhat below the minimum value)
+  y_position <- max_y + 0.05  # Start just above the maximum y value
+  
+  for (i in 1:nrow(comparisons)) {
+    # Skip "ns" (non-significant) results
+    if (comparisons$significance[i] == "ns") {
+      next
+    }
+    
+    # For p-values < 0.05, only plot one annotation (no duplicates)
+    if (comparisons$p_value[i] < 0.05) {
+      # Adjust the y_position dynamically for each comparison
+      # Add additional space for each new comparison to avoid overlap
+      y_position <- y_position + 0.1 * (max_y - min_y)  # Space the comparisons apart
+      
+      # Plot the significance with the adjusted y_position
+      plot <- plot + geom_signif(
+        comparisons = list(c(comparisons$Var1[i], comparisons$Var2[i])),
+        annotations = comparisons$significance[i],  # Add the significance annotation
+        y_position = y_position,
+        tip_length = 0.03,  # Adjust tip length for the bracket
+        vjust = 1.5         # Adjust vertical position of the annotation (further below)
+      )
+    }
+  }
+  
+  return(plot)
+}
+
+
+str(all_data)
+
+demo<-factor(all_data$species_id)
+levels(demo)
+demo_2<-factor(all_data$folder)
+levels(demo_2)
+demo_3<-filter(all_data,!folder==".")
+
+#get factors of all data
+
+# List of numeric columns to exclude from conversion
+numeric_columns <- c("e_AUC", "e_COR", "CBI", "maxTSS", "maxKappa", "t_maxSSS", "t_maxkappa", "t_prevalence", "obs_prevalence")
+
+# Convert all columns to factors except the specified numeric columns
+all_data[] <- lapply(names(all_data), function(col_name) {
+  if (!(col_name %in% numeric_columns)) {
+    # Convert the column to a factor if it's not in the numeric_columns list
+    all_data[[col_name]] <- factor(all_data[[col_name]])
+  }
+  return(all_data[[col_name]])  # Return the column as is
+})
+
+# Check the structure to ensure changes have been made
+str(all_data)
+
+levels(all_data$spatial_layer)
+
+# Rename "uncontrained" to "unconstrained" in the 'spatial_layer' factor
+levels(all_data$spatial_layer)[levels(all_data$spatial_layer) == "uncontrained"] <- "unconstrained"
+
+# Check the levels after renaming
+levels(all_data$spatial_layer)
+
+# Check the structure to ensure changes have been made
+str(all_data)
+
+
+# # Convert 'folder' to a factor and reorder the levels
+# all_data$folder <- factor(all_data$folder, levels = c("6_h_clima", "6_h_hydro", "10_combined","5_hydro","5_clima"))
+# 
+# #again character
+# all_data$folder <- as.character(all_data$folder)
+
+
+
+# Filter data for the desired species and cov
+alien_endemics <- all_data %>% 
+  filter(species %in% c("alien", "endemics"))
+
+# Reshape the data to long format for e_AUC and CBI comparison
+alien_endemics_long <- alien_endemics %>%
+  pivot_longer(cols = c(e_AUC, CBI,maxTSS), 
+               names_to = "metric", 
+               values_to = "value")
+
+# Reorder the metric to ensure e_AUC is first and CBI is second
+alien_endemics_long$metric <- factor(alien_endemics_long$metric, levels = c("e_AUC", "CBI","maxTSS"))
+
+# Create the boxplot with the reshaped data for 'alien' and 'endemics' species, split by 'cov'
+p2 <- ggplot(alien_endemics_long, aes(x = cov, y = value, fill = species)) +
+  geom_boxplot(outlier.shape = NA, color = "black", size = 0.8, alpha = 0.7) +  # Boxplot with customized borders
+  scale_fill_brewer(palette = "Set3", name = "Species") +  # Apply a color palette and add a legend for 'species'
+  labs(title = expression(paste("Comparison of Alien vs Endemic Species")),
+       x = "Covariate", y = expression(bold("Metric Value"))) +
+  facet_wrap(~metric, scales = "free_y", 
+             labeller = labeller(metric = c("e_AUC" = "Area Under the Curve (AUC)", 
+                                            "CBI" = "Continuous Boyce Index (CBI)",
+                                            "maxTSS" = "maxTSS"))) +  # Rename the facet labels
+  theme_minimal() +  # Minimal theme
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+        plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),  # Center and bold the title
+        axis.title = element_text(size = 14, face = "bold"),  # Bold axis titles
+        axis.text = element_text(size = 12),  # Increase axis text size
+        legend.position = "right",  # Display the legend on the right
+        strip.text = element_text(face = "bold", size = 16))  # Increase facet label font size and make bold
+
+# Print the plot
+print(p2)
+
+
+
+
+#all plots
+
+# Define the filter categories with corresponding strategy and spatial_layer values
+filter_categories <- list(
+  list(strategy = "post", spatial_layer = "unconstrained"),
+  list(strategy = "post", spatial_layer = "h5"),
+  list(strategy = "post", spatial_layer = "h8"),
+  list(strategy = "post", spatial_layer = "h12"),
+  list(strategy = "pre", spatial_layer = "h5"),
+  list(strategy = "pre", spatial_layer = "h8"),
+  list(strategy = "pre", spatial_layer = "h12")
+)
+
+# Define the custom order of the x-axis categories
+cov_order <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+# Create a list to store the plots
+plot_list <- list()
+
+# Iterate over each filter category
+for (category in filter_categories) {
+  
+  # Filter the data based on the strategy and spatial_layer
+  subset_data <- alien_endemics %>%
+    filter(strategy == category$strategy, spatial_layer == category$spatial_layer)
+  
+  # Reshape the data to long format for e_AUC and CBI comparison
+  subset_data_long <- subset_data %>%
+    pivot_longer(cols = c(e_AUC, CBI,maxTSS), 
+                 names_to = "metric", 
+                 values_to = "value")
+  
+  # Reorder the metric to ensure e_AUC is first and CBI is second
+  subset_data_long$metric <- factor(subset_data_long$metric, levels = c("e_AUC", "CBI","maxTSS"))
+  
+  # Set the factor levels of cov to the custom order
+  subset_data_long$cov <- factor(subset_data_long$cov, levels = cov_order)
+  
+  # Create the boxplot for each filtered subset of the data
+  p <- ggplot(subset_data_long, aes(x = cov, y = value, fill = species)) +
+    geom_boxplot(outlier.shape = NA, color = "black", size = 0.8, alpha = 0.7) +  # Boxplot with customized borders
+    scale_fill_brewer(palette = "Set3", name = "Species") +  # Apply a color palette and add a legend for 'species'
+    labs(title = paste(category$strategy, " & ", category$spatial_layer),
+         x = "Covariate", y = expression(bold("Metric Value"))) +
+    facet_wrap(~metric, scales = "free_y", 
+               labeller = labeller(metric = c("e_AUC" = "AUC", 
+                                              "CBI" = "CBI",
+                                              "maxTSS" = "TSS"))) +  # Rename the facet labels
+    scale_y_continuous(limits = c(0, 1)) +  # Set y-axis limits from 0 to 1
+    theme_minimal() +  # Minimal theme
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+          plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),  # Center and bold the title
+          axis.title = element_text(size = 14, face = "bold"),  # Bold axis titles
+          axis.text = element_text(size = 12),  # Increase axis text size
+          legend.position = "right",  # Display the legend on the right
+          strip.text = element_text(face = "bold", size = 16))  # Increase facet label font size and make bold
+  
+  # Store the plot in the list
+  plot_list[[category$strategy %>% paste(category$spatial_layer, sep = "_")]] <- p
+}
+
+# Print each plot (or save them if needed)
+for (plot_name in names(plot_list)) {
+  print(plot_list[[plot_name]])
+}
+
+
+
+
+# Define the output directory where the plots will be saved
+output_directory <- "C:/Users/geo_v/Desktop/Metanalysis/Strategies"  # Change this to your desired directory
+
+# Create directory if it doesn't exist
+if (!dir.exists(output_directory)) {
+  dir.create(output_directory, recursive = TRUE)
+  cat("Created directory:", output_directory, "\n")
+}
+
+# Loop through each plot and save them as .tiff files with high resolution
+for (plot_name in names(plot_list)) {
+  # Define the filename for the plot
+  plot_filename <- file.path(output_directory, paste0(plot_name, ".tiff"))
+  
+  # Save the plot with the same aspect ratio as the current plot in RStudio
+  ggsave(plot_filename, plot = plot_list[[plot_name]],
+         dpi=300,
+         device = "tif", 
+         width = 3000, height = 1500,  # Set default width and height in inches
+         units = "px")  # Use inches for width and height
+  
+  # Optionally print a message to confirm
+  message(paste("Saved plot:", plot_filename))
+}
+
+
+
+
+
+
+#Compare strategies
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+
+
+# Define the covariates as filter categories
+covariates <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+# Define the desired order for the categories
+category_order <- c("post & unconstrained", "post & h5", "post & h8", "post & h12", "pre & h5", "pre & h8", "pre & h12")
+
+# Create a list to store the plots
+plot_list_covariates <- list()  # Separate plot list for the second loop
+
+# 2nd Loop: Iterate over each covariate and create plots independently
+for (cova in covariates) {
+  
+  # Re-filter the data from the original dataset 'all_data' for the specific covariate
+  subset_data_cov <- all_data %>%
+    filter(cov == cova)  # Filter based on the 'cov' column
+  
+  # Check if filtering worked, print the first few rows to confirm
+  print(head(subset_data_cov))
+  
+  # Reshape the data to long format for e_AUC and CBI comparison
+  subset_data_cov_long <- subset_data_cov %>%
+    pivot_longer(cols = c(e_AUC, CBI,maxTSS), 
+                 names_to = "metric", 
+                 values_to = "value")
+  
+  # Reorder the metric to ensure e_AUC is first and CBI is second
+  subset_data_cov_long$metric <- factor(subset_data_cov_long$metric, levels = c("e_AUC", "CBI","maxTSS"))
+  
+  # Set the factor levels of cov to the custom order
+  subset_data_cov_long$cov <- factor(subset_data_cov_long$cov, levels = covariates)
+  
+  # Ensure 'strategy' and 'spatial_layer' are included and create the combined category column
+  subset_data_cov_long$category_combined <- paste(subset_data_cov_long$strategy, subset_data_cov_long$spatial_layer, sep = " & ")
+  
+  # Reorder the category_combined factor based on the desired order
+  subset_data_cov_long$category_combined <- factor(subset_data_cov_long$category_combined, levels = category_order)
+  
+  # Create the boxplot for the specific covariate and strategy/spatial_layer combinations
+  p_cov <- ggplot(subset_data_cov_long, aes(x = category_combined, y = value, fill = species)) +
+    geom_boxplot(outlier.shape = NA, color = "black", size = 0.8, alpha = 0.7) +  # Boxplot with customized borders
+    scale_fill_brewer(palette = "Set3", name = "Species") +  # Apply a color palette and add a legend for 'species'
+    labs(title = paste("Comparison for Covariate:", cova),
+         x = "Strategy & Spatial Layer", y = "Metric Value") +
+    facet_wrap(~metric, scales = "free_y", 
+               labeller = labeller(metric = c("e_AUC" = "AUC", 
+                                              "CBI" = "CBI",
+                                              "maxTSS"= "TSS"))) +  # Facet by metric
+    scale_y_continuous(limits = c(0, 1)) +  # Set y-axis limits from 0 to 1
+    theme_minimal() +  # Minimal theme
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels for better readability
+          plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),  # Center and bold the title
+          axis.title = element_text(size = 14, face = "bold"),  # Bold axis titles
+          axis.text = element_text(size = 12),  # Increase axis text size
+          legend.position = "right",  # Display the legend on the right
+          strip.text = element_text(face = "bold", size = 16))  # Increase facet label font size and make bold
+  
+  # Store the plot in the list
+  plot_list_covariates[[cova]] <- p_cov
+}
+
+# Print each plot (or save them if needed)
+for (plot_name in names(plot_list_covariates)) {
+  print(plot_list_covariates[[plot_name]])
+}
+
+
+#plot them together
+#install.packages("gridExtra")
+library(gridExtra)  # For arranging plots
+library(ggplot2)
+
+
+
+
+######## AUC comparison #######
+
+
+
+#Check the groups
+# Load necessary libraries
+library(dplyr)
+library(car)  # For Levene's Test
+
+# Define species and filter categories
+species_types <- c("alien", "endemics")
+
+filter_categories <- list(
+  list(strategy = "post", spatial_layer = "unconstrained"),
+  list(strategy = "post", spatial_layer = "h5"),
+  list(strategy = "post", spatial_layer = "h8"),
+  list(strategy = "post", spatial_layer = "h12"),
+  list(strategy = "pre", spatial_layer = "h5"),
+  list(strategy = "pre", spatial_layer = "h8"),
+  list(strategy = "pre", spatial_layer = "h12")
+)
+
+# Initialize an empty list to store filtered data frames
+filtered_groups <- list()
+
+# Loop through species and filter categories to filter data
+for (species in species_types) {
+  for (filter_cat in filter_categories) {
+    # Filter the data based on species, strategy, and spatial_layer
+    filtered_data <- all_data %>%
+      filter(species == species, 
+             strategy == filter_cat$strategy, 
+             spatial_layer == filter_cat$spatial_layer)
+    
+    # Create a unique group name for each combination of species and filter category
+    group_name <- paste(species, filter_cat$strategy, filter_cat$spatial_layer, sep = "_")
+    
+    # Store the filtered data in the list
+    filtered_groups[[group_name]] <- filtered_data
+  }
+}
+
+# View the filtered groups (e.g., for "alien_post_h5")
+head(filtered_groups[["alien_post_h5"]])
+
+# Check the structure of the filtered groups
+str(filtered_groups)
+
+
+
+
+
+# Load required package
+if (!require(dunn.test)) {
+  install.packages("dunn.test")
+  library(dunn.test)
+}
+
+# Initialize an empty data frame to store the results
+anova_results <- data.frame(
+  group = character(),
+  test_type = character(),
+  chi_squared = numeric(),
+  df = numeric(),
+  p_value = numeric(),
+  post_hoc_comparisons = character(),
+  stringsAsFactors = FALSE
+)
+
+
+# Function to perform Dunn's test and format the results
+perform_dunn_test <- function(filtered_data, group_name) {
+  # Perform Kruskal-Wallis test (already done earlier)
+  kruskal_result <- kruskal.test(filtered_data$e_AUC ~ filtered_data$cov)
+  
+  # Perform Dunn's test for post-hoc analysis
+  dunn_result <- dunn.test(filtered_data$e_AUC, filtered_data$cov, method = "bonferroni")
+  
+  # Extract necessary results from Dunn's test output
+  comparisons <- dunn_result$comparisons  # List of pairwise comparisons
+  diff <- dunn_result$Z  # The Z-values (differences)
+  p_adj <- dunn_result$P.adjusted  # Adjusted p-values
+  
+  # Create a structured data frame for the post-hoc results
+  post_hoc_df <- data.frame(
+    Group = group_name,  # Store group name
+    Comparison = comparisons,  # Pairwise comparison
+    Diff = diff,  # The Z-values (differences)
+    P_adj = p_adj,  # Adjusted p-values
+    Significant = ifelse(p_adj < 0.05, "Yes", "No"),  # Determine significance
+    Dominant_Variable = NA,  # Initialize the Dominant_Variable as NA
+    stringsAsFactors = FALSE
+  )
+  
+  # Logic for Dominant_Variable based on significance and difference
+  post_hoc_df$Dominant_Variable[post_hoc_df$Significant == "Yes"] <- 
+    ifelse(post_hoc_df$Diff > 0, 
+           post_hoc_df$Comparison,  # Keep original comparison if Diff is positive
+           sapply(post_hoc_df$Comparison[post_hoc_df$Diff < 0], function(comp) {
+             parts <- strsplit(comp, " - ")[[1]]
+             paste(rev(parts), collapse = " - ")
+           }))  # Reverse comparison if Diff is negative
+  
+  # Return the data frame containing the structured Dunn's test results
+  return(post_hoc_df)
+}
+
+# Initialize an empty data frame to store results
+anova_results <- data.frame(
+  Group = character(),
+  Comparison = character(),
+  Diff = numeric(),
+  P_adj = numeric(),
+  Significant = character(),
+  Dominant_Variable = character(),
+  stringsAsFactors = FALSE
+)
+
+# Loop through the filtered groups to apply Dunn's test and store the results
+for (group_name in names(filtered_groups)) {
+  filtered_data <- filtered_groups[[group_name]]
+  
+  # Perform Dunn's test and get the formatted results
+  post_hoc_results <- perform_dunn_test(filtered_data, group_name)
+  
+  # Add the results to the main dataframe
+  anova_results <- rbind(anova_results, post_hoc_results)
+}
+
+# Add the Kruskal-Wallis test summary at the beginning of the results dataframe
+kruskal_results_df <- data.frame(
+  Group = names(filtered_groups),
+  Comparison = "Kruskal-Wallis",
+  Diff = NA,  # No Diff for Kruskal-Wallis test
+  P_adj = sapply(names(filtered_groups), function(group_name) {
+    kruskal.test(filtered_groups[[group_name]]$e_AUC ~ filtered_groups[[group_name]]$cov)$p.value
+  }),
+  Significant = ifelse(sapply(names(filtered_groups), function(group_name) {
+    kruskal.test(filtered_groups[[group_name]]$e_AUC ~ filtered_groups[[group_name]]$cov)$p.value < 0.05
+  }), "Yes", "No"),
+  Dominant_Variable = NA,
+  stringsAsFactors = FALSE
+)
+
+# Modify the Dominant_Variable column to follow the specified logic
+anova_results$Dominant_Variable <- mapply(function(diff, sig, comparison) {
+  # Check if the result is significant
+  if (sig == "Yes") {
+    # If Diff is positive, keep the first part of the comparison (before "-")
+    if (diff > 0) {
+      return(strsplit(comparison, " - ")[[1]][1])  # First part of comparison
+    }
+    # If Diff is negative, keep the second part of the comparison (after "-")
+    else {
+      return(strsplit(comparison, " - ")[[1]][2])  # Second part of comparison
+    }
+  }
+  # If not significant, return NA
+  else {
+    return(NA)
+  }
+}, anova_results$Diff, anova_results$Significant, anova_results$Comparison)
+
+# View the updated results
+print(anova_results)
+
+table(anova_results$Dominant_Variable)
+
+table(anova_results$Dominant_Variable,anova_results$Group)
+
+t(table(anova_results$Dominant_Variable,anova_results$Group))
+
+#out of all the cases where cov is compared in have money times is dominant?
+
+# Define the covariates as filter categories
+covariates <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+# Initialize an empty data frame to store the results
+result_table <- data.frame(
+  Covariate = character(),
+  Included = numeric(),
+  NA_Count = numeric(),
+  Ratio = numeric(),
+  stringsAsFactors = FALSE
+)
+
+
+
+
+# Loop through each covariate to calculate the counts and ratio
+
+# Define the covariates as filter categories
+covariates <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+# Split the 'Comparison' column into two parts (before and after the '-')
+anova_results$Comparison_Part1 <- sapply(strsplit(as.character(anova_results$Comparison), " - "), `[`, 1)
+anova_results$Comparison_Part2 <- sapply(strsplit(as.character(anova_results$Comparison), " - "), `[`, 2)
+
+# Initialize an empty data frame to store the results
+result_table <- data.frame(
+  Covariate = character(),
+  Included = numeric(),
+  NA_Count = numeric(),
+  Significance_Count = numeric(),
+  Dominant_Count = numeric(),
+  Ratio = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Loop through each covariate to calculate the counts and ratio
+for (covariate in covariates) {
+  
+  # Filter the rows where either part of 'Comparison' contains the exact covariate
+  covariate_rows <- anova_results[
+    grepl(paste0("\\b", covariate, "\\b"), anova_results$Comparison_Part1) | 
+      grepl(paste0("\\b", covariate, "\\b"), anova_results$Comparison_Part2), 
+  ]
+  
+  # Count how many times the covariate appears in 'Comparison_Part1' or 'Comparison_Part2'
+  included_count <- nrow(covariate_rows)
+  
+  # Count how many times 'Dominant_Variable' is NA in the filtered rows
+  na_count <- sum(is.na(covariate_rows$Dominant_Variable))
+  
+  # Count how many times the row is statistically significant (Significant == "Yes")
+  significant_count <- sum(covariate_rows$Significant == "Yes")
+  
+  # Count how many times the covariate is the dominant variable in significant rows
+  dominant_count <- sum(covariate_rows$Dominant_Variable == covariate & covariate_rows$Significant == "Yes")
+  
+  # Calculate the ratio (handle division by zero if there are no NAs)
+  ratio <- ifelse(na_count == 0, NA, dominant_count / significant_count)
+  
+  # Append the results to the result table
+  result_table <- rbind(result_table, data.frame(
+    Covariate = covariate,
+    Included = included_count,
+    NA_Count = na_count,
+    Significance_Count = significant_count,
+    Dominant_Count = dominant_count,
+    Ratio = ratio
+  ))
+}
+
+# Print the result table
+return_table_AUC_ALL<-result_table
+print(return_table_AUC_ALL)
+
+#sos the significance count column equals to 128 while the dominant_count to 64
+#the reason is because we search for the inclusion of significant for each variable two times in colpart1 and colpart2
+
+
+
+#focus on the two higher strategies
+
+# Define the groups to filter by
+groups_to_include <- c("alien_post_unconstrained", "endemic_post_unconstrained", 
+                       "alien_pre_h5", "endemic_pre_h5")
+
+# Filter the anova_results dataset to include only rows with the selected groups
+filtered_anova_results <- anova_results[anova_results$Group %in% groups_to_include, ]
+
+# Define the covariates as filter categories
+covariates <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+# Split the 'Comparison' column into two parts (before and after the '-')
+filtered_anova_results$Comparison_Part1 <- sapply(strsplit(as.character(filtered_anova_results$Comparison), " - "), `[`, 1)
+filtered_anova_results$Comparison_Part2 <- sapply(strsplit(as.character(filtered_anova_results$Comparison), " - "), `[`, 2)
+
+# Initialize an empty data frame to store the results
+result_table <- data.frame(
+  Covariate = character(),
+  Included = numeric(),
+  NA_Count = numeric(),
+  Significance_Count = numeric(),
+  Dominant_Count = numeric(),
+  Ratio = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Loop through each covariate to calculate the counts and ratio
+for (covariate in covariates) {
+  
+  # Filter the rows where either part of 'Comparison' contains the exact covariate
+  covariate_rows <- filtered_anova_results[
+    grepl(paste0("\\b", covariate, "\\b"), filtered_anova_results$Comparison_Part1) | 
+      grepl(paste0("\\b", covariate, "\\b"), filtered_anova_results$Comparison_Part2), 
+  ]
+  
+  # Count how many times the covariate appears in 'Comparison_Part1' or 'Comparison_Part2'
+  included_count <- nrow(covariate_rows)
+  
+  # Count how many times 'Dominant_Variable' is NA in the filtered rows
+  na_count <- sum(is.na(covariate_rows$Dominant_Variable))
+  
+  # Count how many times the row is statistically significant (Significant == "Yes")
+  significant_count <- sum(covariate_rows$Significant == "Yes")
+  
+  # Count how many times the covariate is the dominant variable in significant rows
+  dominant_count <- sum(covariate_rows$Dominant_Variable == covariate & covariate_rows$Significant == "Yes")
+  
+  # Calculate the ratio (handle division by zero if there are no NAs)
+  ratio <- ifelse(significant_count == 0, NA, dominant_count / significant_count)
+  
+  # Append the results to the result table
+  result_table <- rbind(result_table, data.frame(
+    Covariate = covariate,
+    Included = included_count,
+    NA_Count = na_count,
+    Significance_Count = significant_count,
+    Dominant_Count = dominant_count,
+    Non_Dominant_Count=significant_count-dominant_count,
+    Success_Ratio = ratio,
+    Failure_Ratio = (significant_count-dominant_count)/significant_count
+  ))
+}
+
+# Print the result table
+return_table_AUC_preh5_UNCON<-result_table
+print(return_table_AUC_preh5_UNCON)
+
+
+#focus on the two higher strategies
+
+# Define the groups to filter by
+groups_to_include <- c("alien_pre_h5", "endemic_pre_h5")
+
+# Filter the anova_results dataset to include only rows with the selected groups
+filtered_anova_results <- anova_results[anova_results$Group %in% groups_to_include, ]
+
+# Define the covariates as filter categories
+covariates <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+# Split the 'Comparison' column into two parts (before and after the '-')
+filtered_anova_results$Comparison_Part1 <- sapply(strsplit(as.character(filtered_anova_results$Comparison), " - "), `[`, 1)
+filtered_anova_results$Comparison_Part2 <- sapply(strsplit(as.character(filtered_anova_results$Comparison), " - "), `[`, 2)
+
+# Initialize an empty data frame to store the results
+result_table <- data.frame(
+  Covariate = character(),
+  Included = numeric(),
+  NA_Count = numeric(),
+  Significance_Count = numeric(),
+  Dominant_Count = numeric(),
+  Ratio = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Loop through each covariate to calculate the counts and ratio
+for (covariate in covariates) {
+  
+  # Filter the rows where either part of 'Comparison' contains the exact covariate
+  covariate_rows <- filtered_anova_results[
+    grepl(paste0("\\b", covariate, "\\b"), filtered_anova_results$Comparison_Part1) | 
+      grepl(paste0("\\b", covariate, "\\b"), filtered_anova_results$Comparison_Part2), 
+  ]
+  
+  # Count how many times the covariate appears in 'Comparison_Part1' or 'Comparison_Part2'
+  included_count <- nrow(covariate_rows)
+  
+  # Count how many times 'Dominant_Variable' is NA in the filtered rows
+  na_count <- sum(is.na(covariate_rows$Dominant_Variable))
+  
+  # Count how many times the row is statistically significant (Significant == "Yes")
+  significant_count <- sum(covariate_rows$Significant == "Yes")
+  
+  # Count how many times the covariate is the dominant variable in significant rows
+  dominant_count <- sum(covariate_rows$Dominant_Variable == covariate & covariate_rows$Significant == "Yes")
+  
+  # Calculate the ratio (handle division by zero if there are no NAs)
+  ratio <- ifelse(significant_count == 0, NA, dominant_count / significant_count)
+  
+  # Append the results to the result table
+  result_table <- rbind(result_table, data.frame(
+    Covariate = covariate,
+    Included = included_count,
+    NA_Count = na_count,
+    Significance_Count = significant_count,
+    Dominant_Count = dominant_count,
+    Non_Dominant_Count=significant_count-dominant_count,
+    Success_Ratio = ratio,
+    Failure_Ratio = (significant_count-dominant_count)/significant_count
+  ))
+}
+
+# Print the result table
+return_table_AUC_preh5<-result_table
+print(return_table_AUC_preh5)
+
+
+######## end of AUC comparison#####
+
+
+######## maxTSS comparison #######
+
+
+#Check the groups
+# Load necessary libraries
+library(dplyr)
+library(car)  # For Levene's Test
+
+# Define species and filter categories
+species_types <- c("alien", "endemics")
+
+filter_categories <- list(
+  list(strategy = "post", spatial_layer = "unconstrained"),
+  list(strategy = "post", spatial_layer = "h5"),
+  list(strategy = "post", spatial_layer = "h8"),
+  list(strategy = "post", spatial_layer = "h12"),
+  list(strategy = "pre", spatial_layer = "h5"),
+  list(strategy = "pre", spatial_layer = "h8"),
+  list(strategy = "pre", spatial_layer = "h12")
+)
+
+# Initialize an empty list to store filtered data frames
+filtered_groups <- list()
+
+# Loop through species and filter categories to filter data
+for (species in species_types) {
+  for (filter_cat in filter_categories) {
+    # Filter the data based on species, strategy, and spatial_layer
+    filtered_data <- all_data %>%
+      filter(species == species, 
+             strategy == filter_cat$strategy, 
+             spatial_layer == filter_cat$spatial_layer)
+    
+    # Create a unique group name for each combination of species and filter category
+    group_name <- paste(species, filter_cat$strategy, filter_cat$spatial_layer, sep = "_")
+    
+    # Store the filtered data in the list
+    filtered_groups[[group_name]] <- filtered_data
+  }
+}
+
+# View the filtered groups (e.g., for "alien_post_h5")
+head(filtered_groups[["alien_post_h5"]])
+
+# Check the structure of the filtered groups
+str(filtered_groups)
+
+
+
+
+
+# Load required package
+if (!require(dunn.test)) {
+  install.packages("dunn.test")
+  library(dunn.test)
+}
+
+# Initialize an empty data frame to store the results
+anova_results <- data.frame(
+  group = character(),
+  test_type = character(),
+  chi_squared = numeric(),
+  df = numeric(),
+  p_value = numeric(),
+  post_hoc_comparisons = character(),
+  stringsAsFactors = FALSE
+)
+
+
+# Function to perform Dunn's test and format the results
+perform_dunn_test <- function(filtered_data, group_name) {
+  # Perform Kruskal-Wallis test (already done earlier)
+  kruskal_result <- kruskal.test(filtered_data$maxTSS ~ filtered_data$cov)
+  
+  # Perform Dunn's test for post-hoc analysis
+  dunn_result <- dunn.test(filtered_data$maxTSS, filtered_data$cov, method = "bonferroni")
+  
+  # Extract necessary results from Dunn's test output
+  comparisons <- dunn_result$comparisons  # List of pairwise comparisons
+  diff <- dunn_result$Z  # The Z-values (differences)
+  p_adj <- dunn_result$P.adjusted  # Adjusted p-values
+  
+  # Create a structured data frame for the post-hoc results
+  post_hoc_df <- data.frame(
+    Group = group_name,  # Store group name
+    Comparison = comparisons,  # Pairwise comparison
+    Diff = diff,  # The Z-values (differences)
+    P_adj = p_adj,  # Adjusted p-values
+    Significant = ifelse(p_adj < 0.05, "Yes", "No"),  # Determine significance
+    Dominant_Variable = NA,  # Initialize the Dominant_Variable as NA
+    stringsAsFactors = FALSE
+  )
+  
+  # Logic for Dominant_Variable based on significance and difference
+  post_hoc_df$Dominant_Variable[post_hoc_df$Significant == "Yes"] <- 
+    ifelse(post_hoc_df$Diff > 0, 
+           post_hoc_df$Comparison,  # Keep original comparison if Diff is positive
+           sapply(post_hoc_df$Comparison[post_hoc_df$Diff < 0], function(comp) {
+             parts <- strsplit(comp, " - ")[[1]]
+             paste(rev(parts), collapse = " - ")
+           }))  # Reverse comparison if Diff is negative
+  
+  # Return the data frame containing the structured Dunn's test results
+  return(post_hoc_df)
+}
+
+# Initialize an empty data frame to store results
+anova_results <- data.frame(
+  Group = character(),
+  Comparison = character(),
+  Diff = numeric(),
+  P_adj = numeric(),
+  Significant = character(),
+  Dominant_Variable = character(),
+  stringsAsFactors = FALSE
+)
+
+# Loop through the filtered groups to apply Dunn's test and store the results
+for (group_name in names(filtered_groups)) {
+  filtered_data <- filtered_groups[[group_name]]
+  
+  # Perform Dunn's test and get the formatted results
+  post_hoc_results <- perform_dunn_test(filtered_data, group_name)
+  
+  # Add the results to the main dataframe
+  anova_results <- rbind(anova_results, post_hoc_results)
+}
+
+# Add the Kruskal-Wallis test summary at the beginning of the results dataframe
+kruskal_results_df <- data.frame(
+  Group = names(filtered_groups),
+  Comparison = "Kruskal-Wallis",
+  Diff = NA,  # No Diff for Kruskal-Wallis test
+  P_adj = sapply(names(filtered_groups), function(group_name) {
+    kruskal.test(filtered_groups[[group_name]]$maxTSS ~ filtered_groups[[group_name]]$cov)$p.value
+  }),
+  Significant = ifelse(sapply(names(filtered_groups), function(group_name) {
+    kruskal.test(filtered_groups[[group_name]]$maxTSS ~ filtered_groups[[group_name]]$cov)$p.value < 0.05
+  }), "Yes", "No"),
+  Dominant_Variable = NA,
+  stringsAsFactors = FALSE
+)
+
+# Modify the Dominant_Variable column to follow the specified logic
+anova_results$Dominant_Variable <- mapply(function(diff, sig, comparison) {
+  # Check if the result is significant
+  if (sig == "Yes") {
+    # If Diff is positive, keep the first part of the comparison (before "-")
+    if (diff > 0) {
+      return(strsplit(comparison, " - ")[[1]][1])  # First part of comparison
+    }
+    # If Diff is negative, keep the second part of the comparison (after "-")
+    else {
+      return(strsplit(comparison, " - ")[[1]][2])  # Second part of comparison
+    }
+  }
+  # If not significant, return NA
+  else {
+    return(NA)
+  }
+}, anova_results$Diff, anova_results$Significant, anova_results$Comparison)
+
+# View the updated results
+print(anova_results)
+
+table(anova_results$Dominant_Variable)
+
+table(anova_results$Dominant_Variable,anova_results$Group)
+
+t(table(anova_results$Dominant_Variable,anova_results$Group))
+
+#out of all the cases where cov is compared in have money times is dominant?
+
+# Define the covariates as filter categories
+covariates <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+# Initialize an empty data frame to store the results
+result_table <- data.frame(
+  Covariate = character(),
+  Included = numeric(),
+  NA_Count = numeric(),
+  Ratio = numeric(),
+  stringsAsFactors = FALSE
+)
+
+
+
+
+# Loop through each covariate to calculate the counts and ratio
+
+# Define the covariates as filter categories
+covariates <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+# Split the 'Comparison' column into two parts (before and after the '-')
+anova_results$Comparison_Part1 <- sapply(strsplit(as.character(anova_results$Comparison), " - "), `[`, 1)
+anova_results$Comparison_Part2 <- sapply(strsplit(as.character(anova_results$Comparison), " - "), `[`, 2)
+
+# Initialize an empty data frame to store the results
+result_table <- data.frame(
+  Covariate = character(),
+  Included = numeric(),
+  NA_Count = numeric(),
+  Significance_Count = numeric(),
+  Dominant_Count = numeric(),
+  Ratio = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Loop through each covariate to calculate the counts and ratio
+for (covariate in covariates) {
+  
+  # Filter the rows where either part of 'Comparison' contains the exact covariate
+  covariate_rows <- anova_results[
+    grepl(paste0("\\b", covariate, "\\b"), anova_results$Comparison_Part1) | 
+      grepl(paste0("\\b", covariate, "\\b"), anova_results$Comparison_Part2), 
+  ]
+  
+  # Count how many times the covariate appears in 'Comparison_Part1' or 'Comparison_Part2'
+  included_count <- nrow(covariate_rows)
+  
+  # Count how many times 'Dominant_Variable' is NA in the filtered rows
+  na_count <- sum(is.na(covariate_rows$Dominant_Variable))
+  
+  # Count how many times the row is statistically significant (Significant == "Yes")
+  significant_count <- sum(covariate_rows$Significant == "Yes")
+  
+  # Count how many times the covariate is the dominant variable in significant rows
+  dominant_count <- sum(covariate_rows$Dominant_Variable == covariate & covariate_rows$Significant == "Yes")
+  
+  # Calculate the ratio (handle division by zero if there are no NAs)
+  ratio <- ifelse(na_count == 0, NA, dominant_count / significant_count)
+  
+  # Append the results to the result table
+  result_table <- rbind(result_table, data.frame(
+    Covariate = covariate,
+    Included = included_count,
+    NA_Count = na_count,
+    Significance_Count = significant_count,
+    Dominant_Count = dominant_count,
+    Ratio = ratio
+  ))
+}
+
+# Print the result table
+return_table_maxTSS_ALL<-result_table
+print(return_table_maxTSS_ALL)
+
+#sos the significance count column equals to 128 while the dominant_count to 64
+#the reason is because we search for the inclusion of significant for each variable two times in colpart1 and colpart2
+
+
+
+#focus on the two higher strategies
+
+# Define the groups to filter by
+groups_to_include <- c("alien_post_unconstrained", "endemic_post_unconstrained", 
+                       "alien_pre_h5", "endemic_pre_h5")
+
+# Filter the anova_results dataset to include only rows with the selected groups
+filtered_anova_results <- anova_results[anova_results$Group %in% groups_to_include, ]
+
+# Define the covariates as filter categories
+covariates <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+# Split the 'Comparison' column into two parts (before and after the '-')
+filtered_anova_results$Comparison_Part1 <- sapply(strsplit(as.character(filtered_anova_results$Comparison), " - "), `[`, 1)
+filtered_anova_results$Comparison_Part2 <- sapply(strsplit(as.character(filtered_anova_results$Comparison), " - "), `[`, 2)
+
+# Initialize an empty data frame to store the results
+result_table <- data.frame(
+  Covariate = character(),
+  Included = numeric(),
+  NA_Count = numeric(),
+  Significance_Count = numeric(),
+  Dominant_Count = numeric(),
+  Ratio = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Loop through each covariate to calculate the counts and ratio
+for (covariate in covariates) {
+  
+  # Filter the rows where either part of 'Comparison' contains the exact covariate
+  covariate_rows <- filtered_anova_results[
+    grepl(paste0("\\b", covariate, "\\b"), filtered_anova_results$Comparison_Part1) | 
+      grepl(paste0("\\b", covariate, "\\b"), filtered_anova_results$Comparison_Part2), 
+  ]
+  
+  # Count how many times the covariate appears in 'Comparison_Part1' or 'Comparison_Part2'
+  included_count <- nrow(covariate_rows)
+  
+  # Count how many times 'Dominant_Variable' is NA in the filtered rows
+  na_count <- sum(is.na(covariate_rows$Dominant_Variable))
+  
+  # Count how many times the row is statistically significant (Significant == "Yes")
+  significant_count <- sum(covariate_rows$Significant == "Yes")
+  
+  # Count how many times the covariate is the dominant variable in significant rows
+  dominant_count <- sum(covariate_rows$Dominant_Variable == covariate & covariate_rows$Significant == "Yes")
+  
+  # Calculate the ratio (handle division by zero if there are no NAs)
+  ratio <- ifelse(significant_count == 0, NA, dominant_count / significant_count)
+  
+  # Append the results to the result table
+  result_table <- rbind(result_table, data.frame(
+    Covariate = covariate,
+    Included = included_count,
+    NA_Count = na_count,
+    Significance_Count = significant_count,
+    Dominant_Count = dominant_count,
+    Non_Dominant_Count=significant_count-dominant_count,
+    Success_Ratio = ratio,
+    Failure_Ratio = (significant_count-dominant_count)/significant_count
+  ))
+}
+
+# Print the result table
+return_table_maxTSS_preh5_UNCON<-result_table
+print(return_table_maxTSS_preh5_UNCON)
+
+
+#focus on the two higher strategies
+
+# Define the groups to filter by
+groups_to_include <- c("alien_pre_h5", "endemic_pre_h5")
+
+# Filter the anova_results dataset to include only rows with the selected groups
+filtered_anova_results <- anova_results[anova_results$Group %in% groups_to_include, ]
+
+# Define the covariates as filter categories
+covariates <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+# Split the 'Comparison' column into two parts (before and after the '-')
+filtered_anova_results$Comparison_Part1 <- sapply(strsplit(as.character(filtered_anova_results$Comparison), " - "), `[`, 1)
+filtered_anova_results$Comparison_Part2 <- sapply(strsplit(as.character(filtered_anova_results$Comparison), " - "), `[`, 2)
+
+# Initialize an empty data frame to store the results
+result_table <- data.frame(
+  Covariate = character(),
+  Included = numeric(),
+  NA_Count = numeric(),
+  Significance_Count = numeric(),
+  Dominant_Count = numeric(),
+  Ratio = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Loop through each covariate to calculate the counts and ratio
+for (covariate in covariates) {
+  
+  # Filter the rows where either part of 'Comparison' contains the exact covariate
+  covariate_rows <- filtered_anova_results[
+    grepl(paste0("\\b", covariate, "\\b"), filtered_anova_results$Comparison_Part1) | 
+      grepl(paste0("\\b", covariate, "\\b"), filtered_anova_results$Comparison_Part2), 
+  ]
+  
+  # Count how many times the covariate appears in 'Comparison_Part1' or 'Comparison_Part2'
+  included_count <- nrow(covariate_rows)
+  
+  # Count how many times 'Dominant_Variable' is NA in the filtered rows
+  na_count <- sum(is.na(covariate_rows$Dominant_Variable))
+  
+  # Count how many times the row is statistically significant (Significant == "Yes")
+  significant_count <- sum(covariate_rows$Significant == "Yes")
+  
+  # Count how many times the covariate is the dominant variable in significant rows
+  dominant_count <- sum(covariate_rows$Dominant_Variable == covariate & covariate_rows$Significant == "Yes")
+  
+  # Calculate the ratio (handle division by zero if there are no NAs)
+  ratio <- ifelse(significant_count == 0, NA, dominant_count / significant_count)
+  
+  # Append the results to the result table
+  result_table <- rbind(result_table, data.frame(
+    Covariate = covariate,
+    Included = included_count,
+    NA_Count = na_count,
+    Significance_Count = significant_count,
+    Dominant_Count = dominant_count,
+    Non_Dominant_Count=significant_count-dominant_count,
+    Success_Ratio = ratio,
+    Failure_Ratio = (significant_count-dominant_count)/significant_count
+  ))
+}
+
+# Print the result table
+return_table_maxTSS_preh5<-result_table
+print(return_table_maxTSS_preh5)
+
+
+#### end of maxTSS comparison ###
+
+
+### CBI comparison ###
+
+#Check the groups
+# Load necessary libraries
+library(dplyr)
+library(car)  # For Levene's Test
+
+# Define species and filter categories
+species_types <- c("alien", "endemics")
+
+filter_categories <- list(
+  list(strategy = "post", spatial_layer = "unconstrained"),
+  list(strategy = "post", spatial_layer = "h5"),
+  list(strategy = "post", spatial_layer = "h8"),
+  list(strategy = "post", spatial_layer = "h12"),
+  list(strategy = "pre", spatial_layer = "h5"),
+  list(strategy = "pre", spatial_layer = "h8"),
+  list(strategy = "pre", spatial_layer = "h12")
+)
+
+# Initialize an empty list to store filtered data frames
+filtered_groups <- list()
+
+# Loop through species and filter categories to filter data
+for (species in species_types) {
+  for (filter_cat in filter_categories) {
+    # Filter the data based on species, strategy, and spatial_layer
+    filtered_data <- all_data %>%
+      filter(species == species, 
+             strategy == filter_cat$strategy, 
+             spatial_layer == filter_cat$spatial_layer)
+    
+    # Create a unique group name for each combination of species and filter category
+    group_name <- paste(species, filter_cat$strategy, filter_cat$spatial_layer, sep = "_")
+    
+    # Store the filtered data in the list
+    filtered_groups[[group_name]] <- filtered_data
+  }
+}
+
+# View the filtered groups (e.g., for "alien_post_h5")
+head(filtered_groups[["alien_post_h5"]])
+
+# Check the structure of the filtered groups
+str(filtered_groups)
+
+
+
+
+
+# Load required package
+if (!require(dunn.test)) {
+  install.packages("dunn.test")
+  library(dunn.test)
+}
+
+# Initialize an empty data frame to store the results
+anova_results <- data.frame(
+  group = character(),
+  test_type = character(),
+  chi_squared = numeric(),
+  df = numeric(),
+  p_value = numeric(),
+  post_hoc_comparisons = character(),
+  stringsAsFactors = FALSE
+)
+
+
+# Function to perform Dunn's test and format the results
+perform_dunn_test <- function(filtered_data, group_name) {
+  # Perform Kruskal-Wallis test (already done earlier)
+  kruskal_result <- kruskal.test(filtered_data$CBI ~ filtered_data$cov)
+  
+  # Perform Dunn's test for post-hoc analysis
+  dunn_result <- dunn.test(filtered_data$CBI, filtered_data$cov, method = "bonferroni")
+  
+  # Extract necessary results from Dunn's test output
+  comparisons <- dunn_result$comparisons  # List of pairwise comparisons
+  diff <- dunn_result$Z  # The Z-values (differences)
+  p_adj <- dunn_result$P.adjusted  # Adjusted p-values
+  
+  # Create a structured data frame for the post-hoc results
+  post_hoc_df <- data.frame(
+    Group = group_name,  # Store group name
+    Comparison = comparisons,  # Pairwise comparison
+    Diff = diff,  # The Z-values (differences)
+    P_adj = p_adj,  # Adjusted p-values
+    Significant = ifelse(p_adj < 0.05, "Yes", "No"),  # Determine significance
+    Dominant_Variable = NA,  # Initialize the Dominant_Variable as NA
+    stringsAsFactors = FALSE
+  )
+  
+  # Logic for Dominant_Variable based on significance and difference
+  post_hoc_df$Dominant_Variable[post_hoc_df$Significant == "Yes"] <- 
+    ifelse(post_hoc_df$Diff > 0, 
+           post_hoc_df$Comparison,  # Keep original comparison if Diff is positive
+           sapply(post_hoc_df$Comparison[post_hoc_df$Diff < 0], function(comp) {
+             parts <- strsplit(comp, " - ")[[1]]
+             paste(rev(parts), collapse = " - ")
+           }))  # Reverse comparison if Diff is negative
+  
+  # Return the data frame containing the structured Dunn's test results
+  return(post_hoc_df)
+}
+
+# Initialize an empty data frame to store results
+anova_results <- data.frame(
+  Group = character(),
+  Comparison = character(),
+  Diff = numeric(),
+  P_adj = numeric(),
+  Significant = character(),
+  Dominant_Variable = character(),
+  stringsAsFactors = FALSE
+)
+
+# Loop through the filtered groups to apply Dunn's test and store the results
+for (group_name in names(filtered_groups)) {
+  filtered_data <- filtered_groups[[group_name]]
+  
+  # Perform Dunn's test and get the formatted results
+  post_hoc_results <- perform_dunn_test(filtered_data, group_name)
+  
+  # Add the results to the main dataframe
+  anova_results <- rbind(anova_results, post_hoc_results)
+}
+
+# Add the Kruskal-Wallis test summary at the beginning of the results dataframe
+kruskal_results_df <- data.frame(
+  Group = names(filtered_groups),
+  Comparison = "Kruskal-Wallis",
+  Diff = NA,  # No Diff for Kruskal-Wallis test
+  P_adj = sapply(names(filtered_groups), function(group_name) {
+    kruskal.test(filtered_groups[[group_name]]$CBI ~ filtered_groups[[group_name]]$cov)$p.value
+  }),
+  Significant = ifelse(sapply(names(filtered_groups), function(group_name) {
+    kruskal.test(filtered_groups[[group_name]]$CBI ~ filtered_groups[[group_name]]$cov)$p.value < 0.05
+  }), "Yes", "No"),
+  Dominant_Variable = NA,
+  stringsAsFactors = FALSE
+)
+
+# Modify the Dominant_Variable column to follow the specified logic
+anova_results$Dominant_Variable <- mapply(function(diff, sig, comparison) {
+  # Check if the result is significant
+  if (sig == "Yes") {
+    # If Diff is positive, keep the first part of the comparison (before "-")
+    if (diff > 0) {
+      return(strsplit(comparison, " - ")[[1]][1])  # First part of comparison
+    }
+    # If Diff is negative, keep the second part of the comparison (after "-")
+    else {
+      return(strsplit(comparison, " - ")[[1]][2])  # Second part of comparison
+    }
+  }
+  # If not significant, return NA
+  else {
+    return(NA)
+  }
+}, anova_results$Diff, anova_results$Significant, anova_results$Comparison)
+
+# View the updated results
+print(anova_results)
+
+table(anova_results$Dominant_Variable)
+
+table(anova_results$Dominant_Variable,anova_results$Group)
+
+t(table(anova_results$Dominant_Variable,anova_results$Group))
+
+#out of all the cases where cov is compared in have money times is dominant?
+
+# Define the covariates as filter categories
+covariates <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+# Initialize an empty data frame to store the results
+result_table <- data.frame(
+  Covariate = character(),
+  Included = numeric(),
+  NA_Count = numeric(),
+  Ratio = numeric(),
+  stringsAsFactors = FALSE
+)
+
+
+
+
+# Loop through each covariate to calculate the counts and ratio
+
+# Define the covariates as filter categories
+covariates <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+# Split the 'Comparison' column into two parts (before and after the '-')
+anova_results$Comparison_Part1 <- sapply(strsplit(as.character(anova_results$Comparison), " - "), `[`, 1)
+anova_results$Comparison_Part2 <- sapply(strsplit(as.character(anova_results$Comparison), " - "), `[`, 2)
+
+# Initialize an empty data frame to store the results
+result_table <- data.frame(
+  Covariate = character(),
+  Included = numeric(),
+  NA_Count = numeric(),
+  Significance_Count = numeric(),
+  Dominant_Count = numeric(),
+  Ratio = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Loop through each covariate to calculate the counts and ratio
+for (covariate in covariates) {
+  
+  # Filter the rows where either part of 'Comparison' contains the exact covariate
+  covariate_rows <- anova_results[
+    grepl(paste0("\\b", covariate, "\\b"), anova_results$Comparison_Part1) | 
+      grepl(paste0("\\b", covariate, "\\b"), anova_results$Comparison_Part2), 
+  ]
+  
+  # Count how many times the covariate appears in 'Comparison_Part1' or 'Comparison_Part2'
+  included_count <- nrow(covariate_rows)
+  
+  # Count how many times 'Dominant_Variable' is NA in the filtered rows
+  na_count <- sum(is.na(covariate_rows$Dominant_Variable))
+  
+  # Count how many times the row is statistically significant (Significant == "Yes")
+  significant_count <- sum(covariate_rows$Significant == "Yes")
+  
+  # Count how many times the covariate is the dominant variable in significant rows
+  dominant_count <- sum(covariate_rows$Dominant_Variable == covariate & covariate_rows$Significant == "Yes")
+  
+  # Calculate the ratio (handle division by zero if there are no NAs)
+  ratio <- ifelse(na_count == 0, NA, dominant_count / significant_count)
+  
+  # Append the results to the result table
+  result_table <- rbind(result_table, data.frame(
+    Covariate = covariate,
+    Included = included_count,
+    NA_Count = na_count,
+    Significance_Count = significant_count,
+    Dominant_Count = dominant_count,
+    Ratio = ratio
+  ))
+}
+
+# Print the result table
+return_table_CBI_ALL<-result_table
+print(return_table_CBI_ALL)
+
+#sos the significance count column equals to 128 while the dominant_count to 64
+#the reason is because we search for the inclusion of significant for each variable two times in colpart1 and colpart2
+
+
+
+#focus on the two higher strategies
+
+# Define the groups to filter by
+groups_to_include <- c("alien_post_unconstrained", "endemic_post_unconstrained", 
+                       "alien_pre_h5", "endemic_pre_h5")
+
+# Filter the anova_results dataset to include only rows with the selected groups
+filtered_anova_results <- anova_results[anova_results$Group %in% groups_to_include, ]
+
+# Define the covariates as filter categories
+covariates <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+# Split the 'Comparison' column into two parts (before and after the '-')
+filtered_anova_results$Comparison_Part1 <- sapply(strsplit(as.character(filtered_anova_results$Comparison), " - "), `[`, 1)
+filtered_anova_results$Comparison_Part2 <- sapply(strsplit(as.character(filtered_anova_results$Comparison), " - "), `[`, 2)
+
+# Initialize an empty data frame to store the results
+result_table <- data.frame(
+  Covariate = character(),
+  Included = numeric(),
+  NA_Count = numeric(),
+  Significance_Count = numeric(),
+  Dominant_Count = numeric(),
+  Ratio = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Loop through each covariate to calculate the counts and ratio
+for (covariate in covariates) {
+  
+  # Filter the rows where either part of 'Comparison' contains the exact covariate
+  covariate_rows <- filtered_anova_results[
+    grepl(paste0("\\b", covariate, "\\b"), filtered_anova_results$Comparison_Part1) | 
+      grepl(paste0("\\b", covariate, "\\b"), filtered_anova_results$Comparison_Part2), 
+  ]
+  
+  # Count how many times the covariate appears in 'Comparison_Part1' or 'Comparison_Part2'
+  included_count <- nrow(covariate_rows)
+  
+  # Count how many times 'Dominant_Variable' is NA in the filtered rows
+  na_count <- sum(is.na(covariate_rows$Dominant_Variable))
+  
+  # Count how many times the row is statistically significant (Significant == "Yes")
+  significant_count <- sum(covariate_rows$Significant == "Yes")
+  
+  # Count how many times the covariate is the dominant variable in significant rows
+  dominant_count <- sum(covariate_rows$Dominant_Variable == covariate & covariate_rows$Significant == "Yes")
+  
+  # Calculate the ratio (handle division by zero if there are no NAs)
+  ratio <- ifelse(significant_count == 0, NA, dominant_count / significant_count)
+  
+  # Append the results to the result table
+  result_table <- rbind(result_table, data.frame(
+    Covariate = covariate,
+    Included = included_count,
+    NA_Count = na_count,
+    Significance_Count = significant_count,
+    Dominant_Count = dominant_count,
+    Non_Dominant_Count=significant_count-dominant_count,
+    Success_Ratio = ratio,
+    Failure_Ratio = (significant_count-dominant_count)/significant_count
+  ))
+}
+
+# Print the result table
+return_table_CBI_preh5_UNCON<-result_table
+print(return_table_CBI_preh5_UNCON)
+
+
+#focus on the two higher strategies
+
+# Define the groups to filter by
+groups_to_include <- c("alien_pre_h5", "endemic_pre_h5")
+
+# Filter the anova_results dataset to include only rows with the selected groups
+filtered_anova_results <- anova_results[anova_results$Group %in% groups_to_include, ]
+
+# Define the covariates as filter categories
+covariates <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+# Split the 'Comparison' column into two parts (before and after the '-')
+filtered_anova_results$Comparison_Part1 <- sapply(strsplit(as.character(filtered_anova_results$Comparison), " - "), `[`, 1)
+filtered_anova_results$Comparison_Part2 <- sapply(strsplit(as.character(filtered_anova_results$Comparison), " - "), `[`, 2)
+
+# Initialize an empty data frame to store the results
+result_table <- data.frame(
+  Covariate = character(),
+  Included = numeric(),
+  NA_Count = numeric(),
+  Significance_Count = numeric(),
+  Dominant_Count = numeric(),
+  Ratio = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Loop through each covariate to calculate the counts and ratio
+for (covariate in covariates) {
+  
+  # Filter the rows where either part of 'Comparison' contains the exact covariate
+  covariate_rows <- filtered_anova_results[
+    grepl(paste0("\\b", covariate, "\\b"), filtered_anova_results$Comparison_Part1) | 
+      grepl(paste0("\\b", covariate, "\\b"), filtered_anova_results$Comparison_Part2), 
+  ]
+  
+  # Count how many times the covariate appears in 'Comparison_Part1' or 'Comparison_Part2'
+  included_count <- nrow(covariate_rows)
+  
+  # Count how many times 'Dominant_Variable' is NA in the filtered rows
+  na_count <- sum(is.na(covariate_rows$Dominant_Variable))
+  
+  # Count how many times the row is statistically significant (Significant == "Yes")
+  significant_count <- sum(covariate_rows$Significant == "Yes")
+  
+  # Count how many times the covariate is the dominant variable in significant rows
+  dominant_count <- sum(covariate_rows$Dominant_Variable == covariate & covariate_rows$Significant == "Yes")
+  
+  # Calculate the ratio (handle division by zero if there are no NAs)
+  ratio <- ifelse(significant_count == 0, NA, dominant_count / significant_count)
+  
+  # Append the results to the result table
+  result_table <- rbind(result_table, data.frame(
+    Covariate = covariate,
+    Included = included_count,
+    NA_Count = na_count,
+    Significance_Count = significant_count,
+    Dominant_Count = dominant_count,
+    Non_Dominant_Count=significant_count-dominant_count,
+    Success_Ratio = ratio,
+    Failure_Ratio = (significant_count-dominant_count)/significant_count
+  ))
+}
+
+# Print the result table
+return_table_CBI_preh5<-result_table
+print(return_table_CBI_preh5)
+
+
+### END OF CBI Comparisoon ###
+
+
+#Gather them all
+return_table_AUC_ALL
+return_table_maxTSS_ALL
+return_table_CBI_ALL
+
+return_table_AUC_preh5_UNCON
+return_table_maxTSS_preh5_UNCON
+return_table_CBI_preh5_UNCON
+
+return_table_AUC_preh5
+return_table_maxTSS_preh5
+return_table_CBI_preh5
+
+### Compare with statistical routines the groups ###
+
+str(all_data)
+
+# Load necessary packages
+library(dplyr)
+library(car)
+
+# Define the filter categories
+filter_categories <- list(
+  list(strategy = "post", spatial_layer = "unconstrained"),
+  list(strategy = "post", spatial_layer = "h5"),
+  list(strategy = "post", spatial_layer = "h8"),
+  list(strategy = "post", spatial_layer = "h12"),
+  list(strategy = "pre", spatial_layer = "h5"),
+  list(strategy = "pre", spatial_layer = "h8"),
+  list(strategy = "pre", spatial_layer = "h12")
+)
+
+# Define covariates and metrics
+covariates <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+metrics <- c("e_AUC", "maxTSS", "CBI")
+
+# Store results in a data frame
+results <- data.frame(
+  metric = character(),
+  covariate = character(),
+  species = character(),
+  strategy = character(),
+  spatial_layer = character(),
+  p_value = numeric(),
+  significant = logical(),
+  stringsAsFactors = FALSE
+)
+
+
+str(all_data)
+
+data_ende<-filter(all_data,species=="endemics")
+str(data_ende)
+
+# Subset the data for 'pre' strategy and 'h12' spatial layer
+subset_data <- data_ende %>%
+  filter(strategy == "pre", spatial_layer == "h12")
+
+
+str(subset_data)
+# Run ANOVA for each covariate by filtering based on the 'cov' column
+# Run ANOVA for 'clima' covariate
+anova_d <- aov(e_AUC ~ cov, data = subset_data)  # Example metric
+# ANOVA for 'clima' covariate
+# Run Tukey's HSD test after performing ANOVA
+tukey_result <- TukeyHSD(anova_d)
+
+# Convert the Tukey result to a data frame
+tukey_df <- as.data.frame(tukey_result$cov)
+
+# Add a column for significance (if p-value < 0.05)
+tukey_df$Significant <- ifelse(tukey_df$`p adj` < 0.05, "Yes", "No")
+
+# View the Tukey results with significance and dominant variable columns
+print(tukey_df)
+
+
+# Convert the Tukey result to a data frame
+tukey_df <- as.data.frame(tukey_result$cov)
+
+# Add a column for significance (if p-value < 0.05)
+tukey_df <- tukey_df %>%
+  mutate(
+    Significant = ifelse(`p adj` < 0.05, "Yes", "No"),  # Significance column
+    Dominant_Variable = ifelse(Significant == "Yes", 
+                               ifelse(diff > 0, 
+                                      paste(sub("-.*", "", rownames(tukey_df)), ">", sub(".*-", "", rownames(tukey_df))),  # Positive diff -> first level dominant
+                                      paste(sub(".*-", "", rownames(tukey_df)), ">", sub("-.*", "", rownames(tukey_df)))),  # Negative diff -> second level dominant
+                               NA)  # Only show dominant if the comparison is significant
+  )
+
+# View the updated Tukey result
+print(tukey_df)
+
+
+#check parametricity
+
+# Run ANOVA for 'clima' covariate
+anova_d <- aov(e_AUC ~ cov, data = subset_data)
+
+# Check normality of residuals using Q-Q plot and Shapiro-Wilk test
+qqnorm(resid(anova_d))
+qqline(resid(anova_d))
+
+# Shapiro-Wilk test for normality
+shapiro_test <- shapiro.test(resid(anova_d))  # Test residuals for normality
+print(shapiro_test)
+
+# Levene's Test for homogeneity of variances
+library(car)
+levene_test <- leveneTest(e_AUC ~ cov, data = subset_data)
+print(levene_test)
+
+# Extract p-values from the tests
+shapiro_pvalue <- shapiro_test$p.value
+levene_pvalue <- levene_test$`Pr(>F)`[1]  # Levene test returns a data frame, extract the first value
+
+# Now check if assumptions are violated and decide which test to run
+if (!is.null(shapiro_pvalue) && !is.null(levene_pvalue)) {
+  # If p-value from Shapiro-Wilk test is less than 0.05 or Levene's test p-value is less than 0.05, we violate assumptions
+  if (shapiro_pvalue < 0.05 | levene_pvalue < 0.05) {
+    print("Assumptions violated, running Kruskal-Wallis test")
+    kruskal_test <- kruskal.test(e_AUC ~ cov, data = subset_data)
+    print(kruskal_test)
+  } else {
+    # Run Tukey's HSD test after performing ANOVA
+    tukey_result <- TukeyHSD(anova_d)
+    
+    # Convert the Tukey result to a data frame
+    tukey_df <- as.data.frame(tukey_result$cov)
+    
+    # Add a column for significance (if p-value < 0.05)
+    tukey_df <- tukey_df %>%
+      mutate(
+        Significant = ifelse(`p adj` < 0.05, "Yes", "No"),  # Significance column
+        Dominant_Variable = ifelse(Significant == "Yes", 
+                                   ifelse(diff > 0, 
+                                          paste(sub("-.*", "", rownames(tukey_df)), ">", sub(".*-", "", rownames(tukey_df))),  # Positive diff -> first level dominant
+                                          paste(sub(".*-", "", rownames(tukey_df)), ">", sub("-.*", "", rownames(tukey_df)))),  # Negative diff -> second level dominant
+                                   NA)  # Only show dominant if the comparison is significant
+      )
+    
+    # View the updated Tukey result
+    print(tukey_df)
+  }
+} else {
+  print("Shapiro-Wilk or Levene's Test failed. Please check the test results.")
+}
+
+
+
+
+
+
+
+
+###
+
+
+
+
+# Define the output directory where the plots will be saved
+output_directory <- "C:/Users/geo_v/Desktop/Metanalysis/Covariates"  # Change this to your desired directory
+
+
+# Create directory if it doesn't exist
+if (!dir.exists(output_directory)) {
+  dir.create(output_directory, recursive = TRUE)
+  cat("Created directory:", output_directory, "\n")
+}
+
+# Loop through each plot in the second loop's plot list and save them as .tiff files with high resolution
+for (plot_name in names(plot_list_covariates)) {
+  # Define the filename for the plot
+  plot_filename <- file.path(output_directory, paste0(plot_name, ".tiff"))
+  
+  # Save the plot with the same aspect ratio as the current plot in RStudio
+  ggsave(plot_filename, plot = plot_list_covariates[[plot_name]],
+         dpi = 300,
+         device = "tiff",  # Use "tiff" for high-quality output
+         width = 3000, height = 1500,  # Set the size in pixels (adjust as needed)
+         units = "px")  # Use pixels for width and height
+  
+  # Optionally print a message to confirm
+  message(paste("Saved plot:", plot_filename))
+}
+
+
+
+#It seems that post-unconstrained and pre-h5 perform the best across methods#
+
+#Clima is the best set of covariates and outperforms hydro, the combination of hydroclima as 
+
+
+#Aggregated boxplots
+
+
+# Define the custom order for the 'cov' factor
+cov_order <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+
+# Create a new variable to group by the two combinations
+all_data$group <- NA  # Initialize the group column
+
+# Assign group labels based on the strategy and spatial_layer columns
+all_data$group[all_data$strategy == "post" & all_data$spatial_layer == "unconstrained"] <- "post & unconstrained"
+all_data$group[all_data$strategy == "pre" & all_data$spatial_layer == "h5"] <- "pre & h5"
+
+# Filter the data to only include these two groups
+filtered_data <- subset(all_data, group %in% c("post & unconstrained", "pre & h5"))
+
+# Create the boxplot with the custom x-axis order and the new group factor
+ggplot(filtered_data, aes(x = cov, y = e_AUC, fill = group)) +
+  geom_boxplot(position = "dodge", outlier.shape = NA, color = "black", size = 0.8, alpha = 0.7) +  # Customize boxplot appearance
+  scale_fill_brewer(palette = "Set3", name = "Strategy & Spatial Layer") +  # Apply color palette and legend for strategy & spatial_layer
+  labs(
+    title = "Comparison of AUC between Post-Unconstrained and Pre-H5 Strategies by Covariate", 
+    x = "Covariate", 
+    y = expression(bold("AUC"))  # Bold y-axis title
+  ) +
+  theme_minimal() +  # Use minimal theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels for better readability
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),  # Center and bold the title
+    axis.title = element_text(size = 14, face = "bold"),  # Bold axis titles
+    axis.text = element_text(size = 12),  # Increase axis text size
+    legend.position = "right",  # Display the legend on the right
+    strip.text = element_text(face = "bold", size = 16)  # Make facet labels bold and increase font size
+  ) +
+  facet_wrap(~species, scales = "free_y")  # Facet by species (endemics vs alien) on the x-axis
+
+
+
+# Create the boxplot with the custom x-axis order and the new group factor
+ggplot(filtered_data, aes(x = cov, y = CBI, fill = group)) +
+  geom_boxplot(position = "dodge", outlier.shape = NA, color = "black", size = 0.8, alpha = 0.7) +  # Customize boxplot appearance
+  scale_fill_brewer(palette = "Set3", name = "Strategy & Spatial Layer") +  # Apply color palette and legend for strategy & spatial_layer
+  labs(
+    title = "Comparison of CBI between Post-Unconstrained and Pre-H5 Strategies by Covariate", 
+    x = "Covariate", 
+    y = expression(bold("CBI"))  # Bold y-axis title
+  ) +
+  theme_minimal() +  # Use minimal theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels for better readability
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),  # Center and bold the title
+    axis.title = element_text(size = 14, face = "bold"),  # Bold axis titles
+    axis.text = element_text(size = 12),  # Increase axis text size
+    legend.position = "right",  # Display the legend on the right
+    strip.text = element_text(face = "bold", size = 16)  # Make facet labels bold and increase font size
+  ) +
+  facet_wrap(~species, scales = "free_y")  # Facet by species (endemics vs alien) on the x-axis
+
+
+
+#compare with anova the categories
+
+str(all_data)
+
+
+
+#Run a model
+
+
+# GLM for AUC
+model_AUC <- glm(e_AUC ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                 data = all_data)
+
+summary(model_AUC)
+
+
+# GLM for CBI
+model_CBI <- glm(CBI ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                 data = all_data)
+
+summary(model_CBI)
+
+model_TSS <- glm(maxTSS ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                 data = all_data)
+
+
+summary(model_TSS)
+
+# Create a new data frame with combinations of cov, strategy, and spatial_layer
+new_data <- expand.grid(
+  cov = levels(all_data$cov),
+  strategy = levels(all_data$strategy),
+  spatial_layer = c("h5")  # Include all spatial layers
+)
+
+
+# Make predictions for both e_AUC and CBI
+new_data$e_AUC_pred <- predict(model_AUC, new_data, type = "response")
+new_data$CBI_pred <- predict(model_CBI, new_data, type = "response")
+new_data$TSS_pred<- predict(model_TSS, new_data, type = "response")
+
+# Reshape the data to long format to plot both e_AUC and CBI
+library(tidyr)
+new_data_long <- gather(new_data, key = "Response", value = "Prediction", e_AUC_pred, CBI_pred,TSS_pred)
+
+# Plot both e_AUC and CBI in one plot
+# Plot both e_AUC and CBI in one plot with clearer differentiation between strategies
+library(ggplot2)
+
+ggplot(new_data_long, aes(x = cov, y = Prediction, color = strategy, group = interaction(Response, strategy))) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~Response, scales = "free_y") +  # Separate plots for AUC and CBI
+  labs(title = "Interaction between Covariate and Strategy on Predicted AUC and CBI",
+       x = "Covariate",
+       y = "Predicted Value") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotate x-axis labels
+  scale_color_manual(values = c("pre" = "blue", "post" = "red"),  # Customize colors for strategies
+                     name = "Strategy") +  # Legend title
+  theme(legend.position = "top")  # Position the legend at the top
+
+
+#constrain only to post-unconstrained and pre-h5
+
+# Ensure you have the necessary libraries
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# GLM for AUC
+model_AUC <- glm(e_AUC ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                 data = all_data)
+summary(model_AUC)
+
+# GLM for CBI
+model_CBI <- glm(CBI ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                 data = all_data)
+summary(model_CBI)
+
+model_TSS <- glm(maxTSS ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                 data = all_data)
+
+
+summary(model_TSS)
+
+# Create a new data frame with combinations of cov, strategy, and spatial_layer
+new_data <- expand.grid(
+  cov = levels(all_data$cov),
+  strategy = levels(all_data$strategy),
+  spatial_layer = c("h5", "h8", "h12", "unconstrained")  # Include all spatial layers
+)
+
+# Filter the data to include only "post-unconstrained" and "pre-h5"
+new_data_filtered <- new_data %>%
+  filter((strategy == "post" & spatial_layer == "unconstrained") | 
+           (strategy == "pre" & spatial_layer == "h5"))
+
+# Make predictions for both e_AUC and CBI for the filtered data
+new_data_filtered$e_AUC_pred <- predict(model_AUC, new_data_filtered, type = "response")
+new_data_filtered$CBI_pred <- predict(model_CBI, new_data_filtered, type = "response")
+new_data_filtered$TSS_pred<- predict(model_TSS, new_data_filtered, type = "response")
+
+
+# Reshape the filtered data to long format to plot both e_AUC and CBI
+new_data_long_filtered <- gather(new_data_filtered, key = "Response", value = "Prediction", e_AUC_pred, CBI_pred,TSS_pred)
+
+
+#reshapre with confidence intervals
+
+# Reshape the data to long format including confidence intervals
+new_data_long_filtered <- gather(new_data_filtered, key = "Response", value = "Prediction", 
+                                 e_AUC_pred, CBI_pred, TSS_pred)
+
+# Define the custom order for covariates
+cov_order <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+# Update the 'cov' column to be a factor with the specified order
+new_data_long_filtered$cov <- factor(new_data_long_filtered$cov, levels = cov_order)
+
+# Update 'Response' to be a factor with a specific order
+new_data_long_filtered$Response <- factor(new_data_long_filtered$Response, levels = c("e_AUC_pred", "CBI_pred","TSS_pred"))
+
+# Plot both e_AUC and CBI in one plot with clearer differentiation between strategies
+ggplot(new_data_long_filtered, aes(x = cov, y = Prediction, color = strategy, group = interaction(Response, strategy))) +
+  geom_line() +
+  geom_point() +
+  facet_grid(. ~ Response, scales = "free_y") +  # Arrange the plots side by side (left for e_AUC and right for CBI)
+  labs(title = "Interaction between Covariate and Strategy on Predicted AUC, CBI and TSS (Filtered)",
+       x = "Covariate",
+       y = "Predicted Value") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+        strip.text = element_text(size = 14),  # Increase facet label size
+        strip.background = element_blank()) +  # Make facet strip background transparent
+  scale_color_manual(values = c("pre" = "blue", "post" = "red"),  # Customize colors for strategies
+                     name = "Strategy") +  # Legend title
+  theme(legend.position = "top") + scale_y_continuous(limits = c(0.5, 1))  # Ensure y-axis is from 0 to 1 for all plots
+
+#better
+# Create the plot with a minimal theme
+p <- ggplot(new_data_long_filtered, aes(x = cov, y = Prediction, color = strategy, fill = strategy, group = interaction(Response, strategy))) +
+  geom_line(linewidth = 0.8) +   # Delicate, thinner lines
+  geom_point(shape = 21, size = 3, aes(fill = strategy), color = "black", stroke = 1.5) +  # Points with the same color as the line and black border
+  labs(title = "Interaction between Covariate and Strategy",
+       x = "Covariate", y = "Predicted Value") +
+  scale_color_manual(values = c("pre" = "#0073e6", "post" = "#e63946"),  # Refined color palette
+                     name = "Strategy") +
+  scale_fill_manual(values = c("pre" = "#0073e6", "post" = "#e63946"),  # Refined color palette
+                    name = "Strategy") +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+    strip.text = element_text(size = 14,color="black"),  # Increase facet label size
+    strip.background = element_rect(fill = "white", color = "black", linewidth = 1.5),  # Subtle background for facet labels
+    legend.position = "top",  # Position the legend at the top
+    axis.title = element_text(size = 14),  # Larger axis titles for better readability
+    axis.text = element_text(size = 12),  # Adjust axis text size for clarity
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),  # Add thin black border around the plot area
+    panel.background = element_rect(fill = "white", color = "black"),  # Set the inside to white with black border
+    panel.grid.major = element_line(color = "gray80", size = 0.2),  # Subtle grey major grid lines
+    panel.grid.minor = element_line(color = "gray90", size = 0.2),  # Subtle grey minor grid lines
+    panel.grid.major.x = element_line(color = "gray80", size = 0.2),  # Subtle grey major grid lines on x-axis
+    panel.grid.major.y = element_line(color = "gray80", size = 0.2)   # Subtle grey major grid lines on y-axis
+  ) +
+  scale_y_continuous(limits = c(0.6, 1)) +  # Ensure y-axis is from 0.5 to 1 for all plots
+  facet_wrap(~Response, scales = "free_y", ncol = 3)  # Place the plots side by side in 3 columns
+
+p
+
+# Define the output directory where the plots will be saved
+output_directory <- "C:/Users/geo_v/Desktop/Metanalysis/figure_outputs"  # Change this to your desired directory
+
+
+# Create directory if it doesn't exist
+if (!dir.exists(output_directory)) {
+  dir.create(output_directory, recursive = TRUE)
+  cat("Created directory:", output_directory, "\n")
+}
+
+plot_filename <- file.path(output_directory, paste0("GLM_ALL", ".tiff"))
+
+# Save the plot with the same aspect ratio as the current plot in RStudio
+ggsave(plot_filename, plot = p,
+       dpi = 300,
+       device = "tiff",  # Use "tiff" for high-quality output
+       width = 2500, height = 2500,  # Set the size in pixels (adjust as needed)
+       units = "px")  # Use pixels for width and height
+
+
+#Plot with error bars
+
+# GLM for AUC
+model_AUC <- glm(e_AUC ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                 data = all_data)
+summary(model_AUC)
+
+# GLM for CBI
+model_CBI <- glm(CBI ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                 data = all_data)
+summary(model_CBI)
+
+# GLM for TSS
+model_TSS <- glm(maxTSS ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                 data = all_data)
+summary(model_TSS)
+
+# Create a new data frame with combinations of cov, strategy, and spatial_layer
+new_data <- expand.grid(
+  cov = levels(all_data$cov),
+  strategy = levels(all_data$strategy),
+  spatial_layer = c("h5", "h8", "h12", "unconstrained")  # Include all spatial layers
+)
+
+# Filter the data to include only "post-unconstrained" and "pre-h5"
+new_data_filtered <- new_data %>%
+  filter((strategy == "post" & spatial_layer == "unconstrained") | 
+           (strategy == "pre" & spatial_layer == "h5"))
+
+# Get predictions with standard errors for each model
+new_data_filtered$e_AUC_pred <- predict(model_AUC, new_data_filtered, type = "response", se.fit = TRUE)$fit
+new_data_filtered$e_AUC_se <- predict(model_AUC, new_data_filtered, type = "response", se.fit = TRUE)$se.fit
+
+new_data_filtered$CBI_pred <- predict(model_CBI, new_data_filtered, type = "response", se.fit = TRUE)$fit
+new_data_filtered$CBI_se <- predict(model_CBI, new_data_filtered, type = "response", se.fit = TRUE)$se.fit
+
+new_data_filtered$TSS_pred <- predict(model_TSS, new_data_filtered, type = "response", se.fit = TRUE)$fit
+new_data_filtered$TSS_se <- predict(model_TSS, new_data_filtered, type = "response", se.fit = TRUE)$se.fit
+
+# Calculate 95% confidence intervals for each model's predictions
+new_data_filtered$e_AUC_lower <- new_data_filtered$e_AUC_pred - 1.96 * new_data_filtered$e_AUC_se
+new_data_filtered$e_AUC_upper <- new_data_filtered$e_AUC_pred + 1.96 * new_data_filtered$e_AUC_se
+
+new_data_filtered$CBI_lower <- new_data_filtered$CBI_pred - 1.96 * new_data_filtered$CBI_se
+new_data_filtered$CBI_upper <- new_data_filtered$CBI_pred + 1.96 * new_data_filtered$CBI_se
+
+new_data_filtered$TSS_lower <- new_data_filtered$TSS_pred - 1.96 * new_data_filtered$TSS_se
+new_data_filtered$TSS_upper <- new_data_filtered$TSS_pred + 1.96 * new_data_filtered$TSS_se
+
+# Reshape the data to long format including confidence intervals
+new_data_long_filtered <- gather(new_data_filtered, key = "Response", value = "Prediction", 
+                                 e_AUC_pred, CBI_pred, TSS_pred)
+
+# Reshape the data to long format including predictions
+new_data_long_filtered <- gather(new_data_filtered, key = "Response", value = "Prediction", 
+                                 e_AUC_pred, CBI_pred, TSS_pred)
+
+# Perform the join to add the CI columns
+new_data_long_filtered <- new_data_long_filtered %>%
+  left_join(new_data_filtered %>%
+              select(cov, strategy, spatial_layer, 
+                     e_AUC_upper, CBI_upper, TSS_upper, 
+                     e_AUC_lower, CBI_lower, TSS_lower), 
+            by = c("cov", "strategy", "spatial_layer"))
+
+# Check the column names to ensure the CI columns were added
+colnames(new_data_long_filtered)
+
+# If necessary, rename the CI columns to ensure no conflicts
+new_data_long_filtered <- new_data_long_filtered %>%
+  rename(
+    e_AUC_upper_joined = e_AUC_upper.y,
+    CBI_upper_joined = CBI_upper.y,
+    TSS_upper_joined = TSS_upper.y,
+    e_AUC_lower_joined = e_AUC_lower.y,
+    CBI_lower_joined = CBI_lower.y,
+    TSS_lower_joined = TSS_lower.y
+  )
+
+# Now, create Upper_CI and Lower_CI using mutate, referencing the renamed columns
+new_data_long_filtered <- new_data_long_filtered %>%
+  mutate(Upper_CI = case_when(
+    Response == "e_AUC_pred" ~ e_AUC_upper_joined,
+    Response == "CBI_pred" ~ CBI_upper_joined,
+    Response == "TSS_pred" ~ TSS_upper_joined
+  ),
+  Lower_CI = case_when(
+    Response == "e_AUC_pred" ~ e_AUC_lower_joined,
+    Response == "CBI_pred" ~ CBI_lower_joined,
+    Response == "TSS_pred" ~ TSS_lower_joined
+  ))
+
+# Check the result
+head(new_data_long_filtered)
+
+# Define the custom order for covariates
+cov_order <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+# Update the 'cov' column to be a factor with the specified order
+new_data_long_filtered$cov <- factor(new_data_long_filtered$cov, levels = cov_order)
+
+# Update 'Response' to be a factor with a specific order
+new_data_long_filtered$Response <- factor(new_data_long_filtered$Response, levels = c("e_AUC_pred", "CBI_pred", "TSS_pred"))
+
+# Plot both e_AUC, CBI, and TSS with error bars for confidence intervals
+all<-ggplot(new_data_long_filtered, aes(x = cov, y = Prediction, color = strategy, fill = strategy, group = interaction(Response, strategy))) +
+  geom_line(linewidth = 0.8) +   # Delicate, thinner lines
+  geom_point(shape = 21, size = 3, aes(fill = strategy), color = "black", stroke = 1.5) +  # Points with black border
+  geom_errorbar(aes(ymin = Lower_CI, ymax = Upper_CI), width = 0.5,size=1) +  # Add error bars
+  facet_grid(. ~ Response, scales = "free_y") +  # Arrange the plots side by side (left for e_AUC, right for CBI, TSS)
+  labs(title = "Interaction between Covariate and Strategy on Predicted AUC, CBI and TSS (Filtered)",
+       x = "Covariate", y = "Predicted Value") +
+  scale_color_manual(values = c("pre & h5" = "#0073e6", "post & unconstrained" = "#e63946"),  # Refined color palette
+                     name = "Strategy") +
+  scale_fill_manual(values = c("pre & h5" = "#0073e6", "post & unconstrained" = "#e63946"),  # Refined color palette
+                    name = "Strategy") +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+    strip.text = element_text(size = 14, color = "black"),  # Increase facet label size
+    strip.background = element_rect(fill = "white", color = "black", linewidth = 1.5),  # Subtle background for facet labels
+    legend.position = "top",  # Position the legend at the top
+    axis.title = element_text(size = 14),  # Larger axis titles for better readability
+    axis.text = element_text(size = 12),  # Adjust axis text size for clarity
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),  # Add thin black border around the plot area
+    panel.background = element_rect(fill = "white", color = "black"),  # Set the inside to white with black border
+    panel.grid.major = element_line(color = "gray80", size = 0.2),  # Subtle grey major grid lines
+    panel.grid.minor = element_line(color = "gray90", size = 0.2),  # Subtle grey minor grid lines
+    panel.grid.major.x = element_line(color = "gray80", size = 0.2),  # Subtle grey major grid lines on x-axis
+    panel.grid.major.y = element_line(color = "gray80", size = 0.2)   # Subtle grey major grid lines on y-axis
+  ) +
+  scale_y_continuous(limits = c(0.6, 1.05)) +  # Ensure y-axis is from 0.5 to 1 for all plots
+  facet_wrap(~Response, scales = "free_y", ncol = 3)  # Place the plots side by side in 3 columns
+
+
+all
+
+
+# Define the output directory where the plots will be saved
+output_directory <- "C:/Users/geo_v/Desktop/Metanalysis/figure_outputs"  # Change this to your desired directory
+
+# Create directory if it doesn't exist
+if (!dir.exists(output_directory)) {
+  dir.create(output_directory, recursive = TRUE)
+  cat("Created directory:", output_directory, "\n")
+}
+
+
+plot_filename <- file.path(output_directory, paste0("GLM_ALL_Preh5_Uncon", ".tiff"))
+
+# Save the plot with the same aspect ratio as the current plot in RStudio
+ggsave(plot_filename, plot = all,
+       dpi = 300,
+       device = "tiff",  # Use "tiff" for high-quality output
+       width = 2500, height = 2500,  # Set the size in pixels (adjust as needed)
+       units = "px")  # Use pixels for width and height
+
+
+
+
+# Load necessary libraries
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# Assume `all_data` is already loaded
+
+# Ensure `strategy` and `species` are factors in the dataset
+all_data$strategy <- factor(all_data$strategy, levels = c("pre", "post"))
+all_data$species <- factor(all_data$species, levels = c("alien", "endemics"))
+
+# Filter data for alien species
+alien_data <- all_data %>% filter(species == "alien")
+
+# Filter data for endemic species
+endemics_data <- all_data %>% filter(species == "endemics")
+
+# Create GLM models for e_AUC (for alien and endemic species separately)
+model_AUC_alien <- glm(e_AUC ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                       data = alien_data)
+summary(model_AUC_alien)
+
+model_AUC_endemics <- glm(e_AUC ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                          data = endemics_data)
+summary(model_AUC_endemics)
+
+# Create GLM models for CBI (for alien and endemic species separately)
+model_CBI_alien <- glm(CBI ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                       data = alien_data)
+summary(model_CBI_alien)
+
+model_CBI_endemics <- glm(CBI ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                          data = endemics_data)
+summary(model_CBI_endemics)
+
+# Create GLM models for TSS (for alien and endemic species separately)
+model_TSS_alien <- glm(maxTSS ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                       data = alien_data)
+summary(model_TSS_alien)
+
+model_TSS_endemics <- glm(maxTSS ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                          data = endemics_data)
+summary(model_TSS_endemics)
+
+
+# Create a new data frame with combinations of cov, strategy, and spatial_layer for both species
+new_data <- expand.grid(
+  cov = levels(all_data$cov),
+  strategy = levels(all_data$strategy),
+  spatial_layer = c("h5", "h8", "h12", "unconstrained"),  # Include all spatial layers
+  species = c("alien", "endemics")  # Include both alien and endemic species
+)
+
+# Filter the data based on the specific strategy and spatial layer combination
+new_data_filtered <- new_data %>%
+  filter((strategy == "post" & spatial_layer == "unconstrained") | 
+           (strategy == "pre" & spatial_layer == "h5"))
+
+# Make predictions for both species (alien and endemic) for both e_AUC and CBI
+new_data_filtered$e_AUC_pred <- ifelse(new_data_filtered$species == "alien", 
+                                       predict(model_AUC_alien, new_data_filtered, type = "response"),
+                                       predict(model_AUC_endemics, new_data_filtered, type = "response"))
+
+new_data_filtered$CBI_pred <- ifelse(new_data_filtered$species == "alien", 
+                                     predict(model_CBI_alien, new_data_filtered, type = "response"),
+                                     predict(model_CBI_endemics, new_data_filtered, type = "response"))
+
+
+new_data_filtered$TSS_pred <- ifelse(new_data_filtered$species == "alien", 
+                                     predict(model_TSS_alien, new_data_filtered, type = "response"),
+                                     predict(model_TSS_endemics, new_data_filtered, type = "response"))
+
+# Reshape the filtered data to long format for plotting
+new_data_long_filtered <- gather(new_data_filtered, key = "Response", value = "Prediction", e_AUC_pred, CBI_pred, TSS_pred)
+
+# Define the custom order for covariates
+cov_order <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+# Update the 'cov' column to be a factor with the specified order
+new_data_long_filtered$cov <- factor(new_data_long_filtered$cov, levels = cov_order)
+
+# Update 'Response' to be a factor with a specific order
+new_data_long_filtered$Response <- factor(new_data_long_filtered$Response, levels = c("e_AUC_pred", "CBI_pred","TSS_pred"))
+
+# Ensure 'strategy' is a factor and assign correct levels
+new_data_long_filtered$strategy <- factor(new_data_long_filtered$strategy, 
+                                          levels = c("pre", "post"),
+                                          labels = c("pre & h5", "post & unconstrained"))
+
+# Plot both e_AUC and CBI with separate plots for alien and endemic species
+p<-ggplot(new_data_long_filtered, aes(x = cov, y = Prediction, color = strategy, fill = strategy, group = interaction(Response, strategy))) +
+  geom_line(linewidth = 0.8) +
+  geom_point(shape = 21, size = 3, aes(fill = strategy), color = "black", stroke = 1) +
+  facet_wrap(~species + Response, scales = "free_y", ncol = 3) +  # Facet by species and Response
+  labs(title = "Interaction between Covariate and Strategy on Predicted AUC, CBI & TSS (Filtered)",
+       x = "Covariate",
+       y = "Predicted Value") +
+  scale_color_manual(values = c("pre & h5" = "blue", "post & unconstrained" = "red"),  # Customize colors for strategies
+                     name = "Strategy") +
+  scale_fill_manual(values = c("pre & h5" = "#0073e6", "post & unconstrained" = "#e63946"),  # Refined color palette
+                    name = "Strategy") +
+  theme_light(base_size = 14) +  # Use light theme as the base
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+    strip.text = element_text(size = 14,color="black"),  # Increase facet label size
+    strip.background = element_rect(fill = "white", color = "black", linewidth = 1.5),  # Subtle background for facet labels
+    legend.position = "top",  # Position the legend at the top
+    axis.title = element_text(size = 14),  # Larger axis titles for better readability
+    axis.text = element_text(size = 12),  # Adjust axis text size for clarity
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),  # Add thin black border around the plot area
+    panel.background = element_rect(fill = "white", color = "black"),  # Set the inside to white with black border
+    panel.grid.major = element_line(color = "gray80", size = 0.2),  # Subtle grey major grid lines
+    panel.grid.minor = element_line(color = "gray90", size = 0.2),  # Subtle grey minor grid lines
+    panel.grid.major.x = element_line(color = "gray80", size = 0.2),  # Subtle grey major grid lines on x-axis
+    panel.grid.major.y = element_line(color = "gray80", size = 0.2)   # Subtle grey major grid lines on y-axis
+  ) +
+  scale_y_continuous(limits = c(0.6, 1))  # Set the y-axis range to be from 0.6 to 1
+
+p
+# Define the output directory where the plots will be saved
+output_directory <- "C:/Users/geo_v/Desktop/Metanalysis/figure_outputs"  # Change this to your desired directory
+
+
+# Create directory if it doesn't exist
+if (!dir.exists(output_directory)) {
+  dir.create(output_directory, recursive = TRUE)
+  cat("Created directory:", output_directory, "\n")
+}
+
+plot_filename <- file.path(output_directory, paste0("GLM_Preh5_Uncon", ".tiff"))
+
+# Save the plot with the same aspect ratio as the current plot in RStudio
+ggsave(plot_filename, plot = p,
+       dpi = 300,
+       device = "tiff",  # Use "tiff" for high-quality output
+       width = 2500, height = 2500,  # Set the size in pixels (adjust as needed)
+       units = "px")  # Use pixels for width and height
+
+
+
+
+#Calculate with error bars
+
+
+
+#Create GLM models for e_AUC (for alien and endemic species separately)
+model_AUC_alien <- glm(e_AUC ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                       data = alien_data)
+summary(model_AUC_alien)
+
+model_AUC_endemics <- glm(e_AUC ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                          data = endemics_data)
+summary(model_AUC_endemics)
+
+# Create GLM models for CBI (for alien and endemic species separately)
+model_CBI_alien <- glm(CBI ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                       data = alien_data)
+summary(model_CBI_alien)
+
+model_CBI_endemics <- glm(CBI ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                          data = endemics_data)
+summary(model_CBI_endemics)
+
+# Create GLM models for TSS (for alien and endemic species separately)
+model_TSS_alien <- glm(maxTSS ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                       data = alien_data)
+summary(model_TSS_alien)
+
+model_TSS_endemics <- glm(maxTSS ~ cov + strategy + spatial_layer + cov:strategy + cov:spatial_layer + strategy:spatial_layer, 
+                          data = endemics_data)
+summary(model_TSS_endemics)
+
+# Define a function to calculate CIs for predictions
+calc_ci <- function(pred, se, z = 1.96) {
+  lower_ci <- pred - z * se  # Lower bound of CI
+  upper_ci <- pred + z * se  # Upper bound of CI
+  return(c(lower_ci, upper_ci))
+}
+
+# Create a new data frame with combinations of cov, strategy, spatial_layer, and species
+new_data <- expand.grid(
+  cov = levels(all_data$cov),
+  strategy = levels(all_data$strategy),
+  spatial_layer = c("h5", "h8", "h12", "unconstrained"),  # Include all spatial layers
+  species = c("alien", "endemics")  # Include both alien and endemic species
+)
+
+# Filter the data based on the specific strategy and spatial layer combination
+new_data_filtered <- new_data %>%
+  filter((strategy == "post" & spatial_layer == "unconstrained") | 
+           (strategy == "pre" & spatial_layer == "h5"))
+
+# Make predictions for both alien and endemic species for e_AUC, CBI, and TSS
+new_data_filtered$e_AUC_pred <- ifelse(new_data_filtered$species == "alien", 
+                                       predict(model_AUC_alien, new_data_filtered, type = "response", se.fit = TRUE)$fit, 
+                                       predict(model_AUC_endemics, new_data_filtered, type = "response", se.fit = TRUE)$fit)
+
+new_data_filtered$CBI_pred <- ifelse(new_data_filtered$species == "alien", 
+                                     predict(model_CBI_alien, new_data_filtered, type = "response", se.fit = TRUE)$fit, 
+                                     predict(model_CBI_endemics, new_data_filtered, type = "response", se.fit = TRUE)$fit)
+
+new_data_filtered$TSS_pred <- ifelse(new_data_filtered$species == "alien", 
+                                     predict(model_TSS_alien, new_data_filtered, type = "response", se.fit = TRUE)$fit, 
+                                     predict(model_TSS_endemics, new_data_filtered, type = "response", se.fit = TRUE)$fit)
+
+# Standard errors from predictions
+new_data_filtered$e_AUC_se <- ifelse(new_data_filtered$species == "alien", 
+                                     predict(model_AUC_alien, new_data_filtered, type = "response", se.fit = TRUE)$se.fit,
+                                     predict(model_AUC_endemics, new_data_filtered, type = "response", se.fit = TRUE)$se.fit)
+
+new_data_filtered$CBI_se <- ifelse(new_data_filtered$species == "alien", 
+                                   predict(model_CBI_alien, new_data_filtered, type = "response", se.fit = TRUE)$se.fit,
+                                   predict(model_CBI_endemics, new_data_filtered, type = "response", se.fit = TRUE)$se.fit)
+
+new_data_filtered$TSS_se <- ifelse(new_data_filtered$species == "alien", 
+                                   predict(model_TSS_alien, new_data_filtered, type = "response", se.fit = TRUE)$se.fit,
+                                   predict(model_TSS_endemics, new_data_filtered, type = "response", se.fit = TRUE)$se.fit)
+
+# Apply the CI calculation function to get the Lower and Upper CIs for each Response
+new_data_filtered <- new_data_filtered %>%
+  mutate(
+    # Calculate CI for e_AUC, CBI, and TSS for alien and endemic separately
+    CI_vals = purrr::map2(e_AUC_pred, e_AUC_se, calc_ci),
+    e_AUC_lower = purrr::map_dbl(CI_vals, 1),
+    e_AUC_upper = purrr::map_dbl(CI_vals, 2),
+    
+    CI_vals = purrr::map2(CBI_pred, CBI_se, calc_ci),
+    CBI_lower = purrr::map_dbl(CI_vals, 1),
+    CBI_upper = purrr::map_dbl(CI_vals, 2),
+    
+    CI_vals = purrr::map2(TSS_pred, TSS_se, calc_ci),
+    TSS_lower = purrr::map_dbl(CI_vals, 1),
+    TSS_upper = purrr::map_dbl(CI_vals, 2)
+  ) %>%
+  select(-CI_vals)  # Remove the temporary column used for calculation
+
+# Reshape the filtered data to long format for plotting
+new_data_long_filtered <- gather(new_data_filtered, key = "Response", value = "Prediction", 
+                                 e_AUC_pred, CBI_pred, TSS_pred)
+
+# Define the custom order for covariates
+cov_order <- c("clima", "hiera_clima", "hydroclima", "hiera_hydro", "hydro")
+
+# Update the 'cov' column to be a factor with the specified order
+new_data_long_filtered$cov <- factor(new_data_long_filtered$cov, levels = cov_order)
+
+# Update 'Response' to be a factor with a specific order
+new_data_long_filtered$Response <- factor(new_data_long_filtered$Response, levels = c("e_AUC_pred", "CBI_pred","TSS_pred"))
+
+# Ensure 'strategy' is a factor and assign correct levels
+new_data_long_filtered$strategy <- factor(new_data_long_filtered$strategy, 
+                                          levels = c("pre", "post"),
+                                          labels = c("pre & h5", "post & unconstrained"))
+
+# Plot the data with error bars
+div<-ggplot(new_data_long_filtered, aes(x = cov, y = Prediction, color = strategy, fill = strategy, group = interaction(Response, strategy))) +
+  geom_line(linewidth = 0.8) +  # Delicate, thinner lines
+  geom_point(shape = 21, size = 3, aes(fill = strategy), color = "black", stroke = 1) +  # Points with black border
+  geom_errorbar(aes(ymin = case_when(Response == "e_AUC_pred" ~ e_AUC_lower,
+                                     Response == "CBI_pred" ~ CBI_lower,
+                                     Response == "TSS_pred" ~ TSS_lower),
+                    ymax = case_when(Response == "e_AUC_pred" ~ e_AUC_upper,
+                                     Response == "CBI_pred" ~ CBI_upper,
+                                     Response == "TSS_pred" ~ TSS_upper)), 
+                width = 0.5, size = 1.2) +  # Increased thickness for error bars
+  facet_wrap(~species + Response, scales = "free_y", ncol = 3) +  # Facet by species and Response
+  labs(title = "Interaction between Covariate and Strategy on Predicted AUC, CBI & TSS (Filtered)",
+       x = "Covariate",
+       y = "Predicted Value") +
+  scale_color_manual(values = c("pre & h5" = "blue", "post & unconstrained" = "red"),  # Customize colors for strategies
+                     name = "Strategy") +
+  scale_fill_manual(values = c("pre & h5" = "#0073e6", "post & unconstrained" = "#e63946"),  # Refined color palette
+                    name = "Strategy") +
+  theme_light(base_size = 14) +  # Use light theme as the base
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+    strip.text = element_text(size = 14,color="black"),  # Increase facet label size
+    strip.background = element_rect(fill = "white", color = "black", linewidth = 1.5),  # Subtle background for facet labels
+    legend.position = "top",  # Position the legend at the top
+    axis.title = element_text(size = 14),  # Larger axis titles for better readability
+    axis.text = element_text(size = 12),  # Adjust axis text size for clarity
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),  # Add thin black border around the plot area
+    panel.background = element_rect(fill = "white", color = "black"),  # Set the inside to white with black border
+    panel.grid.major = element_line(color = "gray80", size = 0.2),  # Subtle grey major grid lines
+    panel.grid.minor = element_line(color = "gray90", size = 0.2),  # Subtle grey minor grid lines
+    panel.grid.major.x = element_line(color = "gray80", size = 0.2),  # Subtle grey major grid lines on x-axis
+    panel.grid.major.y = element_line(color = "gray80", size = 0.2)   # Subtle grey major grid lines on y-axis
+  ) +
+  scale_y_continuous(limits = c(0.6, 1.05))  # Set the y-axis range to be from 0.6 to 1
+
+
+
+div
+
+
+
+
+# Define the output directory where the plots will be saved
+output_dir <- "C:/Users/geo_v/Desktop/Metanalysis/figure_outputs"  # Change this to your desired directory
+
+plot_filename <- file.path(output_dir, paste0("GLM_DIVISION_Preh5_Uncon", ".tiff"))
+
+# Save the plot with the same aspect ratio as the current plot in RStudio
+ggsave(plot_filename, plot = div,
+       dpi = 300,
+       device = "tiff",  # Use "tiff" for high-quality output
+       width = 2500, height = 2500,  # Set the size in pixels (adjust as needed)
+       units = "px")  # Use pixels for width and height
+
+
+
+
+#Run a rpart to proceed with regression trees based on the predictors
+
+
+str(all_data)
+
+# Install required packages if not already installed
+if (!require(randomForest)) install.packages("randomForest")
+if (!require(caret)) install.packages("caret")
+
+output_directory <- "C:/Users/geo_v/Desktop/Metanalysis/trees"  # Change this to your desired directory
+
+# Create directory if it doesn't exist
+if (!dir.exists(output_directory)) {
+  dir.create(output_directory, recursive = TRUE)
+  cat("Created directory:", output_directory, "\n")
+}
+
+setwd(output_directory)
+
+# Load necessary libraries
+library(randomForest)
+library(caret)
+library(ggplot2)
+library(rpart)
+library(rpart.plot)
+
+# Ensure `strategy`, `species`, `spatial_layer`, and `cov` are factors
+all_data$strategy <- factor(all_data$strategy, levels = c("pre", "post"))
+all_data$species <- factor(all_data$species, levels = c("alien", "endemics"))
+all_data$spatial_layer <- factor(all_data$spatial_layer)
+all_data$cov <- factor(all_data$cov)
+
+# ----------------------------------------------
+# e_AUC Analysis
+# ----------------------------------------------
+
+# Train a decision tree using the same data and predictors for CBI
+tree_model_AUC <- rpart(e_AUC ~ strategy + spatial_layer + species + cov, data = all_data)
+
+printcp(tree_model_AUC)
+
+# Choose a cp value, usually the one with the lowest cross-validation error
+best_cp <- tree_model_AUC$cptable[which.min(tree_model_AUC$cptable[,"xerror"]), "CP"]
+
+# Prune the tree using the best cp value
+pruned_tree_AUC <- prune(tree_model_AUC,cp = 0.001)
+
+print(tree_model_AUC$cptable)
+
+
+plot_path <- "Decision_Tree_Pruned_AUC.tiff"  # Saves in working directory
+
+# Open png device
+tiff(
+  filename = plot_path,
+  width = 2500, 
+  height = 2500,
+  units = "px",
+  res = 300
+)
+
+# Plot the tree
+rpart.plot(
+  pruned_tree_AUC, 
+  type = 4,               
+  extra = 1,               
+  fallen.leaves = TRUE,   
+  main = "Pruned Decision Tree for AUC",
+  cex = 0.8,               
+  col.main = "darkblue",   
+  col = "darkgreen",       
+  branch.col = "blue",     
+  box.col = c("lightblue", "lightpink"),
+  shadow.col = "gray",     
+  nn = TRUE,               
+  faclen = 0,              
+  tweak = 1.2             
+)
+
+# Close the device (saves the file)
+dev.off()
+
+if (file.exists(plot_path)) {
+  message("File saved successfully at: ", normalizePath(plot_path))
+} else {
+  message("File NOT saved. Check permissions or path.")
+}
+
+cat("Decision tree saved as:", plot_filename, "\n")
+
+#do it with random forest
+
+library(randomForest)
+
+# Train a Random Forest model
+rf_model_AUC <- randomForest(e_AUC ~ strategy + spatial_layer + species + cov, data = all_data)
+
+# Print the model summary
+print(rf_model_AUC)
+
+# Check the importance of predictors
+importance(rf_model_AUC)
+
+# Plot variable importance
+varImpPlot(rf_model_AUC)
+
+rf_model_AUC_tuned <- randomForest(e_AUC ~ strategy + spatial_layer + species + cov, 
+                                   data = all_data, 
+                                   ntree = 1000,  # Number of trees
+                                   mtry = 2,importance=T)     # Number of variables to consider at each split
+print(rf_model_AUC_tuned)
+
+single_tree <- getTree(rf_model_AUC_tuned, k = 1)  # k = 1 selects the first tree in the ensemble
+
+
+# Get the importance of variables
+var_importance <- importance(rf_model_AUC)
+
+# Convert importance data to a data frame for easier plotting
+var_importance_df <- data.frame(Variable = rownames(var_importance), 
+                                Importance = var_importance[, 1])
+
+# Create a ggplot2 bar plot
+ggplot(var_importance_df, aes(x = reorder(Variable, Importance), y = Importance)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  coord_flip() +  # Flip the coordinates to make it horizontal
+  labs(title = "Variable Importance in Random Forest Model for AUC", 
+       x = "Variables", y = "Importance") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        plot.title = element_text(size = 16, hjust = 0.5))
+
+
+# ----------------------------------------------
+# maxTSS Analysis
+# ----------------------------------------------
+
+# Train a Decision Tree model
+tree_model_TSS <- rpart(maxTSS ~ strategy + spatial_layer + species + cov, data = all_data)
+
+printcp(tree_model_TSS)
+
+# Choose a cp value, usually the one with the lowest cross-validation error
+best_cp <- tree_model_TSS$cptable[which.min(tree_model_TSS$cptable[,"xerror"]), "CP"]
+
+# Prune the tree using the best cp value
+pruned_tree_TSS <- prune(tree_model_TSS, cp = 0.001)
+
+print(tree_model_TSS$cptable)
+
+plot_path <- "Decision_Tree_Pruned_TSS.tiff"  # Saves in working directory
+
+# Open png device
+tiff(
+  filename = plot_path,
+  width = 2500, 
+  height = 2500,
+  units = "px",
+  res = 300
+)
+
+
+# Visualize the pruned tree with customizations for a cleaner and more elegant look
+rpart.plot(pruned_tree_TSS, 
+           type = 4,                # Detailed tree with text on nodes
+           extra = 1,               # Show additional information (e.g., class probabilities)
+           fallen.leaves = TRUE,   # Keep leaves from falling to the bottom
+           main = "Pruned Decision Tree for TSS", # Title of the tree
+           cex = 0.8,               # Adjust the text size to avoid overlap
+           col.main = "darkblue",   # Title color
+           col = "darkgreen",       # Node colors
+           branch.col = "blue",     # Branch color
+           box.col = c("lightblue", "lightpink"), # Color nodes differently (e.g., based on class)
+           shadow.col = "gray",     # Add shadow for better readability
+           nn = TRUE,               # Add node numbers for clarity
+           faclen = 0,              # No truncation of factor variable names
+           tweak = 1.2,compress=TRUE)             # Scale the tree size for better readability
+
+dev.off()
+
+# Load the randomForest library
+library(randomForest)
+
+# Train a Random Forest model
+rf_model_TSS <- randomForest(maxTSS ~ strategy + spatial_layer + species + cov, data = all_data)
+
+# Print the model summary
+print(rf_model_TSS)
+
+# Check the importance of predictors
+importance(rf_model_TSS)
+
+# Plot variable importance
+varImpPlot(rf_model_TSS)
+
+# Tune the Random Forest model with more trees
+rf_model_TSS_tuned <- randomForest(maxTSS ~ strategy + spatial_layer + species + cov, 
+                                   data = all_data, 
+                                   ntree = 1000,  # Number of trees
+                                   mtry = 2, importance = T)     # Number of variables to consider at each split
+print(rf_model_TSS_tuned)
+
+# Extract a single tree from the Random Forest model (first tree)
+single_tree <- getTree(rf_model_TSS_tuned, k = 1)  # k = 1 selects the first tree in the ensemble
+
+# Get the importance of variables
+var_importance <- importance(rf_model_TSS_tuned)
+
+# Convert importance data to a data frame for easier plotting
+var_importance_df <- data.frame(Variable = rownames(var_importance), 
+                                Importance = var_importance[, 1])
+
+# Create a ggplot2 bar plot for variable importance
+ggplot(var_importance_df, aes(x = reorder(Variable, Importance), y = Importance)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  coord_flip() +  # Flip the coordinates to make it horizontal
+  labs(title = "Variable Importance in Random Forest Model for TSS", 
+       x = "Variables", y = "Importance") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        plot.title = element_text(size = 16, hjust = 0.5))
+
+
+# ----------------------------------------------
+# e_CBI Analysis
+# ----------------------------------------------
+
+# Train a decision tree using the same data and predictors for CBI
+tree_model_CBI <- rpart(CBI ~ strategy + spatial_layer + species + cov, data = all_data)
+
+printcp(tree_model_CBI)
+
+# Choose a cp value, usually the one with the lowest cross-validation error
+best_cp <- tree_model_CBI$cptable[which.min(tree_model_CBI$cptable[,"xerror"]), "CP"]
+
+# Prune the tree using the best cp value
+pruned_tree_CBI <- prune(tree_model_CBI, cp = 0.001)
+
+print(tree_model_CBI$cptable)
+
+
+# 1. Set output path
+plot_path <- "Decision_Tree_Pruned_CBI.tiff"  # Saves in working directory
+
+# 2. Open TIFF device
+tiff(
+  filename = plot_path,
+  width = 2500, 
+  height = 2500, 
+  res = 300, 
+  compression = "lzw"
+)
+
+
+# Visualize the pruned tree with customizations for a cleaner and more elegant look
+rpart.plot(pruned_tree_CBI, 
+           type = 4,                # Detailed tree with text on nodes
+           extra = 1,               # Show additional information (e.g., class probabilities)
+           fallen.leaves = TRUE,    # Keep leaves from falling to the bottom
+           main = "Pruned Decision Tree for CBI", # Title of the tree
+           cex = 0.8,               # Adjust the text size to avoid overlap
+           col.main = "darkblue",   # Title color
+           col = "darkgreen",       # Node colors
+           branch.col = "blue",     # Branch color
+           box.col = c("lightblue", "lightpink"), # Color nodes differently (e.g., based on class)
+           shadow.col = "gray",     # Add shadow for better readability
+           nn = TRUE,               # Add node numbers for clarity
+           faclen = 0,              # No truncation of factor variable names
+           tweak = 1.2)             # Scale the tree size for better readability
+
+
+
+
+# Load the randomForest library
+library(randomForest)
+
+# Train a Random Forest model
+rf_model_CBI <- randomForest(CBI ~ strategy + spatial_layer + species + cov, data = all_data)
+
+# Print the model summary
+print(rf_model_CBI)
+
+# Check the importance of predictors
+importance(rf_model_CBI)
+
+# Plot variable importance
+varImpPlot(rf_model_CBI)
+
+# Tune the Random Forest model with more trees
+rf_model_CBI_tuned <- randomForest(CBI ~ strategy + spatial_layer + species + cov, 
+                                   data = all_data, 
+                                   ntree = 1000,  # Number of trees
+                                   mtry = 2, importance = T)     # Number of variables to consider at each split
+print(rf_model_CBI_tuned)
+
+# Extract a single tree from the Random Forest model (first tree)
+single_tree <- getTree(rf_model_CBI_tuned, k = 1)  # k = 1 selects the first tree in the ensemble
+
+# Get the importance of variables
+var_importance <- importance(rf_model_CBI_tuned)
+
+# Convert importance data to a data frame for easier plotting
+var_importance_df <- data.frame(Variable = rownames(var_importance), 
+                                Importance = var_importance[, 1])
+
+# Create a ggplot2 bar plot for variable importance
+ggplot(var_importance_df, aes(x = reorder(Variable, Importance), y = Importance)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  coord_flip() +  # Flip the coordinates to make it horizontal
+  labs(title = "Variable Importance in Random Forest Model for CBI", 
+       x = "Variables", y = "Importance") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        plot.title = element_text(size = 16, hjust = 0.5))
+
+
+
+
+
+#Stack suitabilities for visualization purposes
+
+# Set working directory (change to your actual directory)
+setwd("C:/Users/geo_v/Desktop/Metanalysis/input")
+
+
+library(terra)
+
+# Set the path to the folder containing your TIF files
+tif_directory <- "C:/Users/geo_v/Desktop/Metanalysis/input"
+
+list.files(tif_directory)
+
+# List all the TIF files in the directory
+tif_files <- list.files(tif_directory, pattern = "\\.tif$", full.names = TRUE, ignore.case = TRUE)
+
+
+# Initialize an empty list to store rasters
+summed_rasters <- list()
+
+# Step 1: Loop through each TIF file
+for (tif_path in tif_files) {
+  
+  # Read the raster stack from the current TIF file (which has multiple species/layers)
+  raster_stack <- rast(tif_path)
+  
+  # Step 2: Sum all the species layers (all layers in the raster stack)
+  summed_raster <- sum(raster_stack, na.rm = TRUE)
+  
+  summed_raster_norm<-summed_raster/max(values(summed_raster),na.rm = TRUE)
+  
+  # Step 3: Store the summed raster into the list
+  summed_rasters[[basename(tif_path)]] <- summed_raster_norm
+}
+
+# Step 4: Optionally, check the result
+str(summed_rasters)
+
+# Plot one of the summed rasters (for the first TIF in the list)
+
+
+# Set the white-to-blue color palette (100 steps)
+# red_to_blue <- colorRampPalette(c("#FFCCCC", "blue"))(25)
+# red_to_blue <-  colorRampPalette(c("yellow", "#993300"))(100)
+yellow_to_red <- colorRampPalette(c("#FFF44F", "red"))(100)  # Lemon → Crimson
+#library(RColorBrewer)
+#red_to_blue <- brewer.pal(100, "YlOrRd")  # Gets the 9-color YlOrRd palette
+# Create a color palette based on the breaks and the colors
+#custom_palette <- colorRampPalette(colors)(length(breaks) - 1)
+
+# Print the custom palette
+#print(custom_palette)
+getwd()
+ib<-vect("C:/Users/geo_v/Desktop/Metanalysis/input/H8_Iberian/H8_Iberian.shp")
+
+ib_n<-aggregate(ib)
+
+plot(ib_n)
+
+# Open a high-resolution graphics device
+png(
+  filename = "preh5_hydro_alien.png",  # or .tiff
+  width = 10,                          # Width in inches
+  height = 8,                          # Height in inches
+  units = "in",                        # Units (inches, "cm", "mm")
+  res = 300,                           # Resolution (300 dpi for print)
+  bg = "white"                         # Background color
+)
+
+plot(summed_rasters$preh5_reg_alien_hydro_1km.tif, col = yellow_to_red,  main = "preh5_hydro_alien",
+     axes = FALSE,     # Removes x and y axes
+     box = FALSE,      # Removes the bounding box
+     legend.only = FALSE)
+
+plot(ib_n,add=T)
+
+#close
+dev.off()
+
+#crop it to the basque country
+# Define the extent (xmin, xmax, ymin, ymax)
+library(terra)
+ext <- ext(-5,1,40,45)
+
+a<-summed_rasters$preh5_clima_endemics_1km.tif
+cropped_tiff <- crop(a, ext)
+
+plot(cropped_tiff)
+
+png(
+  filename = "crop_preh5_clima_endemics.png",  # or .tiff
+  width = 10,                          # Width in inches
+  height = 8,                          # Height in inches
+  units = "in",                        # Units (inches, "cm", "mm")
+  res = 300,                           # Resolution (300 dpi for print)
+  bg = "white"                         # Background color
+)
+
+
+
+plot(cropped_tiff, col = yellow_to_red, main = "crop_preh5_clima_endemics",
+     axes = FALSE,     # Removes x and y axes
+     box = FALSE,      # Removes the bounding box
+     legend.only = FALSE)
+# Ensures legend is still shown (default)
+plot(ib_n,add=T)
+
+dev.off()
+
+val<-values(cropped_tiff,na.rm=TRUE)
+a_mean<-mean(val)
+a_mean
+
+b<-summed_rasters$preh5_reg_alien_clima_1km.tif
+cropped_tiff_b <- crop(b, ext)
+
+png(
+  filename = "crop_preh5_clima_alien.png",  # or .tiff
+  width = 10,                          # Width in inches
+  height = 8,                          # Height in inches
+  units = "in",                        # Units (inches, "cm", "mm")
+  res = 300,                           # Resolution (300 dpi for print)
+  bg = "white"                         # Background color
+)
+
+
+plot(cropped_tiff_b, col = yellow_to_red, main = "crop_preh5_clima_alien",
+     axes = FALSE,     # Removes x and y axes
+     box = FALSE,      # Removes the bounding box
+     legend.only = FALSE)
+plot(ib_n,add=T)
+
+dev.off()
+
+val_b<-values(cropped_tiff_b,na.rm=TRUE)
+b_mean<-mean(val_b)
+b_mean
+
+c<-summed_rasters$preh5_hydro_endemics_1km.tif
+cropped_tiff_c <- crop(c, ext)
+
+png(
+  filename = "crop_preh5_hydro_endemics.png",  # or .tiff
+  width = 10,                          # Width in inches
+  height = 8,                          # Height in inches
+  units = "in",                        # Units (inches, "cm", "mm")
+  res = 300,                           # Resolution (300 dpi for print)
+  bg = "white"                         # Background color
+)
+
+plot(cropped_tiff_c, col = yellow_to_red, main = "crop_preh5_hydro_endemics",
+     axes = FALSE,     # Removes x and y axes
+     box = FALSE,      # Removes the bounding box
+     legend.only = FALSE)
+plot(ib_n,add=T)
+
+dev.off()
+
+val_c<-values(cropped_tiff_c,na.rm=TRUE)
+c_mean<-mean(val_c)
+c_mean
+
+d<-summed_rasters$preh5_reg_alien_hydro_1km.tif
+cropped_tiff_d <- crop(d, ext)
+
+png(
+  filename = "crop_preh5_hydro_alien.png",  # or .tiff
+  width = 10,                          # Width in inches
+  height = 8,                          # Height in inches
+  units = "in",                        # Units (inches, "cm", "mm")
+  res = 300,                           # Resolution (300 dpi for print)
+  bg = "white"                         # Background color
+)
+
+plot(cropped_tiff_d, col =yellow_to_red, main = "crop_preh5_hydro_alien",
+     axes = FALSE,     # Removes x and y axes
+     box = FALSE,      # Removes the bounding box
+     legend.only = FALSE)
+plot(ib_n,add=T)
+
+dev.off()
+
+val_d<-values(cropped_tiff_d,na.rm=TRUE)
+d_mean<-mean(val_d)
+d_mean
+
+#TIFF
+output_directory<-"C:/Users/geo_v/Desktop/Metanalysis/input/yellow_to_red/raster/"
+
+# Create directory if it doesn't exist
+if (!dir.exists(output_directory)) {
+  dir.create(output_directory, recursive = TRUE)
+  cat("Created directory:", output_directory, "\n")
+}
+
+
+# Set a custom color palette from white to blue
+yellow_to_red <- colorRampPalette(c("#FFF44F", "red"))(100)  # Lemon → Crimson
+
+  for (i in 1:length(summed_rasters)) {
+    tryCatch({
+      # Get the current raster to export
+      raster_to_export <- summed_rasters[[i]]
+      
+      # Extract and modify file name
+      file_name <- basename(tif_files[[i]])
+      new_file_name <- paste0("Stacked_newpalette_", tools::file_path_sans_ext(file_name))
+      
+      # Set output path with .tif extension (consistent with writeRaster)
+      output_file <- file.path(output_directory, paste0(new_file_name, ".tif"))
+      
+      # Plot the raster
+      plot(raster_to_export, 
+           col = yellow_to_red,
+           main = file_name,
+           legend = TRUE)
+      
+      # Save the raster as TIFF
+      writeRaster(raster_to_export,
+                  filename = output_file,  # Explicitly specify TIFF format
+                  overwrite = TRUE)
+      
+      cat("Successfully saved raster", i, "to:", output_file, "\n")
+      
+    }, error = function(e) {
+      cat("Error processing raster", i, ":", e$message, "\n")
+    })
+  }
+
+
+#JPG
+
+output_directory<-"C:/Users/geo_v/Desktop/Metanalysis/input/yellow_to_red/jpg/"
+
+# Create directory if it doesn't exist
+if (!dir.exists(output_directory)) {
+  dir.create(output_directory, recursive = TRUE)
+  cat("Created directory:", output_directory, "\n")
+}
+
+# Loop over all rasters
+for (i in 1:length(summed_rasters)) {
+  
+  # Get the current raster to export
+  raster_to_export <- summed_rasters[[i]]
+  
+  # Extract the base file name and modify it by adding "Stacked_" at the beginning
+  file_name <- basename(tif_files[[i]])  # Extract the base file name
+  new_file_name <- paste0("Stacked_", gsub(".tif", "", file_name))  # Add "Stacked_" and remove the file extension
+  
+  # Set the output file path using the modified file name
+  output_file <- file.path(output_directory, paste0(new_file_name, "_with_transparency.jpg"))
+  
+  # Open a new jpeg device with 300 DPI resolution
+  jpeg(output_file, width = 10, height = 10, units = "in", res = 300)  # Set dimensions (in inches) and resolution (DPI)
+  
+  # Set up the plot settings with white background
+  # Reset plot settings (if any are in place)
+  par(mfrow = c(1, 1), mar = c(5, 4, 4, 2) + 0.1)  # Reset margins and layout if previously changed
+  
+  # Plot the raster with white background
+  plot(raster_to_export, 
+       col = yellow_to_red,          # Custom white-to-blue color palette
+       main = paste(file_name),       # Plot the original file name
+       legend = TRUE,                # Display the legend for context
+       na.color = "transparent",     # Set NA values to transparent
+       axes = TRUE,                  # Ensure axes are shown
+       frame.plot = TRUE,            # Ensure a frame is drawn around the plot
+       bg = "white")                 # Set the background to white
+  
+  # Close the jpeg device to save the image
+  dev.off()
+  
+  # Optionally, print message indicating successful saving
+  cat("JPG", i, "saved to:", output_file, "\n")
+}
+
+
