@@ -35,13 +35,20 @@ All the information related to the Supplementary material of this study can be a
 The structure of the scripts for the primary analysis set is structured as: 
 
 ```
-├── data/                     # Local data files (bioclimatic variables, hydrological baseline layers etc.)
-├── supplementary/            # Output - Supplementary Figures
-├── Scripts                   # Main analysis script 
-└── figures/                  # Manuscript figures
+├── Post_Alien/               # The repository contains two sets of scripts for unconstrained models for: i) Widespread species - Global aSDMs "Post_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Post_Regional_Alien"
+├── Post_Endemics/            # The repository contains one set of scripts for unconstrained models for: i) Endemic species - Regional aSDMs "Post_Regional_Endemics" 
+├── Pre_Alien/                # The repository contains two sets of scripts for contrained models at various scales for: i) Widespread species - Global aSDMs "Pre_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Pre_Regional_Alien"
+└── Pre_Endemics/            # The repository contains one set of scripts for contrained models at various scales for: i) Endemic species - Regional aSDMs "Pre_Regional_Endemics" 
 ```
 
 # Outputs
+The repository contains the full set of initial data and the required script to generate
+```
+├── Post_Alien/               # The repository contains two sets of scripts for unconstrained models for: i) Widespread species - Global aSDMs "Post_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Post_Regional_Alien"
+├── Post_Endemics/            # The repository contains one set of scripts for unconstrained models for: i) Endemic species - Regional aSDMs "Post_Regional_Endemics" 
+├── Pre_Alien/                # The repository contains two sets of scripts for contrained models at various scales for: i) Widespread species - Global aSDMs "Pre_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Pre_Regional_Alien"
+└── Pre_Endemics/            # The repository contains one set of scripts for contrained models at various scales for: i) Endemic species - Regional aSDMs "Pre_Regional_Endemics" 
+```
 
 # Figures
 
