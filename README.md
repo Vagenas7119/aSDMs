@@ -11,7 +11,7 @@ Species Distribution Models (SDMs) in aquatic ecosystems present unique conceptu
 SDMs, freshwaters, fish, hydrology, climate, watersheds, hierarchical, aquatic species
 
 #### Citation (APA):
- Vagenas, G., Matias, M., Araujo M.B. (2025). Beyond land: a framework for modelling aquatic species distributions.
+Vagenas, G., Matias, M., Araujo M.B. (2025). Beyond land: a framework for modelling aquatic species distributions.
  
 #### DOI:  
 [Pending]
@@ -42,12 +42,11 @@ The structure of the scripts for the primary analysis set is structured as:
 ```
 
 # Outputs
-The repository contains the full set of initial data and the required script to generate
+The repository represents a stand-alone analysis package and contains the full set of initial data and the required script to generate the figures of the study:
 ```
-├── Post_Alien/               # The repository contains two sets of scripts for unconstrained models for: i) Widespread species - Global aSDMs "Post_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Post_Regional_Alien"
-├── Post_Endemics/            # The repository contains one set of scripts for unconstrained models for: i) Endemic species - Regional aSDMs "Post_Regional_Endemics" 
-├── Pre_Alien/                # The repository contains two sets of scripts for contrained models at various scales for: i) Widespread species - Global aSDMs "Pre_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Pre_Regional_Alien"
-└── Pre_Endemics/            # The repository contains one set of scripts for contrained models at various scales for: i) Endemic species - Regional aSDMs "Pre_Regional_Endemics" 
+├── input/                    # Contains the input information based on the raster files of the stacked suitability maps across species, spatial strategies, covariates and model configurations
+├── metrics_vagenas_et_al/    # Contains all the performance metrics for all the produced aSDM models in form of multiple data tables
+└── Scipt_Metanalysis/           # Represents the stand-alone script to "run" the analysis which requires a working directory including the two sub-files above in order to generate all the outputs/figure of the present manuscript
 ```
 
 # Figures
