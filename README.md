@@ -1,4 +1,4 @@
-# aquatic Species Distribution Model (aSDMs)
+# aSDMs :: aquatic Species Distribution Models
 
 The files included herein represent the complete set of outputs and the scripts required for the analysis.
 
