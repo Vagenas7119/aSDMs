@@ -19,10 +19,10 @@ SDMs, freshwaters, fish, hydrology, climate, watersheds, hierarchical, aquatic s
 # Project structure
 ```
 ├── data/                     # Local data files (bioclimatic variables, hydrological baseline layers etc.)
-├── figures/                  # Output plots and figures
-├── supplementary/            # Output supplementary plots and figures
-├── outputs/                  # Output intermediate figures 
-└── Scripts                   # Primary analysis script (.txt files)
+├── figures/                  # Manuscript figures
+├── supplementary/            # Output - Supplementary Figures
+├── outputs/                  # Input data - Code - Generation of Manuscript figures 
+└── Scripts                   # Main analysis script (.txt files)
 ```
 
 # Data
@@ -43,7 +43,7 @@ The baseline layers required for the analysis can be downloaded from here: https
 **Figure 4.** Stacked aSDMs for endemic (N=39) and non-endemic/introduced species (N=53) across the study area. The maps represent stacked outputs derived through aSDMs using the superior pre-constrained h5 spatial strategy, based on climate (left) and hydrological (right) predictor sets. Boxes indicate the high-resolution (~1x1 km) aSDMs projected across the hydrographic network. Highlighted zoomed-in areas are illustrative examples for visual comparison and do not represent specific ecological patterns.
 
 # Supplementary
-
+All the information related to the Supplementary material of this study can be accessed by the following link: https://saco.csic.es/s/3p7n9p724kYr5jN
 # Outputs
 
 # Scripts
