@@ -19,10 +19,10 @@ SDMs, freshwaters, fish, hydrology, climate, watersheds, hierarchical, aquatic s
 # Project structure
 ```
 ├── data/                     # Local data files (bioclimatic variables, hydrological baseline layers etc.)
-├── figures/                  # Output plots and figures
-├── supplementary/            # Output supplementary plots and figures
-├── outputs/                  # Output intermediate figures 
-└── Scripts                   # Primary analysis script (.txt files)
+├── figures/                  # Manuscript figures
+├── supplementary/            # Output - Supplementary Figures
+├── outputs/                  # Input data - Code - Generation of Manuscript figures 
+└── Scripts                   # Main analysis script (.txt files)
 ```
 
 # Data
