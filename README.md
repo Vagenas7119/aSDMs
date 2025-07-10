@@ -48,9 +48,9 @@ Key:
 The repository represents a stand-alone analysis package and contains the full set of initial data and the required script to generate the figures of the study:
 ```
 📁 outputs/
-├── 📁 input/ # 🗺️ Stacked suitability maps
+├── 📁 input/                 # 🗺️ Stacked suitability maps
 ├── 📁 metrics_vagenas_et_al/ # 📈 Model performance metrics
-└── 📁 Script_Metanalysis/ # 🔄 Stand-alone analysis script
+└── 📁 Script_Metanalysis/    # 🔄 Stand-alone analysis script
 ```
 
 # Figures
