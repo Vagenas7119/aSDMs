@@ -18,35 +18,39 @@ Vagenas, G., Matias, M., Araujo M.B. (2025). Beyond land: a framework for modell
 
 # Project structure
 ```
-├── data/                     # Local data files (bioclimatic variables, hydrological baseline layers etc.)
-├── supplementary/            # Output - Supplementary Figures
-├── Scripts                   # Main analysis script 
-├── outputs/                  # Input data - Code - Generation of Manuscript figures 
-└── figures/                  # Manuscript figures
+├── 📁 data/          # 🌡️ Local data (bioclimatic vars, hydrological layers)
+├── 📁 supplementary/ # 📑 Output - Supplementary Figures
+├── 📁 Scripts        # 💻 Main analysis scripts (see structure below)
+├── 📁 outputs/       # 🖨️ Generated figures & analysis results
+└── 📁 figures/       # 🖼️ Final manuscript figures
 ```
 
-# Data
-The baseline layers required for the analysis can be downloaded from here: https://saco.csic.es/s/SYTM8qZrnY2HG5q
+# 🔗 **Data**
+The baseline layers 🌐 required for the analysis can be downloaded from here: https://saco.csic.es/s/SYTM8qZrnY2HG5q
 
-# Supplementary
+# 📚 **Supplementary material**
 All the information related to the Supplementary material of this study can be accessed by the following link: https://saco.csic.es/s/3p7n9p724kYr5jN
 
-# Scripts
+# 💻 **Fundamental Scripts**
 The structure of the scripts for the primary analysis set is structured as: 
 
 ```
-├── Post_Alien/       # i) Widespread species - Global aSDMs "Post_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Post_Regional_Alien"
-├── Post_Endemics/    # i) Endemic species - Regional aSDMs "Post_Regional_Endemics" 
-├── Pre_Alien/        # i) Widespread species - Global aSDMs "Pre_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Pre_Regional_Alien"
-└── Pre_Endemics/     # i) Endemic species - Regional aSDMs "Pre_Regional_Endemics" 
+├── 🌍Post_Alien/       # i) Widespread species - Global aSDMs "Post_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Post_Regional_Alien"
+├── 🏝️Post_Endemics/    # i) Endemic species - Regional aSDMs "Post_Regional_Endemics" 
+├── 🌍Pre_Alien/        # i) Widespread species - Global aSDMs "Pre_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Pre_Regional_Alien"
+└── 🏝️Pre_Endemics/     # i) Endemic species - Regional aSDMs "Pre_Regional_Endemics"
+
+Key:  
+🌍 = Global scale | 🏝️ = Regional/Endemic focus  
 ```
 
 # Outputs
 The repository represents a stand-alone analysis package and contains the full set of initial data and the required script to generate the figures of the study:
 ```
-├── input/                 # Stacked suitability maps across species, spatial strategies, covariates and model configurations
-├── metrics_vagenas_et_al/ # Performance metrics for all the produced aSDM models
-└── Scipt_Metanalysis/     # Stand-alone script to "run" the analysis, requires the two sub-files to generate all the outputs/figure of the manuscript
+📁 outputs/
+├── 📁 input/ # 🗺️ Stacked suitability maps
+├── 📁 metrics_vagenas_et_al/ # 📈 Model performance metrics
+└── 📁 Script_Metanalysis/ # 🔄 Stand-alone analysis script
 ```
 
 # Figures
