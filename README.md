@@ -44,7 +44,7 @@ The repository represents a stand-alone analysis package and contains the full s
 
 You are an aquatic ecologist modeling the distribution of multiple species in a hydrographic network. Your task is to build an aquatic Species Distribution Model (aSDM) that predicts suitable habitats based on:
 
-<div align="center">
+
 | Model Architecture       | Symbol  | Key Variables               | Short ID          |
 |--------------------------|---------|-----------------------------|-------------------|
 | Climate aSDM             | 🌡️      | Temperature, Precipitation  | `clima_SDM`       |
@@ -52,7 +52,52 @@ You are an aquatic ecologist modeling the distribution of multiple species in a 
 | Hydroclimatic aSDM       | 🌡️ & 💧  | Climate × Hydrological      | `hydroclima_aSDM` |
 | Hierarchical Climate     | 🌡️→💧   | Climate + Hydro covariate   | `h_clima_aSDM`    |
 | Hierarchical Hydro       | 💧→🌡️   | Hydro + Climate covariate   | `h_hydro_aSDM`    |
+
+
+<div align="center">
+  
+<table>
+  <tr>
+    <th>Model Architecture</th>
+    <th>Symbol</th>
+    <th>Key Variables</th>
+    <th>Short ID</th>
+  </tr>
+  <tr>
+    <td>Climate aSDM</td>
+    <td>🌡️</td>
+    <td>Temperature, Precipitation</td>
+    <td><code>clima_SDM</code></td>
+  </tr>
+  <tr>
+    <td>Hydrological aSDM</td>
+    <td>💧</td>
+    <td>Discharge, Stream gradient</td>
+    <td><code>hydro_aSDM</code></td>
+  </tr>
+  <tr>
+    <td>Hydroclimatic aSDM</td>
+    <td>🌡️ & 💧</td>
+    <td>Climate × Hydrological</td>
+    <td><code>hydroclima_aSDM</code></td>
+  </tr>
+  <tr>
+    <td>Hierarchical Climate</td>
+    <td>🌡️→💧</td>
+    <td>Climate + Hydro covariate</td>
+    <td><code>h_clima_aSDM</code></td>
+  </tr>
+  <tr>
+    <td>Hierarchical Hydro</td>
+    <td>💧→🌡️</td>
+    <td>Hydro + Climate covariate</td>
+    <td><code>h_hydro_aSDM</code></td>
+  </tr>
+</table>
+
 </div>
+
+
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 
