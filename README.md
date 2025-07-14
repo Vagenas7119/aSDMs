@@ -57,25 +57,6 @@ You are an aquatic ecologist modeling the distribution of multiple species in a 
 ---
 
 ```mermaid
-flowchart TD
-    A(("📊\nAquatic SDM\nVariables")) --> B(["🌡️\nclima_aSDM"])
-    A --> C(["💧\nhydro_aSDM"]) 
-    A --> D(["🌡️💧\nhydroclima_aSDM"])
-    A --> E(["h_clima_aSDM\n🌡️→💧"])
-    A --> F(["h_hydro_aSDM\n💧→🌡️"])
-
-    style A stroke:#333,stroke-width:2px,fill:none
-    style B stroke:#555,fill:none
-    style C stroke:#555,fill:none
-    style D stroke:#555,fill:none
-    style E stroke:#555,fill:none
-    style F stroke:#555,fill:none
-
-    %% Adjust layout
-    classDef default font-family:serif
-    linkStyle default stroke:#888,stroke-width:1.5px
-```
-```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Arial', 'nodeTextMargin': 5}, 'config': {'fontSize': 14}}}%%
 flowchart TD
     A(("<b>📊<br/>Aquatic SDM<br/>Variables</b>")):::centerNode
@@ -100,6 +81,35 @@ flowchart TD
     linkStyle 2 stroke:#888,stroke-width:2px,stroke-dasharray:0
     linkStyle 3 stroke:#888,stroke-width:2px,stroke-dasharray:0
     linkStyle 4 stroke:#888,stroke-width:2px,stroke-dasharray:0
+```
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 
+    'fontFamily': 'Arial',
+    'primaryColor': '#f5f5f5',
+    'primaryBorderColor': '#666',
+    'primaryTextColor': '#222',
+    'nodeTextMargin': 8
+}, 'config': {'fontSize': 14}}}%%
+flowchart TD
+    A(("<b>📊<br/>Aquatic SDM<br/>Variables</b>")):::centerNode
+    B("<b>🌡️<br/>clima_aSDM</b>"):::outerNode
+    C("<b>💧<br/>hydro_aSDM</b>"):::outerNode 
+    D("<b>🌡️💧<br/>hydroclima_aSDM</b>"):::outerNode
+    E("<b>h_clima_aSDM<br/>🌡️→💧</b>"):::outerNode
+    F("<b>h_hydro_aSDM<br/>💧→🌡️</b>"):::outerNode
+
+    A --- B
+    A --- C
+    A --- D
+    A --- E
+    A --- F
+
+    classDef centerNode stroke:#444,stroke-width:2.5px,fill:#f8f8f8
+    classDef outerNode stroke:#555,stroke-width:2px,fill:#f0f0f0
+    
+    %% Radial layout adjustments
+    linkStyle 0,1,2,3,4 stroke:#999,stroke-width:2px
 ```
 
 ## Abstract:
