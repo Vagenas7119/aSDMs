@@ -56,32 +56,13 @@ You are an aquatic ecologist modeling the distribution of multiple species in a 
 
 ---
 
-```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Arial', 'nodeTextMargin': 5}, 'config': {'fontSize': 14}}}%%
-flowchart TD
-    A(("<b>📊<br/>Aquatic SDM<br/>Variables</b>")):::centerNode
-    B("<b>🌡️<br/>clima_aSDM</b>"):::outerNode
-    C("<b>💧<br/>hydro_aSDM</b>"):::outerNode
-    D("<b>🌡️💧<br/>hydroclima_aSDM</b>"):::outerNode
-    E("<b>h_clima_aSDM<br/>🌡️→💧</b>"):::outerNode
-    F("<b>h_hydro_aSDM<br/>💧→🌡️</b>"):::outerNode
-
-    A --- B
-    A --- C
-    A --- D
-    A --- E
-    A --- F
-
-    classDef centerNode stroke:#333,stroke-width:3px,fill:none,text-align:center
-    classDef outerNode stroke:#555,stroke-width:2px,fill:none,text-align:center
-    
-    %% Radial layout forces
-    linkStyle 0 stroke:#888,stroke-width:2px,stroke-dasharray:0
-    linkStyle 1 stroke:#888,stroke-width:2px,stroke-dasharray:0
-    linkStyle 2 stroke:#888,stroke-width:2px,stroke-dasharray:0
-    linkStyle 3 stroke:#888,stroke-width:2px,stroke-dasharray:0
-    linkStyle 4 stroke:#888,stroke-width:2px,stroke-dasharray:0
-```
+| Model Component          | Symbol   | Key Variables                          | Statistical Approach          |
+|--------------------------|----------|----------------------------------------|-------------------------------|
+| Climate Base Model       | 🌡️       | Temp, Precip                          | GLM/MaxEnt                    |
+| Hydro Base Model         | 💧        | Q, ∇z                                  | Random Forest                 |
+| Coupled Model            | 🌡️⊗💧    | Climate × Hydro interaction           | GAM with interaction terms    |
+| Hierarchical Climate     | 🌡️⎘💧   | Climate|Hydro                          | Mixed-effects modeling        |
+| Hierarchical Hydro       | 💧⎘🌡️   | Hydro|Climate                          | Bayesian hierarchical model   |
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 
