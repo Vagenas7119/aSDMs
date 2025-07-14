@@ -98,7 +98,7 @@ You are an aquatic ecologist/ecohydrological engineer and you want to predict th
     'nodeTextMargin': 8
 }, 'config': {'fontSize': 14}}}%%
 flowchart TD
-    A(("<b>📊<br/>Aquatic SDM<br/>Variables</b>")):::centerNode
+    A(("<b>📊<br/>Aquatic SDM<br/>Predictors</b>")):::centerNode
     B("<b>🌡️<br/>clima_aSDM</b>"):::outerNode
     C("<b>💧<br/>hydro_aSDM</b>"):::outerNode 
     D("<b>🌡️💧<br/>hydroclima_aSDM</b>"):::outerNode
