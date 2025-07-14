@@ -88,13 +88,20 @@ You are an aquatic ecologist/ecohydrological engineer and you want to predict th
 </div>
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 
+    'fontFamily': 'Arial',
+    'primaryColor': '#f5f5f5',
+    'primaryBorderColor': '#666',
+    'primaryTextColor': '#222',
+    'nodeTextMargin': 8
+}, 'config': {'fontSize': 14}}}%%
 flowchart TD
     A(("<b>📊<br/>Aquatic SDM<br/>Predictors</b>")):::centerNode
-    B("<b>🌡️ clima_aSDM</b>"):::outerNode
-    C("<b>💧 hydro_aSDM</b>"):::outerNode 
-    D("<b>🌡️💧 hydroclima_aSDM</b>"):::outerNode
-    E("<b>🌡️→ h_clima_aSDM</b>"):::outerNode
-    F("<b>💧→ h_hydro_aSDM</b>"):::outerNode
+    B("<b>🌡️<br/>clima_aSDM</b>"):::outerNode
+    C("<b>💧<br/>hydro_aSDM</b>"):::outerNode 
+    D("<b>🌡️💧<br/>hydroclima_aSDM</b>"):::outerNode
+    E("<b>h_clima_aSDM<br/>🌡️→💧</b>"):::outerNode
+    F("<b>h_hydro_aSDM<br/>💧→🌡️</b>"):::outerNode
 
     A --- B
     A --- C
@@ -102,15 +109,11 @@ flowchart TD
     A --- E
     A --- F
 
-    classDef centerNode stroke:#333,stroke-width:3px,fill:none,text-align:center
-    classDef outerNode stroke:#555,stroke-width:2px,fill:none,text-align:center
+    classDef centerNode stroke:#444,stroke-width:2.5px,fill:#f8f8f8
+    classDef outerNode stroke:#555,stroke-width:2px,fill:#f0f0f0
     
-    %% Radial layout forces
-    linkStyle 0 stroke:#888,stroke-width:2px
-    linkStyle 1 stroke:#888,stroke-width:2px
-    linkStyle 2 stroke:#888,stroke-width:2px
-    linkStyle 3 stroke:#888,stroke-width:2px
-    linkStyle 4 stroke:#888,stroke-width:2px
+    %% Radial layout adjustments
+    linkStyle 0,1,2,3,4 stroke:#999,stroke-width:2px
 ```
 
 ## Abstract:
