@@ -58,21 +58,6 @@ You are an aquatic ecologist modeling the distribution of multiple species in a 
 
 ```mermaid
 flowchart TD
-    A[("Aquatic SDM Variables (📊)")] --> B["clima_aSDM (🌡️)\nClimate vars"]
-    A --> C["hydro_aSDM (💧)\nHydrology vars"]
-    A --> D["hydroclima_aSDM (🌡️💧)\nCombined"]
-    A --> E["h_clima_aSDM\n(Climate + Hydro)"]
-    A --> F["h_hydro_aSDM\n(Hydro + Climate)"]
-    
-    style A fill:#ffffff,stroke:#333
-    style B fill:#f9d5e5,stroke:#333
-    style C fill:#e3eaa7,stroke:#333
-    style D fill:#b2d3c2,stroke:#333
-    style E fill:#ffb347,stroke:#333
-    style F fill:#82b4d6,stroke:#333
-```
-```mermaid
-flowchart TD
     A(("📊\nAquatic SDM\nVariables")) --> B(["🌡️\nclima_aSDM"])
     A --> C(["💧\nhydro_aSDM"]) 
     A --> D(["🌡️💧\nhydroclima_aSDM"])
@@ -91,26 +76,30 @@ flowchart TD
     linkStyle default stroke:#888,stroke-width:1.5px
 ```
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Arial', 'nodeTextMargin': 5}, 'config': {'fontSize': 14}}}%%
 flowchart TD
-    A(("📊")) --> B(["🌡️"])
-    A --> C(["💧"]) 
-    A --> D(["🌡️💧"])
-    A --> E(["🌡️→"])
-    A --> F(["💧→"])
+    A(("<b>📊<br/>Aquatic SDM<br/>Variables</b>")):::centerNode
+    B("<b>🌡️<br/>clima_aSDM</b>"):::outerNode
+    C("<b>💧<br/>hydro_aSDM</b>"):::outerNode
+    D("<b>🌡️💧<br/>hydroclima_aSDM</b>"):::outerNode
+    E("<b>h_clima_aSDM<br/>🌡️→💧</b>"):::outerNode
+    F("<b>h_hydro_aSDM<br/>💧→🌡️</b>"):::outerNode
 
-    style A stroke:#333,stroke-width:2px,fill:none
-    style B stroke:#555,fill:none
-    style C stroke:#555,fill:none
-    style D stroke:#555,fill:none
-    style E stroke:#555,fill:none
-    style F stroke:#555,fill:none
+    A --- B
+    A --- C
+    A --- D
+    A --- E
+    A --- F
 
-    %% Add invisible labels for hover
-    click B "clima_aSDM" _blank
-    click C "hydro_aSDM" _blank
-    click D "hydroclima_aSDM" _blank
-    click E "h_clima_aSDM" _blank
-    click F "h_hydro_aSDM" _blank
+    classDef centerNode stroke:#333,stroke-width:3px,fill:none,text-align:center
+    classDef outerNode stroke:#555,stroke-width:2px,fill:none,text-align:center
+    
+    %% Radial layout forces
+    linkStyle 0 stroke:#888,stroke-width:2px,stroke-dasharray:0
+    linkStyle 1 stroke:#888,stroke-width:2px,stroke-dasharray:0
+    linkStyle 2 stroke:#888,stroke-width:2px,stroke-dasharray:0
+    linkStyle 3 stroke:#888,stroke-width:2px,stroke-dasharray:0
+    linkStyle 4 stroke:#888,stroke-width:2px,stroke-dasharray:0
 ```
 
 ## Abstract:
