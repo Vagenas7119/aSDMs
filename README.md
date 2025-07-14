@@ -42,17 +42,7 @@ The repository represents a stand-alone analysis package and contains the full s
 # 🌊 **Toy Problem: Predicting Fish Habitat Suitability in River Ecosystems** 🐟📊
 📋 Description
 
-You are an aquatic ecologist modeling the distribution of multiple species in a hydrographic network. Your task is to build an aquatic Species Distribution Model (aSDM) that predicts suitable habitats based on:
-
-
-| Model Architecture       | Symbol  | Key Variables               | Short ID          |
-|--------------------------|---------|-----------------------------|-------------------|
-| Climate aSDM             | 🌡️      | Temperature, Precipitation  | `clima_SDM`       |
-| Hydrological aSDM        | 💧       | Discharge, Stream gradient  | `hydro_aSDM`      |
-| Hydroclimatic aSDM       | 🌡️ & 💧  | Climate × Hydrological      | `hydroclima_aSDM` |
-| Hierarchical Climate     | 🌡️→💧   | Climate + Hydro covariate   | `h_clima_aSDM`    |
-| Hierarchical Hydro       | 💧→🌡️   | Hydro + Climate covariate   | `h_hydro_aSDM`    |
-
+You are an aquatic ecologist/ecohydrological engineer and you want to predict the distribution of multiple species in a hydrographic network. Your task is to build an aquatic Species Distribution Model (aSDM) that predicts suitability scores or species richness based on:
 
 <div align="center">
   
