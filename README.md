@@ -42,15 +42,18 @@ The repository represents a stand-alone analysis package and contains the full s
 # 🌊 **Toy Problem: Predicting Fish Habitat Suitability in River Ecosystems** 🐟📊
 📋 Description
 
-You are an aquatic ecologist modeling the distribution of a target fish species (e.g., Oncorhynchus mykiss – Rainbow Trout 🎣) in a hydrographic network. Your task is to build an aquatic Species Distribution Model (aSDM) that predicts suitable habitats based on:
+You are an aquatic ecologist modeling the distribution of multiple species in a hydrographic network. Your task is to build an aquatic Species Distribution Model (aSDM) that predicts suitable habitats based on:
 
-    Water quality (pH, dissolved oxygen, temperature) 🌡️💧
+    Climate variables (precipitation, temperature) clima_aSDM 🌡️
 
-    River flow dynamics (velocity, depth, discharge) 🌊📉
+    Hydrological variables (discharge, stream gradient) :: hydro_aSDM 💧
 
-    Habitat structure (substrate type, riparian vegetation) 🪨🌿
+    Hydroclimatic variables (combination) 🌡️💧 :: hydroclima_aSDM
 
-    Human impacts (pollution, dams, land use) 🏭🚧
+    Hierarhical climate (h-setting with hydro_aSDM as an additional covariate) :: h_clima_aSDM 🌡️ (💧)
+
+    Hierarhical hydro (h-setting with clima_aSDM as an additional covariate) :: h_hydro_aSDM  💧  (🌡️)
+
 ---
 
 
