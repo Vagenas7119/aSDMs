@@ -4,6 +4,56 @@ The files included here represent the complete set of baseline inputs, scripts, 
 
 ![SIBECOL_Vagenas_scroped](https://github.com/user-attachments/assets/2a56da26-b665-4091-b802-3541cb3330a8)
 
+
+# Project structure
+```
+├── 📁 data/          # 🌡️ Local data (bioclimatic vars, hydrological layers)
+├── 📁 supplementary/ # 📑 Output - Supplementary Figures
+├── 📁 Scripts        # 💻 Main analysis scripts (see structure below)
+├── 📁 outputs/       # 🖨️ Generated figures & analysis results
+└── 📁 figures/       # 🖼️ Final manuscript figures
+```
+---
+# 🔗 **Data**
+The baseline layers 🌐 required for the analysis can be downloaded from here: https://saco.csic.es/s/SYTM8qZrnY2HG5q
+---
+# 📚 **Supplementary material**
+All the information related to the Supplementary material of this study can be accessed by the following link: https://saco.csic.es/s/3p7n9p724kYr5jN
+---
+# 💻 **Fundamental Scripts**
+The structure of the scripts for the primary analysis set is structured as: 
+```
+├── 🌍Post_Alien/       # i) Widespread species - Global aSDMs "Post_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Post_Regional_Alien"
+├── 🏝️Post_Endemics/    # i) Endemic species - Regional aSDMs "Post_Regional_Endemics" 
+├── 🌍Pre_Alien/        # i) Widespread species - Global aSDMs "Pre_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Pre_Regional_Alien"
+└── 🏝️Pre_Endemics/     # i) Endemic species - Regional aSDMs "Pre_Regional_Endemics"
+
+Key:  
+🌍 = Global scale | 🏝️ = Regional/Endemic focus  
+```
+---
+# Outputs
+The repository represents a stand-alone analysis package and contains the full set of initial data and the required script to generate the figures of the study:
+```
+📁 outputs/
+├── 📁 input/                 # 🗺️ Stacked suitability maps
+├── 📁 metrics_vagenas_et_al/ # 📈 Model performance metrics
+└── 📁 Script_Metanalysis/    # 🔄 Stand-alone analysis script
+```
+---
+🌊 Toy Problem: Predicting Fish Habitat Suitability in River Ecosystems 🐟📊
+📋 Description
+
+You are an aquatic ecologist modeling the distribution of a target fish species (e.g., Oncorhynchus mykiss – Rainbow Trout 🎣) in a hydrographic network. Your task is to build an aquatic Species Distribution Model (aSDM) that predicts suitable habitats based on:
+
+    Water quality (pH, dissolved oxygen, temperature) 🌡️💧
+
+    River flow dynamics (velocity, depth, discharge) 🌊📉
+
+    Habitat structure (substrate type, riparian vegetation) 🪨🌿
+
+    Human impacts (pollution, dams, land use) 🏭🚧
+---
 ## Abstract:
 Species Distribution Models (SDMs) in aquatic ecosystems present unique conceptual and technical challenges, from predicting distributions across spatially constrained networks to incorporating hydroclimatic drivers. These challenges amplify uncertainties and have hindered the development of standardized aquatic SDM frameworks. Here, we explore high-performance and efficient modelling protocols using presence-only records of freshwater organisms. Focusing on the Ichthyofauna of the Iberian Peninsula, we evaluated two hierarchical modelling structures: global-to-regional models trained at a global scale and projected regionally for widespread species, and strictly regional models trained and predicted within the region for endemic species. We systematically compare two spatial strategies for aquatic SDMs: unconstrained models, trained across the entire freshwater range of each species, and constrained models, trained only within watersheds where species are known to occur. Additionally, we evaluated different predictor combinations, ranging from individual environmental variables to hierarchical structures incorporating climatic, hydrological, and their interacting factors. Our results demonstrate that spatially constrained models significantly enhance predictive performance. Moreover, models trained with climate predictors consistently outperformed those relying solely on hydrological predictors. We conclude that all proposed modelling stages are essential for accurately predicting aquatic species distributions. This multi-stage process ensures comprehensive spatial representation, robust environmental variable selection, and optimal model configuration, thereby addressing the inherent complexity of aquatic ecosystems.
 
@@ -15,43 +65,6 @@ Vagenas, G., Matias, M., Araujo M.B. (2025). Beyond land: a framework for modell
  
 #### DOI:  
 [Pending]
-
-# Project structure
-```
-├── 📁 data/          # 🌡️ Local data (bioclimatic vars, hydrological layers)
-├── 📁 supplementary/ # 📑 Output - Supplementary Figures
-├── 📁 Scripts        # 💻 Main analysis scripts (see structure below)
-├── 📁 outputs/       # 🖨️ Generated figures & analysis results
-└── 📁 figures/       # 🖼️ Final manuscript figures
-```
-
-# 🔗 **Data**
-The baseline layers 🌐 required for the analysis can be downloaded from here: https://saco.csic.es/s/SYTM8qZrnY2HG5q
-
-# 📚 **Supplementary material**
-All the information related to the Supplementary material of this study can be accessed by the following link: https://saco.csic.es/s/3p7n9p724kYr5jN
-
-# 💻 **Fundamental Scripts**
-The structure of the scripts for the primary analysis set is structured as: 
-
-```
-├── 🌍Post_Alien/       # i) Widespread species - Global aSDMs "Post_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Post_Regional_Alien"
-├── 🏝️Post_Endemics/    # i) Endemic species - Regional aSDMs "Post_Regional_Endemics" 
-├── 🌍Pre_Alien/        # i) Widespread species - Global aSDMs "Pre_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Pre_Regional_Alien"
-└── 🏝️Pre_Endemics/     # i) Endemic species - Regional aSDMs "Pre_Regional_Endemics"
-
-Key:  
-🌍 = Global scale | 🏝️ = Regional/Endemic focus  
-```
-
-# Outputs
-The repository represents a stand-alone analysis package and contains the full set of initial data and the required script to generate the figures of the study:
-```
-📁 outputs/
-├── 📁 input/                 # 🗺️ Stacked suitability maps
-├── 📁 metrics_vagenas_et_al/ # 📈 Model performance metrics
-└── 📁 Script_Metanalysis/    # 🔄 Stand-alone analysis script
-```
 
 # Figures
 
