@@ -44,25 +44,13 @@ The repository represents a stand-alone analysis package and contains the full s
 
 You are an aquatic ecologist modeling the distribution of multiple species in a hydrographic network. Your task is to build an aquatic Species Distribution Model (aSDM) that predicts suitable habitats based on:
 
-    Climate variables (precipitation, temperature) clima_aSDM 🌡️
-
-    Hydrological variables (discharge, stream gradient) :: hydro_aSDM 💧
-
-    Hydroclimatic variables (combination) 🌡️💧 :: hydroclima_aSDM
-
-    Hierarhical climate (h-setting with hydro_aSDM as an additional covariate) :: h_clima_aSDM 🌡️ (💧)
-
-    Hierarhical hydro (h-setting with clima_aSDM as an additional covariate) :: h_hydro_aSDM  💧  (🌡️)
-
----
-
-| Model Architecture         | Symbol   | Key Variables                          | Short ID         |
-|--------------------------|----------|----------------------------------------|-------------------------------|
-| Climate aSDM       | 🌡️       | Temperature, Precipation                          | clima_SDM                    |
-| Hydrological aSDM         | 💧        | Discharge, Stream gradient                                  | hydro_aSDM                |
-| Hydrodynamic aSDM          | 🌡️ & 💧    | Climate × Hydrological predictors           | hydroclimatic_aSDM    |
-| Hierarchical Climate     | 🌡️→💧   | h-setting with clima_aSDM as an additional covariate                         | h_clima_aSDM        |
-| Hierarchical Hydrological     | 💧→🌡️   | h-setting with clima_aSDM as an additional covariate                          | h_hydro_aSDM   |
+| Model Architecture       | Symbol  | Key Variables               | Short ID          |
+|--------------------------|---------|-----------------------------|-------------------|
+| Climate aSDM             | 🌡️      | Temperature, Precipitation  | `clima_SDM`       |
+| Hydrological aSDM        | 💧       | Discharge, Stream gradient  | `hydro_aSDM`      |
+| Hydroclimatic aSDM       | 🌡️ & 💧  | Climate × Hydrological      | `hydroclimatic_aSDM` |
+| Hierarchical Climate     | 🌡️→💧   | Climate + Hydro covariate   | `h_clima_aSDM`    |
+| Hierarchical Hydro       | 💧→🌡️   | Hydro + Climate covariate   | `h_hydro_aSDM`    |
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 
