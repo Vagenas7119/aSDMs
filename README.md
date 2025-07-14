@@ -14,10 +14,10 @@ The files included here represent the complete set of baseline inputs, scripts, 
 ```
 # 🔗 Data
 The baseline layers 🌐 required for the analysis can be downloaded from here: https://saco.csic.es/s/SYTM8qZrnY2HG5q
----
+
 # 📚 Supplementary material
 All the information related to the Supplementary material of this study can be accessed by the following link: https://saco.csic.es/s/3p7n9p724kYr5jN
----
+
 # 💻 Fundamental Scripts
 The structure of the scripts for the primary analysis set is structured as: 
 ```
@@ -29,7 +29,7 @@ The structure of the scripts for the primary analysis set is structured as:
 Key:  
 🌍 = Global scale | 🏝️ = Regional/Endemic focus  
 ```
----
+
 # 📈 Outputs
 The repository represents a stand-alone analysis package and contains the full set of initial data and the required script to generate the figures of the study:
 ```
@@ -38,7 +38,7 @@ The repository represents a stand-alone analysis package and contains the full s
 ├── 📁 metrics_vagenas_et_al/ # 📈 Model performance metrics
 └── 📁 Script_Metanalysis/    # 🔄 Stand-alone analysis script
 ```
----
+
 🌊 **Toy Problem: Predicting Fish Habitat Suitability in River Ecosystems** 🐟📊
 📋 Description
 
