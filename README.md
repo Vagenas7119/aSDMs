@@ -56,13 +56,13 @@ You are an aquatic ecologist modeling the distribution of multiple species in a 
 
 ---
 
-| Model Component          | Symbol   | Key Variables                          | Statistical Approach          |
+| Model Architecture         | Symbol   | Key Variables                          | Short ID         |
 |--------------------------|----------|----------------------------------------|-------------------------------|
-| Climate Base Model       | 🌡️       | Temp, Precip                          | GLM/MaxEnt                    |
-| Hydro Base Model         | 💧        | Q, ∇z                                  | Random Forest                 |
-| Coupled Model            | 🌡️⊗💧    | Climate × Hydro interaction           | GAM with interaction terms    |
-| Hierarchical Climate     | 🌡️⎘💧   | Climate|Hydro                          | Mixed-effects modeling        |
-| Hierarchical Hydro       | 💧⎘🌡️   | Hydro|Climate                          | Bayesian hierarchical model   |
+| Climate aSDM       | 🌡️       | Temperature, Precipation                          | clima_SDM                    |
+| Hydrological aSDM         | 💧        | Discharge, Stream gradient                                  | hydro_aSDM                |
+| Hydrodynamic aSDM          | 🌡️ & 💧    | Climate × Hydrological predictors           | hydroclimatic_aSDM    |
+| Hierarchical Climate     | 🌡️→💧   | h-setting with clima_aSDM as an additional covariate                         | h_clima_aSDM        |
+| Hierarchical Hydrological     | 💧→🌡️   | h-setting with clima_aSDM as an additional covariate                          | h_hydro_aSDM   |
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 
