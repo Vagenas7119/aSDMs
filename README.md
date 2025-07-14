@@ -96,7 +96,7 @@ You are an aquatic ecologist/ecohydrological engineer and you want to predict th
     'primaryBorderColor': '#666',
     'primaryTextColor': '#222',
     'nodeTextMargin': 8
-}, 'config': {'fontSize': 14}}}%%
+}, 'config': {'fontSize': 13}}}%%
 flowchart TD
     A(("<b>📊<br/>Aquatic SDM<br/>Predictors</b>")):::centerNode
     B("<b>🌡️<br/>clima_aSDM</b>"):::outerNode
