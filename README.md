@@ -57,12 +57,13 @@ You are an aquatic ecologist modeling the distribution of multiple species in a 
 ---
 
 ```mermaid
+```mermaid
 flowchart TD
-    A[📊 Aquatic SDM Variables] --> B[🌡️ clima_aSDM\nClimate: Precipitation, Temperature]
-    A --> C[💧 hydro_aSDM\nHydrology: Discharge, Stream Gradient]
-    A --> D[🌡️💧 hydroclima_aSDM\nCombined Hydro-Climatic]
-    A --> E[🌡️ (💧)\nh_clima_aSDM\nHierarchical Climate + Hydro]
-    A --> F[💧 (🌡️)\nh_hydro_aSDM\nHierarchical Hydro + Climate]
+    A["📊 Aquatic SDM Variables"] --> B["🌡️ clima_aSDM\nClimate vars"]
+    A --> C["💧 hydro_aSDM\nHydrology vars"]
+    A --> D["🌡️+💧 hydroclima_aSDM\nCombined"]
+    A --> E["h_clima_aSDM\nClimate + Hydro"]
+    A --> F["h_hydro_aSDM\nHydro + Climate"]
     
     style B fill:#f9d5e5,stroke:#333
     style C fill:#e3eaa7,stroke:#333
