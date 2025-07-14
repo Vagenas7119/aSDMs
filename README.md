@@ -48,7 +48,7 @@ You are an aquatic ecologist modeling the distribution of multiple species in a 
 |--------------------------|---------|-----------------------------|-------------------|
 | Climate aSDM             | 🌡️      | Temperature, Precipitation  | `clima_SDM`       |
 | Hydrological aSDM        | 💧       | Discharge, Stream gradient  | `hydro_aSDM`      |
-| Hydroclimatic aSDM       | 🌡️ & 💧  | Climate × Hydrological      | `hydroclimatic_aSDM` |
+| Hydroclimatic aSDM       | 🌡️ & 💧  | Climate × Hydrological      | `hydroclima_aSDM` |
 | Hierarchical Climate     | 🌡️→💧   | Climate + Hydro covariate   | `h_clima_aSDM`    |
 | Hierarchical Hydro       | 💧→🌡️   | Hydro + Climate covariate   | `h_hydro_aSDM`    |
 
