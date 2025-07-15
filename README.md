@@ -99,8 +99,7 @@ You are an aquatic ecologist/ecohydrological engineer and you want to predict th
     'primaryColor': '#f5f5f5',
     'primaryBorderColor': '#666',
     'primaryTextColor': '#222',
-    'nodeTextMargin': 8,
-    'lineColor': '#ffffff'  /* Sets default line color to white */
+    'nodeTextMargin': 8
 }, 'config': {'fontSize': 14}}}%%
 flowchart TD
     A(("<b>📊<br/>Aquatic SDM<br/>Predictors</b>")):::centerNode
@@ -115,16 +114,25 @@ flowchart TD
     A --- D
     A --- E
     A --- F
+    
+    %% Existing connections
     B --- F
     C --- E
-    C --- E  %% Double connection
-    B --- F  %% Double connection
+    
+    %% New double connections
+    C --- E
+    B --- F
+    
+    %% Alternative for visual distinction (using different line styles)
+    B -.-> F
+    C -.-> E
 
     classDef centerNode stroke:#444,stroke-width:2.5px,fill:#f8f8f8
     classDef outerNode stroke:#555,stroke-width:2px,fill:#f0f0f0
     
-    %% Force all links to white
-    linkStyle default stroke:#ffffff,stroke-width:2px
+    %% Radial layout adjustments
+    linkStyle 0,1,2,3,4 stroke:#999,stroke-width:2px
+    linkStyle 6,7 stroke:#666,stroke-width:2px,stroke-dasharray:5  %% Dashed for distinction
 ```
 
 # aSDMs :: Aquatic Species Distribution Models - Tutorial
