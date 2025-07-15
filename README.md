@@ -158,7 +158,7 @@ unique_species <- unique(terra_df$species_id)
 numbers_sp <- length(unique_species)
 ```
 
-## Step 2 :: Environmental Predictors
+## Step 2 :: Hydroclimatic Predictors
 ```r
 riveratl_global <- rast("data/River_atlas_1km_5vars/top5_global_rivers_atlas_raster_list_30sec.tif")
 bioclim_global_rn <- rast("data/BIOCLIM_rn_1km_5vars/bioclim_global_rn_5vars_30sec.tif")
@@ -186,7 +186,7 @@ combined_rasters <- rast()
 sdm_d <- list()
 ```
 
-## Step 4 :: Spatial Processing (Complete)
+## Step 4 :: Spatial Processing - Allocation to watersheds
 ```r
 watershed <- vect("data/H5_Iberian/H5_Iberian.shp") #the user should define the spatial layer, in our files the H8 and H12 alternatives are available
 
@@ -241,7 +241,7 @@ aggregated_raster <- rasterize(aggregated_vec, raster_template, field = 1, fun =
 aggregated_raster[!is.na(aggregated_raster)] <- NA
 crs(aggregated_raster) <- "EPSG:4326"
 ```
-## Step 5 :: aSDM Models Execution (Complete)
+## Step 5 :: aSDM Models Prediction - Fitting
 ```r
 input_cov <- bioclim_global_rn  # Primary covariates climate aSDM - in case the user wants to apply hydrological or hydroclimatic or hierarchical approaches the fundamental documentation should be followed
 
@@ -317,7 +317,7 @@ for (i in 1:numbers_sp) {
 }
 ```
 
-## Step 6 :: Post-Processing (Complete)
+## Step 6 :: Post-Processing - Thresholding based on prevalence
 ```r
 # Threshold Application
 thresholded_rasters_comb <- rast()
