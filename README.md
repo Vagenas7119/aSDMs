@@ -106,14 +106,16 @@ flowchart TD
     B("<b>🌡️<br/>clima_aSDM</b>"):::outerNode
     C("<b>💧<br/>hydro_aSDM</b>"):::outerNode 
     D("<b>🌡️💧<br/>hydroclima_aSDM</b>"):::outerNode
-    E("<b>h_clima_aSDM<br/>🌡️→💧</b>"):::outerNode
-    F("<b>h_hydro_aSDM<br/>💧→🌡️</b>"):::outerNode
+    E("<b>🌡️→💧<br/>h_clima_aSDM</b>"):::outerNode
+    F("<b>💧→🌡️<br/>h_hydro_aSDM</b>"):::outerNode
 
     A --- B
     A --- C
     A --- D
     A --- E
     A --- F
+    B --- F
+    C --- E
 
     classDef centerNode stroke:#444,stroke-width:2.5px,fill:#f8f8f8
     classDef outerNode stroke:#555,stroke-width:2px,fill:#f0f0f0
@@ -141,20 +143,23 @@ library(terra)
 library(usdm) 
 library(randomForest)
 library(parallel)
+```
 
 ## Step 1 :: Data Input
-
+```r
 terra_df <- data_sp  # Full occurrence dataset
 unique_species <- unique(terra_df$species_id)
 numbers_sp <- length(unique_species)
+```
 
 ## Step 2 :: Environmental Predictors
-
+```r
 riveratl_global <- rast("data/River_atlas_1km_5vars/top5_global_rivers_atlas_raster_list_30sec.tif")
 bioclim_global_rn <- rast("data/BIOCLIM_rn_1km_5vars/bioclim_global_rn_5vars_30sec.tif")
+```
 
 ## Step 3 :: Initialize SDM Structures
-
+```r
 results_df <- data.frame(
   id = integer(),
   species_name = integer(),
@@ -173,9 +178,10 @@ results_df <- data.frame(
 raster_list <- list()
 combined_rasters <- rast()
 sdm_d <- list()
+```
 
 ## Step 4 :: Spatial Processing (Complete)
-
+```r
 watershed <- vect("data/H5_Iberian/H5_Iberian.shp")
 
 # CRS Handling and Conversion
@@ -228,9 +234,9 @@ raster_template <- rast(ext(aggregated_vec), resolution = resolution)
 aggregated_raster <- rasterize(aggregated_vec, raster_template, field = 1, fun = "count")
 aggregated_raster[!is.na(aggregated_raster)] <- NA
 crs(aggregated_raster) <- "EPSG:4326"
-
+```
 ## Step 5 :: aSDM Models Execution (Complete)
-
+```r
 input_cov <- bioclim_global_rn  # Primary covariates
 
 for (i in 1:numbers_sp) {
@@ -303,9 +309,10 @@ for (i in 1:numbers_sp) {
   combined_rasters_stack <- c(combined_rasters_stack, mask_en1)
   writeRaster(en1, filename = paste0("deleteplease.tif"), overwrite = TRUE)
 }
+```
 
 ## Step 6 :: Post-Processing (Complete)
-
+```r
 # Threshold Application
 thresholded_rasters_comb <- rast()
 for (i in 1:max(results_df$id)) {
