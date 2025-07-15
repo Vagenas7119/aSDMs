@@ -44,8 +44,9 @@ The repository represents a stand-alone analysis package and contains the full s
 ├── 📁 metrics_vagenas_et_al/ # 📈 Model performance metrics
 └── 📁 Script_Metanalysis/    # 🔄 Stand-alone analysis script
 ```
+---
 
-# 🌊 **Toy Problem: Predicting Habitat Suitability in Aquatic Ecosystems** 🐟🦐🌿📊
+# 🌊 **Toy Problem: Predicting Habitat Suitability in Aquatic Ecosystems** 🌊
 📋 Description
 
 You are an aquatic ecologist/ecohydrological engineer and you want to predict the distribution of multiple endemic species in a hydrographic network. Your task is to build an aquatic Species Distribution Model (aSDM) that predicts suitability scores or species richness based on:
@@ -126,8 +127,7 @@ flowchart TD
     linkStyle 5,6 stroke:#fff,stroke-width:3px
 
 ```
-## Start of Tutorial
-
+### Start of Tutorial
 # aSDMs :: Aquatic Species Distribution Models - Tutorial
 
 This tutorial demonstrates a workflow for building aquatic Species Distribution Models (aSDMs) using occurrence data and environmental predictors. To download the repository which includes all the required files for the toy problem execution download from: https://saco.csic.es/s/Co8WNBa323ft3Qi.
@@ -342,8 +342,7 @@ sp_richness <- crop(final_stack, thresholded_rasters_comb[[1]], mask = TRUE)
 writeRaster(combined_rasters_stack, "output/preh5_clima_endemics_1km.tif", overwrite = TRUE)
 write.csv(results_df, "output/preh5_clima_endemics_metrics.csv", row.names = FALSE)
 ```
-
-## End of Tutorial
+### End of Tutorial
 
 # Manuscript Outline
 
