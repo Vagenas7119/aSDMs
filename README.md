@@ -32,8 +32,7 @@ The structure of the scripts for the primary analysis set is structured as:
 ├── 🌍Pre_Alien/        # i) Widespread species - Global aSDMs "Pre_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Pre_Regional_Alien"
 └── 🏝️Pre_Endemics/     # i) Endemic species - Regional aSDMs "Pre_Regional_Endemics"
 
-Key:  
-🌍 = Global scale | 🏝️ = Regional/Endemic focus  
+Key: 🌍 = Global scale | 🏝️ = Regional/Endemic focus  
 ```
 
 # 📈 Outputs
@@ -130,27 +129,28 @@ flowchart TD
 ### Start of Tutorial
 # aSDMs :: Aquatic Species Distribution Models - Tutorial
 
-This tutorial demonstrates a workflow for building aquatic Species Distribution Models (aSDMs) using occurrence data and environmental predictors. To download the repository which includes all the required files for the toy problem execution download from: https://saco.csic.es/s/Co8WNBa323ft3Qi.
+This tutorial demonstrates a workflow for building aquatic Species Distribution Models (aSDMs) using occurrence data and environmental predictors. In this exercise, we provide a computational-light exercise with seven random species that demonstrates our methodology step-by-step, by implementing the pre-constrained h5 climate aSDMs, thus making it accessible for readers to replicate and explore. To download the repository which includes all the required files for the toy problem execution download from: https://saco.csic.es/s/Co8WNBa323ft3Qi.
 
 ## Step 0 :: Required Packages
 ```r
-library(sf)
-library(sdm)
-library(dismo)
-library(dplyr)
-library(tidyr)
-library(mapview)
-library(geodata)
-library(raster)
-library(RColorBrewer)
-library(terra)
-library(usdm) 
-library(randomForest)
-library(parallel)
+# List of required packages
+pkgs <- c("sf", "sdm", "dismo", "dplyr", "tidyr", 
+          "mapview", "geodata", "raster", "RColorBrewer",
+          "terra", "usdm", "randomForest", "parallel")
+
+# Install missing packages in one command
+if (length(setdiff(pkgs, rownames(installed.packages()))) > 0) {
+  install.packages(setdiff(pkgs, rownames(installed.packages())))
+}
+
+# Load all packages silently
+invisible(lapply(pkgs, library, character.only = TRUE))
 ```
 
 ## Step 1 :: Data Input
 ```r
+setwd("C:/XXX/XXX/XXX/aSDM_toy_problem/")
+data_sp<-vect("sevensp_toyprob.shp")
 terra_df <- data_sp  # Full occurrence dataset
 unique_species <- unique(terra_df$species_id)
 numbers_sp <- length(unique_species)
@@ -186,7 +186,7 @@ sdm_d <- list()
 
 ## Step 4 :: Spatial Processing (Complete)
 ```r
-watershed <- vect("data/H5_Iberian/H5_Iberian.shp")
+watershed <- vect("data/H5_Iberian/H5_Iberian.shp") #the user should define the spatial layer, in our files the H8 and H12 alternatives are available
 
 # CRS Handling and Conversion
 if (is.factor(terra_df$species_id)) {
@@ -241,7 +241,7 @@ crs(aggregated_raster) <- "EPSG:4326"
 ```
 ## Step 5 :: aSDM Models Execution (Complete)
 ```r
-input_cov <- bioclim_global_rn  # Primary covariates
+input_cov <- bioclim_global_rn  # Primary covariates climate aSDM - in case the user wants to apply hydrological or hydroclimatic or hierarchical approaches the fundamental documentation should be followed
 
 for (i in 1:numbers_sp) {
   # Watershed Processing
@@ -266,7 +266,7 @@ for (i in 1:numbers_sp) {
   )
 
   # Background Points Calculation
-  background_points <- sum(freq(bioc_gal_in_crop[[1]])) * 0.025
+  background_points <- sum(freq(bioc_gal_in_crop[[1]])) * 0.025 #we recommend 0.05 but for computational efficiency we increased the margin
 
   # SDM Implementation
   d <- sdmData(

@@ -22,6 +22,19 @@ library(sdm)
 library(randomForest)
 library(parallel)
 
+# List of required packages
+pkgs <- c("sf", "sdm", "dismo", "dplyr", "tidyr", 
+          "mapview", "geodata", "raster", "RColorBrewer",
+          "terra", "usdm", "randomForest", "parallel")
+
+# Install missing packages in one command
+if (length(setdiff(pkgs, rownames(installed.packages()))) > 0) {
+  install.packages(setdiff(pkgs, rownames(installed.packages())))
+}
+
+# Load all packages silently
+invisible(lapply(pkgs, library, character.only = TRUE))
+
 #### Chapter 1 :: Species occurrences imported objects/files to perform the aSDMs ####
 
 #set working directory
