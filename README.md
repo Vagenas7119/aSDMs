@@ -93,6 +93,7 @@ You are an aquatic ecologist/ecohydrological engineer and you want to predict th
 
 </div>
 
+```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 
     'fontFamily': 'Arial',
     'primaryColor': '#f5f5f5',
@@ -132,6 +133,7 @@ flowchart TD
     %% Radial layout adjustments
     linkStyle 0,1,2,3,4 stroke:#999,stroke-width:2px
     linkStyle 6,7 stroke:#666,stroke-width:2px,stroke-dasharray:5  %% Dashed for distinction
+```
 
 # aSDMs :: Aquatic Species Distribution Models - Tutorial
 
