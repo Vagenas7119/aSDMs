@@ -96,12 +96,10 @@ You are an aquatic ecologist/ecohydrological engineer and you want to predict th
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 
     'fontFamily': 'Arial',
-    'primaryColor': '#222222',  /* Darker background for contrast */
+    'primaryColor': '#f5f5f5',
     'primaryBorderColor': '#666',
-    'primaryTextColor': '#ffffff',  /* White text */
-    'nodeTextMargin': 8,
-    'lineColor': '#ffffff',  /* White connections */
-    'arrowheadColor': '#ffffff'  /* White arrowheads */
+    'primaryTextColor': '#222',
+    'nodeTextMargin': 8
 }, 'config': {'fontSize': 14}}}%%
 flowchart TD
     A(("<b>📊<br/>Aquatic SDM<br/>Predictors</b>")):::centerNode
@@ -111,28 +109,35 @@ flowchart TD
     E("<b>🌡️→💧<br/>h_clima_aSDM</b>"):::outerNode
     F("<b>💧→🌡️<br/>h_hydro_aSDM</b>"):::outerNode
 
-    %% Primary connections (solid white)
-    A === B
-    A === C
-    A === D
-    A === E
-    A === F
+    A --- B
+    A --- C
+    A --- D
+    A --- E
+    A --- F
     
-    %% Cross-connections (bold white)
-    B ==="Hydro-climate\nfeedback"=== F
-    C ==="Climate-hydro\nfeedback"=== E
+    %% Existing connections
+    B --- F
+    C --- E
+    
+    %% New double connections
+    C --- E
+    B --- F
+    
+    %% Alternative for visual distinction (using different line styles)
+    B -.-> F
+    C -.-> E
 
-    classDef centerNode stroke:#ffffff,stroke-width:3px,fill:#333333
-    classDef outerNode stroke:#ffffff,stroke-width:2px,fill:#444444
+    classDef centerNode stroke:#444,stroke-width:2.5px,fill:#f8f8f8
+    classDef outerNode stroke:#555,stroke-width:2px,fill:#f0f0f0
     
-    %% Styling for all connections
-    linkStyle default stroke:#ffffff,stroke-width:2px
-    linkStyle 5,6 stroke:#ffffff,stroke-width:3px
+    %% Radial layout adjustments
+    linkStyle 0,1,2,3,4 stroke:#999,stroke-width:2px
+    linkStyle 6,7 stroke:#666,stroke-width:2px,stroke-dasharray:5  %% Dashed for distinction
 ```
 
 # aSDMs :: Aquatic Species Distribution Models - Tutorial
 
-This tutorial demonstrates a workflow for building aquatic Species Distribution Models (aSDMs) using occurrence data and environmental predictors.
+This tutorial demonstrates a workflow for building aquatic Species Distribution Models (aSDMs) using occurrence data and environmental predictors. To download the repository which includes all the required files for the toy problem execution download from: https://saco.csic.es/s/Co8WNBa323ft3Qi.
 
 ## Step 0 :: Required Packages
 ```r
