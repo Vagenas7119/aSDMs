@@ -93,7 +93,6 @@ You are an aquatic ecologist/ecohydrological engineer and you want to predict th
 
 </div>
 
-```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 
     'fontFamily': 'Arial',
     'primaryColor': '#f5f5f5',
@@ -114,15 +113,25 @@ flowchart TD
     A --- D
     A --- E
     A --- F
+    
+    %% Existing connections
     B --- F
     C --- E
+    
+    %% New double connections
+    C --- E
+    B --- F
+    
+    %% Alternative for visual distinction (using different line styles)
+    B -.-> F
+    C -.-> E
 
     classDef centerNode stroke:#444,stroke-width:2.5px,fill:#f8f8f8
     classDef outerNode stroke:#555,stroke-width:2px,fill:#f0f0f0
     
     %% Radial layout adjustments
     linkStyle 0,1,2,3,4 stroke:#999,stroke-width:2px
-```
+    linkStyle 6,7 stroke:#666,stroke-width:2px,stroke-dasharray:5  %% Dashed for distinction
 
 # aSDMs :: Aquatic Species Distribution Models - Tutorial
 
@@ -338,8 +347,10 @@ sp_richness <- crop(final_stack, thresholded_rasters_comb[[1]], mask = TRUE)
 writeRaster(combined_rasters_stack, "output/preh5_clima_endemics_1km.tif", overwrite = TRUE)
 write.csv(results_df, "output/preh5_clima_endemics_metrics.csv", row.names = FALSE)
 ```
-## End
 
+## End of Tutorial
+
+# Manuscript Outline
 
 ## Abstract:
 Species Distribution Models (SDMs) in aquatic ecosystems present unique conceptual and technical challenges, from predicting distributions across spatially constrained networks to incorporating hydroclimatic drivers. These challenges amplify uncertainties and have hindered the development of standardized aquatic SDM frameworks. Here, we explore high-performance and efficient modelling protocols using presence-only records of freshwater organisms. Focusing on the Ichthyofauna of the Iberian Peninsula, we evaluated two hierarchical modelling structures: global-to-regional models trained at a global scale and projected regionally for widespread species, and strictly regional models trained and predicted within the region for endemic species. We systematically compare two spatial strategies for aquatic SDMs: unconstrained models, trained across the entire freshwater range of each species, and constrained models, trained only within watersheds where species are known to occur. Additionally, we evaluated different predictor combinations, ranging from individual environmental variables to hierarchical structures incorporating climatic, hydrological, and their interacting factors. Our results demonstrate that spatially constrained models significantly enhance predictive performance. Moreover, models trained with climate predictors consistently outperformed those relying solely on hydrological predictors. We conclude that all proposed modelling stages are essential for accurately predicting aquatic species distributions. This multi-stage process ensures comprehensive spatial representation, robust environmental variable selection, and optimal model configuration, thereby addressing the inherent complexity of aquatic ecosystems.
