@@ -94,46 +94,39 @@ You are an aquatic ecologist/ecohydrological engineer and you want to predict th
 </div>
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 
+%%{init: {'theme': 'base', 'themeVariables': {
     'fontFamily': 'Arial',
-    'primaryColor': '#f5f5f5',
-    'primaryBorderColor': '#666',
-    'primaryTextColor': '#222',
-    'nodeTextMargin': 8
-}, 'config': {'fontSize': 14}}}%%
+    'primaryColor': '#333',
+    'primaryBorderColor': '#fff',
+    'primaryTextColor': '#fff',
+    'lineColor': '#fff',
+    'arrowheadColor': '#fff',
+    'textColor': '#fff'
+}}}%%
 flowchart TD
     A(("<b>📊<br/>Aquatic SDM<br/>Predictors</b>")):::centerNode
     B("<b>🌡️<br/>clima_aSDM</b>"):::outerNode
-    C("<b>💧<br/>hydro_aSDM</b>"):::outerNode 
+    C("<b>💧<br/>hydro_aSDM</b>"):::outerNode
     D("<b>🌡️💧<br/>hydroclima_aSDM</b>"):::outerNode
     E("<b>🌡️→💧<br/>h_clima_aSDM</b>"):::outerNode
     F("<b>💧→🌡️<br/>h_hydro_aSDM</b>"):::outerNode
 
-    A --- B
-    A --- C
-    A --- D
-    A --- E
-    A --- F
-    
-    %% Existing connections
-    B --- F
-    C --- E
-    
-    %% New double connections
-    C --- E
-    B --- F
-    
-    %% Alternative for visual distinction (using different line styles)
-    B -.-> F
-    C -.-> E
+    A --o B
+    A --o C
+    A --o D
+    A --o E
+    A --o F
+    B --o F
+    C --o E
 
-    classDef centerNode stroke:#444,stroke-width:2.5px,fill:#f8f8f8
-    classDef outerNode stroke:#555,stroke-width:2px,fill:#f0f0f0
+    classDef centerNode stroke:#fff,stroke-width:3px,fill:#333
+    classDef outerNode stroke:#fff,stroke-width:2px,fill:#444
     
-    %% Radial layout adjustments
-    linkStyle 0,1,2,3,4 stroke:#999,stroke-width:2px
-    linkStyle 6,7 stroke:#666,stroke-width:2px,stroke-dasharray:5  %% Dashed for distinction
+    linkStyle default stroke:#fff,stroke-width:2px
+    linkStyle 5,6 stroke:#fff,stroke-width:3px
+
 ```
+## Start of Tutorial
 
 # aSDMs :: Aquatic Species Distribution Models - Tutorial
 
