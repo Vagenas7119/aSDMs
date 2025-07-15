@@ -373,7 +373,9 @@ Vagenas, G., Matias, M., Araujo M.B. (2025). Beyond land: a framework for modell
 **Figure 4.** Stacked aSDMs for endemic (N=39) and non-endemic/introduced species (N=53) across the study area. The maps represent stacked outputs derived through aSDMs using the superior pre-constrained h5 spatial strategy, based on climate (left) and hydrological (right) predictor sets. Boxes indicate the high-resolution (~1x1 km) aSDMs projected across the hydrographic network. Highlighted zoomed-in areas are illustrative examples for visual comparison and do not represent specific ecological patterns.
 
 # Author: Georgios Vagenas
+
 Name: PhD Researcher - Georgios Vagenas (georgios.vagenas@mncn.csic.es | georgvagenas@gmail.com)
+
 Affiliation: Biogeography and Global Change Department, National Museum of Natural Sciences, CSIC, C/ Jose Gutierrez Abascal, 2, Madrid 28006, Spain
 
 **Last modified: 15/07/2025**
