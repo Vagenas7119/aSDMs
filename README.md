@@ -122,6 +122,216 @@ flowchart TD
     linkStyle 0,1,2,3,4 stroke:#999,stroke-width:2px
 ```
 
+# aSDMs :: Aquatic Species Distribution Models - Tutorial
+
+This tutorial demonstrates a workflow for building aquatic Species Distribution Models (aSDMs) using occurrence data and environmental predictors.
+
+## Step 0 :: Required Packages
+```r
+library(sf)
+library(sdm)
+library(dismo)
+library(dplyr)
+library(tidyr)
+library(mapview)
+library(geodata)
+library(raster)
+library(RColorBrewer)
+library(terra)
+library(usdm) 
+library(randomForest)
+library(parallel)
+
+## Step 1 :: Data Input
+
+terra_df <- data_sp  # Full occurrence dataset
+unique_species <- unique(terra_df$species_id)
+numbers_sp <- length(unique_species)
+
+## Step 2 :: Environmental Predictors
+
+riveratl_global <- rast("data/River_atlas_1km_5vars/top5_global_rivers_atlas_raster_list_30sec.tif")
+bioclim_global_rn <- rast("data/BIOCLIM_rn_1km_5vars/bioclim_global_rn_5vars_30sec.tif")
+
+## Step 3 :: Initialize SDM Structures
+
+results_df <- data.frame(
+  id = integer(),
+  species_name = integer(),
+  e_AUC = numeric(),
+  e_COR = numeric(),
+  t_maxSSS = numeric(),
+  t_maxkappa = numeric(),
+  t_prevalence = numeric(),
+  CBI = numeric(),
+  maxKappa = numeric(),
+  maxTSS = numeric(),
+  obs_prevalence = numeric(),
+  stringsAsFactors = FALSE
+)
+
+raster_list <- list()
+combined_rasters <- rast()
+sdm_d <- list()
+
+## Step 4 :: Spatial Processing (Complete)
+
+watershed <- vect("data/H5_Iberian/H5_Iberian.shp")
+
+# CRS Handling and Conversion
+if (is.factor(terra_df$species_id)) {
+  terra_df$species_id <- as.numeric(levels(terra_df$species_id))[terra_df$species_id]
+} else {
+  terra_df$species_id <- as.numeric(terra_df$species_id)
+}
+crs(terra_df) <- "EPSG:4326"
+miteco_sp_vect <- terra_df
+
+# Intersect occurrences with watersheds
+miteco_sp_in <- terra::intersect(miteco_sp_vect, watershed)
+
+# Data Conversion Pipeline
+data <- as.data.frame(miteco_sp_in)
+data$geometry <- NULL
+coords <- geom(miteco_sp_in)
+terra_df_o <- cbind(coords, data)
+
+# Species Filtering (≥10 obs)
+terra_df_or <- terra_df_o %>%
+  mutate(species_id = as.numeric(factor(terra_df_o$species_id)))
+
+species_name_id <- dplyr::select(terra_df_or, "species_id", "HYBAS_ID")
+
+terra_df_filtered <- terra_df_or %>%
+  group_by(species_id) %>%
+  filter(n() >= 10) %>%
+  ungroup() %>%
+  droplevels()
+
+# Presence-Absence Matrix Construction
+presence_absence_matrix <- terra_df_conv %>%
+  mutate(presence = 1) %>%
+  dplyr::select(species_id, HYBAS_ID, presence) %>%
+  distinct() %>%
+  pivot_wider(names_from = HYBAS_ID, values_from = presence, values_fill = list(presence = 0)) %>%
+  as.data.frame() %>%
+  .[order(.$species_id),]
+
+presence_long <- presence_absence_matrix %>%
+  pivot_longer(-species_id, names_to = "HYBAS_ID", values_to = "presence")
+
+# Spatial Template Preparation
+iberian_watersheds <- watershed
+aggregated_vec <- aggregate(iberian_watersheds)
+resolution <- res(bioclim_global_rn)
+raster_template <- rast(ext(aggregated_vec), resolution = resolution)
+aggregated_raster <- rasterize(aggregated_vec, raster_template, field = 1, fun = "count")
+aggregated_raster[!is.na(aggregated_raster)] <- NA
+crs(aggregated_raster) <- "EPSG:4326"
+
+## Step 5 :: aSDM Models Execution (Complete)
+
+input_cov <- bioclim_global_rn  # Primary covariates
+
+for (i in 1:numbers_sp) {
+  # Watershed Processing
+  species_data <- presence_long %>%
+    filter(species_id == unique(presence_long$species_id)[[i]] & presence == 1)
+  
+  watershed_id <- species_data$HYBAS_ID
+  masked_watershed <- watershed[watershed$HYBAS_ID %in% watershed_id, ]
+  polygon_list[[i]] <- masked_watershed
+  dissolve <- aggregate(polygon_list[[i]], dissolve = TRUE)
+
+  # Environmental Data Preparation
+  bioc_gal_in <- input_cov
+  bioc_gal_in_crop <- crop(bioc_gal_in, dissolve, mask = TRUE)
+
+  # Occurrence Data Setup
+  terra_df_demo <- subset(terra_df, species_id == numbers_sp[i])
+  terra_df_demo$species_id <- 1
+  terra_df_demo_f <- SpatialPointsDataFrame(
+    terra_df_demo, 
+    data = terra_df_demo@data[, "species_id", drop = FALSE]
+  )
+
+  # Background Points Calculation
+  background_points <- sum(freq(bioc_gal_in_crop[[1]])) * 0.025
+
+  # SDM Implementation
+  d <- sdmData(
+    species_id ~ ., 
+    terra_df_demo_f, 
+    predictors = as(bioc_gal_in_crop, "Raster"), 
+    bg = list(method = 'gRandom', n = round(background_points), exclude = TRUE)
+  
+  m <- sdm(
+    species_id ~ ., 
+    d, 
+    methods = c('glm', 'brt', 'rf'), 
+    replication = c('boot'),
+    n = 1, 
+    parallelSetting = list(ncore = 4, method = 'parallel')
+  
+  # Prediction and Evaluation
+  p2 <- predict(m, as(bioc_gal_in_crop, "Raster"))
+  en1 <- ensemble(m, p2, setting = list(method = 'weighted', stat = 'auc'))
+  e <- evaluates(d, en1)
+  bc <- sdm:::.boyce(e@observed, e@predicted)
+
+  # Results Compilation
+  results_df <- rbind(results_df, data.frame(
+    id = i,
+    species_id = paste("Species", i),
+    e_AUC = e@statistics$AUC,
+    e_COR = e@statistics$COR[1],
+    CBI = bc$CBI,
+    maxTSS = e@threshold_based$TSS[2],
+    maxKappa = e@threshold_based$Kappa[5],
+    t_maxSSS = e@threshold_based$threshold[2],
+    t_maxkappa = e@threshold_based$threshold[5],
+    t_prevalence = e@threshold_based$threshold[10],
+    obs_prevalence = length(d@species$species_id@presence) / 
+      (length(d@species$species_id@background) + length(d@species$species_id@presence))
+  )
+
+  # Output Handling
+  raster_list[[i]] <- en1
+  crop_en1 <- mask(en1, aggregated_vec)
+  mask_en1 <- resample(crop_en1, combined_rasters, method = "near")
+  crs(mask_en1) <- "EPSG:4326"
+  combined_rasters_stack <- c(combined_rasters_stack, mask_en1)
+  writeRaster(en1, filename = paste0("deleteplease.tif"), overwrite = TRUE)
+}
+
+## Step 6 :: Post-Processing (Complete)
+
+# Threshold Application
+thresholded_rasters_comb <- rast()
+for (i in 1:max(results_df$id)) {
+  threshold_value <- results_df$obs_prevalence[i]
+  thresholded_rasters[[i]] <- app(
+    combined_rasters_stack[[i]], 
+    fun = function(x) ifelse(x > threshold_value, 1, 0)
+  )
+  thresholded_rasters_comb <- c(thresholded_rasters_comb, thresholded_rasters[[i]])
+  names(thresholded_rasters_comb)[i] <- results_df$species_id[i]
+}
+
+# Species Richness Calculation
+masked_rasters <- lapply(thresholded_rasters_comb, function(r) {
+  r[is.na(r)] <- 0
+  return(r)
+})
+stacked_raster <- rast(masked_rasters)
+final_stack <- sum(stacked_raster)
+sp_richness <- crop(final_stack, thresholded_rasters_comb[[1]], mask = TRUE)
+
+# Final Outputs
+writeRaster(combined_rasters_stack, "output/preh5_clima_endemics_1km.tif", overwrite = TRUE)
+write.csv(results_df, "output/preh5_clima_endemics_metrics.csv", row.names = FALSE)
+```
+## End
 
 
 ## Abstract:
