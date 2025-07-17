@@ -45,7 +45,7 @@ The repository represents a stand-alone analysis package and contains the full s
 ```
 ---
 
-# 🌊 **Toy Problem: Predicting Habitat Suitability in Aquatic Ecosystems** 🌊
+# 🌊Toy Problem: Predicting Habitat Suitability in Aquatic Ecosystems🌊
 📋 Description
 
 You are an aquatic ecologist/ecohydrological engineer and you want to predict the distribution of multiple endemic species in a hydrographic network. Your task is to build an aquatic Species Distribution Model (aSDM) that predicts suitability scores or species richness based on:
