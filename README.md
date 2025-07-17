@@ -4,11 +4,11 @@
 
 </div>
 
+![GITHUB_logo](https://github.com/user-attachments/assets/30290a4a-9196-4687-b997-73abf2207593)
+
 # Repository Overview
 
 This repository contains the complete set of baseline input data, analysis scripts, and final outputs (rasters and figures) from our study. Additionally, we begin with a user-friendly "Toy Problem" tutorial - a lightweight, computational exercise that demonstrates our methodology step-by-step, making it accessible for readers to replicate and explore.
-
-![GITHUB_logo](https://github.com/user-attachments/assets/30290a4a-9196-4687-b997-73abf2207593)
 
 # Project structure
 ```
