@@ -445,7 +445,7 @@ Vagenas, G., Matias, M., Araujo M.B. (2025). Beyond land: a framework for modell
 ![Figure1_cropped_jpg](https://github.com/user-attachments/assets/b655c959-c405-4b5d-a443-8130f5ef321d)
 **Figure 1**. Spatial distribution of species richness of the dataset used for the development of the aSDMs through a (A) global (GBIF | 50 arc-minute grid) to (B) regional (MITECO, SNIPAD, GBIF | 10 arc-minute grid) approach for the 92 endemics and widespread freshwater fish species of the study area. Colors represent gradients of species richness (low = yellow; high = red). The finer resolution (B) highlights richness patterns in the Iberian Peninsula.
 
-![Figure2_v3](https://github.com/user-attachments/assets/61a6ebd4-7fda-469f-a94f-a6e7fce59020)
+![Figure2_v4](https://github.com/user-attachments/assets/a115a22a-395e-41a1-a48b-e8f2b5f82653)
 **Figure 2.** Flowchart illustrating the implementation and evaluation workflow for aquatic Species Distribution Models (aSDMs), comprising nine sequential stages (i.e., I-IX), from input data preparation and modelling through to performance evaluation and the generation of stacked suitability maps.
 
 ![Figure3](https://github.com/user-attachments/assets/83ad4567-7767-41c0-9c7c-6b902f796804)
