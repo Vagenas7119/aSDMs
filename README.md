@@ -149,17 +149,18 @@ invisible(lapply(pkgs, library, character.only = TRUE))
 
 ## Step 1 :: Data Input
 ```r
-setwd("C:/XXX/XXX/XXX/aSDM_toy_problem/")
-data_sp<-vect("sevensp_toyprob.shp")
+setwd("C:/XXX/aSDM/data/")
+data_sp<-vect("random_species_subset_sp10.shp")
 terra_df <- data_sp  # Full occurrence dataset
 unique_species <- unique(terra_df$species_id)
 numbers_sp <- length(unique_species)
+numbers_sp
 ```
 
 ## Step 2 :: Hydroclimatic Predictors
 ```r
-riveratl_global <- rast("data/River_atlas_1km_5vars/top5_global_rivers_atlas_raster_list_30sec.tif")
-bioclim_global_rn <- rast("data/BIOCLIM_rn_1km_5vars/bioclim_global_rn_5vars_30sec.tif")
+riveratl_global <- rast("top5_global_rivers_atlas_raster_list_30sec.tif")
+bioclim_global_rn <- rast("bioclim_global_rn_5vars_30sec.tif")
 ```
 
 ## Step 3 :: Initialize SDM Structures
@@ -186,7 +187,7 @@ sdm_d <- list()
 
 ## Step 4 :: Spatial Processing - Allocation to watersheds
 ```r
-watershed <- vect("data/H5_Iberian/H5_Iberian.shp") #the user should define the spatial layer, in our files the H8 and H12 alternatives are available
+watershed <- vect("H5_Iberian/H5_Iberian.shp") #the user should define the spatial layer, in our files the H8 and H12 alternatives are available
 
 # CRS Handling and Conversion
 if (is.factor(terra_df$species_id)) {
@@ -218,17 +219,25 @@ terra_df_filtered <- terra_df_or %>%
   ungroup() %>%
   droplevels()
 
-# Presence-Absence Matrix Construction
+
+# First, convert your spatial vector data to a dataframe
+terra_df_conv <- as.data.frame(terra_df_filtered)
+
+# Now create the presence-absence matrix
 presence_absence_matrix <- terra_df_conv %>%
   mutate(presence = 1) %>%
   dplyr::select(species_id, HYBAS_ID, presence) %>%
   distinct() %>%
   pivot_wider(names_from = HYBAS_ID, values_from = presence, values_fill = list(presence = 0)) %>%
-  as.data.frame() %>%
-  .[order(.$species_id),]
+  as.data.frame()
 
+# Order ascendingly by species_id
+presence_absence_matrix <- presence_absence_matrix[order(presence_absence_matrix$species_id),]
+
+# Convert presence-absence table back to long format
 presence_long <- presence_absence_matrix %>%
   pivot_longer(-species_id, names_to = "HYBAS_ID", values_to = "presence")
+
 
 # Spatial Template Preparation
 iberian_watersheds <- watershed
@@ -238,58 +247,97 @@ raster_template <- rast(ext(aggregated_vec), resolution = resolution)
 aggregated_raster <- rasterize(aggregated_vec, raster_template, field = 1, fun = "count")
 aggregated_raster[!is.na(aggregated_raster)] <- NA
 crs(aggregated_raster) <- "EPSG:4326"
+
+
+combined_rasters<-resample(combined_rasters,aggregated_raster)
+crs(combined_rasters)<- "EPSG:4326"
+
 ```
 ## Step 5 :: aSDM Models Prediction - Fitting
 ```r
 input_cov <- bioclim_global_rn  # Primary covariates climate aSDM - in case the user wants to apply hydrological or hydroclimatic or hierarchical approaches the fundamental documentation should be followed
 
-for (i in 1:numbers_sp) {
-  # Watershed Processing
+# Initialize lists
+polygon_list <- list()
+raster_list <- list()
+sdm_d <- list()
+combined_rasters_stack <- rast()
+results_df <- data.frame()
+
+# Define the vector of numbers - THIS SHOULD BE OUTSIDE THE LOOP
+numbers_sp <- levels(as.factor(terra_df$species_id))
+
+
+for (i in 1:length(numbers_sp)) {
+  
+  #set covariates
+  input_cov <- bioclim_global_rn  # Use your primary covariates
+  
+  # Get presence data for the current species
   species_data <- presence_long %>%
     filter(species_id == unique(presence_long$species_id)[[i]] & presence == 1)
   
+  # Get the watershed IDs
   watershed_id <- species_data$HYBAS_ID
+  
+  # Get the corresponding freshwater polygon for this HYBAS_ID
   masked_watershed <- watershed[watershed$HYBAS_ID %in% watershed_id, ]
+  
+  # Connect the watersheds produced in a single polygon
   polygon_list[[i]] <- masked_watershed
+  
+  # Dissolve the different watersheds to function as the training region
   dissolve <- aggregate(polygon_list[[i]], dissolve = TRUE)
-
-  # Environmental Data Preparation
-  bioc_gal_in <- input_cov
+  
+  # Combine the raster objects
+  combined_raster <- c(input_cov)
+  
+  ############ RUN THE SDMs #############
+  
+  bioc_gal_in <- combined_raster
+  
+  crs(dissolve) <- "EPSG:4326"
+  
+  # Crop the bioclim to the extent of the watersheds where the species belongs to
   bioc_gal_in_crop <- crop(bioc_gal_in, dissolve, mask = TRUE)
-
-  # Occurrence Data Setup
-  terra_df_demo <- subset(terra_df, species_id == numbers_sp[i])
-  terra_df_demo$species_id <- 1
+  
+  # Pre-set the dataset - CORRECTED: use single brackets [i]
+  terra_df_demo <- terra_df[terra_df$species_id == numbers_sp[i], ]
+  terra_df_demo$species_id[terra_df_demo$species_id == numbers_sp[i]] <- 1
+  
+  # Convert SpatVector to data frame with coordinates
+  terra_df_demo_df <- as.data.frame(terra_df_demo, geom = "XY")
+  
+  # Create SpatialPointsDataFrame from coordinates
   terra_df_demo_f <- SpatialPointsDataFrame(
-    terra_df_demo, 
-    data = terra_df_demo@data[, "species_id", drop = FALSE]
+    coords = terra_df_demo_df[, c("x", "y")],
+    data = data.frame(species_id = rep(1, nrow(terra_df_demo_df))),
+    proj4string = CRS("+init=EPSG:4326")
   )
-
-  # Background Points Calculation
-  background_points <- sum(freq(bioc_gal_in_crop[[1]])) * 0.025 #we recommend 0.05 but for computational efficiency we increased the margin
-
-  # SDM Implementation
-  d <- sdmData(
-    species_id ~ ., 
-    terra_df_demo_f, 
-    predictors = as(bioc_gal_in_crop, "Raster"), 
-    bg = list(method = 'gRandom', n = round(background_points), exclude = TRUE)
   
-  m <- sdm(
-    species_id ~ ., 
-    d, 
-    methods = c('glm', 'brt', 'rf'), 
-    replication = c('boot'),
-    n = 1, 
-    parallelSetting = list(ncore = 4, method = 'parallel')
+  # Generate background points equal to 5% of the training area
+  background_points <- sum(freq(bioc_gal_in_crop[[1]]))* 0.05
   
-  # Prediction and Evaluation
-  p2 <- predict(m, as(bioc_gal_in_crop, "Raster"))
+  # Convert SpatRaster to RasterBrick
+  r_bioc_gal_in_crop <- as(bioc_gal_in_crop, "Raster")
+  
+  d <- sdmData(species_id ~ ., terra_df_demo_f, predictors = r_bioc_gal_in_crop, 
+               bg = list(method = 'gRandom', n = round(background_points), exclude = TRUE))
+  
+  # Store the background points in a vector to be evaluated at a later stage
+  sdm_d[[i]] <- d
+  
+  # SDM function to fit the models
+  m <- sdm(species_id ~ ., d, methods = c('glm', 'brt', 'rf'), replication = c('boot'),
+           test.p = 30, n = 2, parallelSetting = list(ncore = 4, method = 'parallel'))
+  
+  # Current prediction to the rest of the 30%
+  p2 <- predict(m, r_bioc_gal_in_crop)
+  
   en1 <- ensemble(m, p2, setting = list(method = 'weighted', stat = 'auc'))
   e <- evaluates(d, en1)
   bc <- sdm:::.boyce(e@observed, e@predicted)
-
-  # Results Compilation
+  
   results_df <- rbind(results_df, data.frame(
     id = i,
     species_id = paste("Species", i),
@@ -303,31 +351,59 @@ for (i in 1:numbers_sp) {
     t_prevalence = e@threshold_based$threshold[10],
     obs_prevalence = length(d@species$species_id@presence) / 
       (length(d@species$species_id@background) + length(d@species$species_id@presence))
-  )
-
-  # Output Handling
-  raster_list[[i]] <- en1
-  crop_en1 <- mask(en1, aggregated_vec)
-  mask_en1 <- resample(crop_en1, combined_rasters, method = "near")
-  crs(mask_en1) <- "EPSG:4326"
-  combined_rasters_stack <- c(combined_rasters_stack, mask_en1)
-  writeRaster(en1, filename = paste0("deleteplease.tif"), overwrite = TRUE)
+  ))
+  
+  
+  #name the raster file based on the species name
+  species_name <- terra_df$Species[terra_df$species_id == i][1]
+  names(en1) <- species_name
+  
+  #Combine the aSDM into the Iberian extent
+  crop_en1<-mask(en1,aggregated_vec)
+ 
+  mask_en1<- resample(crop_en1, combined_rasters, method = "near")
+  #plot(mask_en1)
+  
+  # Reproject raster1 to the CRS of raster2
+  crs(mask_en1) = "EPSG:4326"
+  
+  #store all the species in a combon raster file
+  combined_rasters_stack <- c(combined_rasters_stack,mask_en1)
+  
+  # Define the file name for saving and NAME IT BASE ON THE SPECIES ACCORDING TO THE INTIAL LEDGER
+  file_name <- paste0("deleteplease.tif")
+  
+  # Save the raster file
+  writeRaster(en1, filename = file_name, overwrite = TRUE)
+  
+  # Print a message indicating the file has been saved
+  cat("Saved:", file_name, "for iteration:", i, "\n")
 }
+
+# Assess the number of layers and the generated habitat suitability raster layer
+nlyr(combined_rasters_stack)
+
+plot(combined_rasters_stack)
+
 ```
 
 ## Step 6 :: Post-Processing - Thresholding based on prevalence
 ```r
 # Threshold Application
-thresholded_rasters_comb <- rast()
+thresholded_rasters_list <- list()
+
 for (i in 1:max(results_df$id)) {
   threshold_value <- results_df$obs_prevalence[i]
-  thresholded_rasters[[i]] <- app(
+  thresholded_raster <- app(
     combined_rasters_stack[[i]], 
     fun = function(x) ifelse(x > threshold_value, 1, 0)
   )
-  thresholded_rasters_comb <- c(thresholded_rasters_comb, thresholded_rasters[[i]])
-  names(thresholded_rasters_comb)[i] <- results_df$species_id[i]
+  thresholded_rasters_list[[i]] <- thresholded_raster
 }
+
+# Combine all at once
+thresholded_rasters_comb <- rast(thresholded_rasters_list)
+names(thresholded_rasters_comb) <- results_df$species_id[1:length(thresholded_rasters_list)]
 
 # Species Richness Calculation
 masked_rasters <- lapply(thresholded_rasters_comb, function(r) {
@@ -336,18 +412,24 @@ masked_rasters <- lapply(thresholded_rasters_comb, function(r) {
 })
 stacked_raster <- rast(masked_rasters)
 final_stack <- sum(stacked_raster)
-sp_richness <- crop(final_stack, thresholded_rasters_comb[[1]], mask = TRUE)
+
+#Plot species richness based on thresholded prevalence per species
+plot(stacked_raster)
+
+#Plot species richness based on thresholded prevalence for all species summed
+plot(final_stack)
 
 # Final Outputs
-writeRaster(combined_rasters_stack, "output/preh5_clima_endemics_1km.tif", overwrite = TRUE)
-write.csv(results_df, "output/preh5_clima_endemics_metrics.csv", row.names = FALSE)
+writeRaster(combined_rasters_stack, "preh5_clima_endemics_1km.tif", overwrite = TRUE)
+writeRaster(final_stack,"species_richness_thresholded_1km.tif",overwrite=TRUE)
+write.csv(results_df, "preh5_clima_endemics_metrics.csv", row.names = FALSE)
 ```
 ### End of Tutorial
 
 # Manuscript Outline
 
 ## Abstract:
-Species Distribution Models (SDMs) have traditionally been developed in a terrestrial context, and their application to aquatic ecosystems presents unique challenges. These include predicting species distributions across spatially delineated environments, incorporating key specific environmental drivers such as hydromorphological features. In this study, we develop a multi-stage framework that explicitly addresses these challenges by combining novel hierarchical model structures, spatial strategies and flexible predictor sets. Using presence-only records of freshwater fish from the Iberian Peninsula, we investigated: the optimal spatial training extent for SDMs in freshwater ecosystems; (ii) the effect of multiple predictor combinations—from single variables to hierarchical sets integrating climatic, hydrological, and interactive factors—on predictive performance; and (iii) the interplay between climate and hydrology in predicting species distributions. By systematically cross-comparing these methodological dimensions, we show that spatially constrained models deliver markedly higher predictive accuracy, and that climate-based predictors consistently outperform purely hydrological ones. Our results highlight that no single methodological decision guarantees improved results in all circumstances. Therefore, our framework provides scope for standardising SDMs in freshwater systems, ensuring more reliable inference under the intrinsic complexity of aquatic environments.
+Species Distribution Models (SDMs) have traditionally been developed in a terrestrial context, and their application to aquatic ecosystems presents unique challenges. These include predicting species distributions across spatially constrained environments, and incorporating specific environmental drivers such as hydromorphological features. In this study, we address these challenges by exploring various spatially-explicit model training strategies, novel hierarchical model structures and different flexible predictor sets. Using Iberian freshwater fish as a case study, we investigated: (i) the optimal spatial training extent for SDMs in freshwater ecosystems; (ii) the effect of multiple predictor combinations—from single variables to hierarchical sets integrating climatic, hydrological, and interactive factors—on predictive performance; and (iii) the interplay between climate and hydrology in predicting species distributions. By systematically cross-comparing these methodological dimensions we show that pre-constrained models to a species' watershed of occurrence—meaning they are trained within its boundaries—deliver higher predictive accuracy, and that climate-based predictors consistently outperform purely hydrological ones. Our framework provides a basis for standardising SDMs in freshwater systems, but it remains to be seen whether the patterns we observed in Iberia hold across different geographies. Future studies applying the same protocol to other regions will be essential to assess the robustness and generality of our results.
 
 ### Keywords: 
 SDMs, freshwaters, fish, hydrology, climate, watersheds, hierarchical, aquatic species
@@ -378,6 +460,6 @@ Name: PhD Researcher - Georgios Vagenas (georgios.vagenas@mncn.csic.es | georgva
 
 Affiliation: Biogeography and Global Change Department, National Museum of Natural Sciences, CSIC, C/ Jose Gutierrez Abascal, 2, Madrid 28006, Spain
 
-**Last modified: 04/10/2025**
+**Last modified: 26/10/2025**
 
 
