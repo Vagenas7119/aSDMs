@@ -1,138 +1,17 @@
-<div align="center">
-
-# aSDMs :: aquatic Species Distribution Models
-
-</div>
-
-![GITHUB_logo](https://github.com/user-attachments/assets/30290a4a-9196-4687-b997-73abf2207593)
-
-# Repository Overview
-
-This repository contains the complete set of baseline input data, analysis scripts, and final outputs (rasters and figures) from our study. Additionally, we begin with a user-friendly "Toy Problem" tutorial - a lightweight, computational exercise that demonstrates our methodology step-by-step, making it accessible for readers to replicate and explore.
-
-# Project structure
-```
-├── 📁 data/          # 🌡️ Local data (bioclimatic vars, hydrological layers)
-├── 📁 supplementary/ # 📑 Output - Supplementary Figures
-├── 📁 Scripts        # 💻 Main analysis scripts (see structure below)
-├── 📁 outputs/       # 🖨️ Generated figures & analysis results
-└── 📁 figures/       # 🖼️ Final manuscript figures
-```
-# 🔗 Data
-The baseline layers 🌐 required for the analysis can be downloaded from here: https://saco.csic.es/s/SYTM8qZrnY2HG5q
-
-# 📚 Supplementary material
-All the information related to the Supplementary material of this study can be accessed by the following link: https://saco.csic.es/s/3p7n9p724kYr5jN
-
-# 💻 Fundamental Scripts
-The structure of the scripts for the primary analysis set is structured as: 
-```
-├── 🌍Post_Alien/       # i) Widespread species - Global aSDMs "Post_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Post_Regional_Alien"
-├── 🏝️Post_Endemics/    # i) Endemic species - Regional aSDMs "Post_Regional_Endemics" 
-├── 🌍Pre_Alien/        # i) Widespread species - Global aSDMs "Pre_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Pre_Regional_Alien"
-└── 🏝️Pre_Endemics/     # i) Endemic species - Regional aSDMs "Pre_Regional_Endemics"
-
-Key: 🌍 = Global scale | 🏝️ = Regional/Endemic focus  
-```
-
-# 📈 Outputs
-The repository represents a stand-alone analysis package and contains the full set of initial data and the required script to generate the figures of the study:
-```
-📁 outputs/
-├── 📁 input/                 # 🗺️ Stacked suitability maps
-├── 📁 metrics_vagenas_et_al/ # 📈 Model performance metrics
-└── 📁 Script_Metanalysis/    # 🔄 Stand-alone analysis script
-```
+---
+title: "aSDM_Toy Problem Application"
+author: "Georgios Vagenas"
+date: "2025-10-26"
+output: html_document
 ---
 
-# 🌊Toy Problem: Predicting Habitat Suitability in Aquatic Ecosystems🌊
-📋 Description
-
-You are an aquatic ecologist/ecohydrological engineer and you want to predict the distribution of multiple endemic species in a hydrographic network. Your task is to build an aquatic Species Distribution Model (aSDM) that predicts suitability scores or species richness based on:
-
-<div align="center">
-  
-<table>
-  <tr>
-    <th>Model Architecture</th>
-    <th>Symbol</th>
-    <th>Key Variables</th>
-    <th>Short ID</th>
-  </tr>
-  <tr>
-    <td>Climate aSDM</td>
-    <td>🌡️</td>
-    <td>Temperature, Precipitation</td>
-    <td><code>clima_SDM</code></td>
-  </tr>
-  <tr>
-    <td>Hydrological aSDM</td>
-    <td>💧</td>
-    <td>Discharge, Stream gradient</td>
-    <td><code>hydro_aSDM</code></td>
-  </tr>
-  <tr>
-    <td>Hydroclimatic aSDM</td>
-    <td>🌡️ & 💧</td>
-    <td>Climate × Hydrological</td>
-    <td><code>hydroclima_aSDM</code></td>
-  </tr>
-  <tr>
-    <td>Hierarchical Climate</td>
-    <td>🌡️→💧</td>
-    <td>Climate + Hydro covariate</td>
-    <td><code>h_clima_aSDM</code></td>
-  </tr>
-  <tr>
-    <td>Hierarchical Hydro</td>
-    <td>💧→🌡️</td>
-    <td>Hydro + Climate covariate</td>
-    <td><code>h_hydro_aSDM</code></td>
-  </tr>
-</table>
-
-</div>
-
-```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {
-    'fontFamily': 'Arial',
-    'primaryColor': '#333',
-    'primaryBorderColor': '#fff',
-    'primaryTextColor': '#fff',
-    'lineColor': '#fff',
-    'arrowheadColor': '#fff',
-    'textColor': '#fff'
-}}}%%
-flowchart TD
-    A(("<b>📊<br/>Aquatic SDM<br/>Predictors</b>")):::centerNode
-    B("<b>🌡️<br/>clima_aSDM</b>"):::outerNode
-    C("<b>💧<br/>hydro_aSDM</b>"):::outerNode
-    D("<b>🌡️💧<br/>hydroclima_aSDM</b>"):::outerNode
-    E("<b>🌡️→💧<br/>h_clima_aSDM</b>"):::outerNode
-    F("<b>💧→🌡️<br/>h_hydro_aSDM</b>"):::outerNode
-
-    A --o B
-    A --o C
-    A --o D
-    A --o E
-    A --o F
-    B --o F
-    C --o E
-
-    classDef centerNode stroke:#fff,stroke-width:3px,fill:#333
-    classDef outerNode stroke:#fff,stroke-width:2px,fill:#444
-    
-    linkStyle default stroke:#fff,stroke-width:2px
-    linkStyle 5,6 stroke:#fff,stroke-width:3px
-
-```
 ### Start of Tutorial
-# aSDMs :: Aquatic Species Distribution Models - Tutorial
+aSDMs :: Aquatic Species Distribution Models - Tutorial
 
 This tutorial demonstrates a workflow for building aquatic Species Distribution Models (aSDMs) using occurrence data and environmental predictors. In this exercise, we provide a computational-light exercise with seven random species that demonstrates our methodology step-by-step, by implementing the pre-constrained h5 climate aSDMs, thus making it accessible for readers to replicate and explore. To download the repository which includes all the required files for the toy problem execution download from: https://saco.csic.es/s/Co8WNBa323ft3Qi.
 
 ## Step 0 :: Required Packages
-```r
+```{r}
 # List of required packages
 pkgs <- c("sf", "sdm", "dismo", "dplyr", "tidyr", 
           "mapview", "geodata", "raster", "RColorBrewer",
@@ -148,9 +27,9 @@ invisible(lapply(pkgs, library, character.only = TRUE))
 ```
 
 ## Step 1 :: Data Input
-```r
-setwd("C:/XXX/XXX/")
-data_sp<-vect("random_species_subset_sp10.shp")
+```{r}
+setwd("XXX/XXX/XXX")
+data_sp<-vect("XXX/random_species_subset_sp10.shp")
 terra_df <- data_sp  # Full occurrence dataset
 unique_species <- unique(terra_df$species_id)
 numbers_sp <- length(unique_species)
@@ -158,13 +37,14 @@ numbers_sp
 ```
 
 ## Step 2 :: Hydroclimatic Predictors
-```r
-riveratl_global <- rast("top5_global_rivers_atlas_raster_list_30sec.tif")
-bioclim_global_rn <- rast("bioclim_global_rn_5vars_30sec.tif")
+```{r}
+riveratl_global <- rast("XXX/top5_global_rivers_atlas_raster_list_30sec.tif")
+bioclim_global_rn <- rast("XXX//bioclim_global_rn_5vars_30sec.tif")
+
 ```
 
 ## Step 3 :: Initialize SDM Structures
-```r
+```{r}
 results_df <- data.frame(
   id = integer(),
   species_name = integer(),
@@ -186,8 +66,9 @@ sdm_d <- list()
 ```
 
 ## Step 4 :: Spatial Processing - Allocation to watersheds
-```r
-watershed <- vect("H5_Iberian/H5_Iberian.shp") #the user should define the spatial layer, in our files the H8 and H12 alternatives are available
+```{r}
+watershed <- vect("XXX/H5_Iberian/H5_Iberian.shp") #the user should define the spatial layer, in our files the H8 and H12 alternatives are available
+ #the user should define the spatial layer, in our files the H8 and H12 alternatives are available
 
 # CRS Handling and Conversion
 if (is.factor(terra_df$species_id)) {
@@ -254,7 +135,7 @@ crs(combined_rasters)<- "EPSG:4326"
 
 ```
 ## Step 5 :: aSDM Models Prediction - Fitting
-```r
+```{r}
 input_cov <- bioclim_global_rn  # Primary covariates climate aSDM - in case the user wants to apply hydrological or hydroclimatic or hierarchical approaches the fundamental documentation should be followed
 
 # Initialize lists
@@ -388,7 +269,7 @@ plot(combined_rasters_stack)
 ```
 
 ## Step 6 :: Post-Processing - Thresholding based on prevalence
-```r
+```{r}
 # Threshold Application
 thresholded_rasters_list <- list()
 
@@ -425,41 +306,3 @@ writeRaster(final_stack,"species_richness_thresholded_1km.tif",overwrite=TRUE)
 write.csv(results_df, "preh5_clima_endemics_metrics.csv", row.names = FALSE)
 ```
 ### End of Tutorial
-
-# Manuscript Outline
-
-## Abstract:
-Species Distribution Models (SDMs) have traditionally been developed in a terrestrial context, and their application to aquatic ecosystems presents unique challenges. These include predicting species distributions across spatially constrained environments, and incorporating specific environmental drivers such as hydromorphological features. In this study, we address these challenges by exploring various spatially-explicit model training strategies, novel hierarchical model structures and different flexible predictor sets. Using Iberian freshwater fish as a case study, we investigated: (i) the optimal spatial training extent for SDMs in freshwater ecosystems; (ii) the effect of multiple predictor combinations—from single variables to hierarchical sets integrating climatic, hydrological, and interactive factors—on predictive performance; and (iii) the interplay between climate and hydrology in predicting species distributions. By systematically cross-comparing these methodological dimensions we show that pre-constrained models to a species' watershed of occurrence—meaning they are trained within its boundaries—deliver higher predictive accuracy, and that climate-based predictors consistently outperform purely hydrological ones. Our framework provides a basis for standardising SDMs in freshwater systems, but it remains to be seen whether the patterns we observed in Iberia hold across different geographies. Future studies applying the same protocol to other regions will be essential to assess the robustness and generality of our results.
-
-### Keywords: 
-SDMs, freshwaters, fish, hydrology, climate, watersheds, hierarchical, aquatic species
-
-#### Citation (APA):
-Vagenas, G., Matias, M., Araujo M.B. (2025). Beyond land: a framework for modelling aquatic species distributions. (Submitted)
- 
-#### DOI:  
-[Pending]
-
-# Figures
-
-![Figure1_cropped_jpg](https://github.com/user-attachments/assets/b655c959-c405-4b5d-a443-8130f5ef321d)
-**Figure 1**. Spatial distribution of species richness of the dataset used for the development of the aSDMs through a (A) global (GBIF | 50 arc-minute grid) to (B) regional (MITECO, SNIPAD, GBIF | 10 arc-minute grid) approach for the 92 endemics and widespread freshwater fish species of the study area. Colors represent gradients of species richness (low = yellow; high = red). The finer resolution (B) highlights richness patterns in the Iberian Peninsula.
-
-![Figure2_v3](https://github.com/user-attachments/assets/61a6ebd4-7fda-469f-a94f-a6e7fce59020)
-**Figure 2.** Flowchart illustrating the implementation and evaluation workflow for aquatic Species Distribution Models (aSDMs), comprising nine sequential stages (i.e., I-IX), from input data preparation and modelling through to performance evaluation and the generation of stacked suitability maps.
-
-![Figure3](https://github.com/user-attachments/assets/83ad4567-7767-41c0-9c7c-6b902f796804)
-**Figure 3.** Flowchart showing how model performance (AUC, CBI, TSS) varies based on different combinations of spatial strategies, layers, and predictors. High-performing models (aSDMs) are highlighted in green.
-
-![Figure4_jpg_cropped](https://github.com/user-attachments/assets/eee40ddf-cef8-4e8b-8110-b4582e1864c1)
-**Figure 4.** Stacked aSDMs for endemic (N=39) and non-endemic/introduced species (N=53) across the study area. The maps represent stacked outputs derived through aSDMs using the superior pre-constrained h5 spatial strategy, based on climate (left) and hydrological (right) predictor sets. Boxes indicate the high-resolution (~1x1 km) aSDMs projected across the hydrographic network. Highlighted zoomed-in areas are illustrative examples for visual comparison and do not represent specific ecological patterns.
-
-# Author: Georgios Vagenas
-
-Name: PhD Researcher - Georgios Vagenas (georgios.vagenas@mncn.csic.es | georgvagenas@gmail.com)
-
-Affiliation: Biogeography and Global Change Department, National Museum of Natural Sciences, CSIC, C/ Jose Gutierrez Abascal, 2, Madrid 28006, Spain
-
-**Last modified: 26/10/2025**
-
-
