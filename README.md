@@ -4,11 +4,11 @@
 
 </div>
 
+![GITHUB_logo](https://github.com/user-attachments/assets/30290a4a-9196-4687-b997-73abf2207593)
+
 # Repository Overview
 
 This repository contains the complete set of baseline input data, analysis scripts, and final outputs (rasters and figures) from our study. Additionally, we begin with a user-friendly "Toy Problem" tutorial - a lightweight, computational exercise that demonstrates our methodology step-by-step, making it accessible for readers to replicate and explore.
-
-![GITHUB_logo](https://github.com/user-attachments/assets/30290a4a-9196-4687-b997-73abf2207593)
 
 # Project structure
 ```
@@ -45,7 +45,7 @@ The repository represents a stand-alone analysis package and contains the full s
 ```
 ---
 
-# 🌊 **Toy Problem: Predicting Habitat Suitability in Aquatic Ecosystems** 🌊
+# 🌊Toy Problem: Predicting Habitat Suitability in Aquatic Ecosystems🌊
 📋 Description
 
 You are an aquatic ecologist/ecohydrological engineer and you want to predict the distribution of multiple endemic species in a hydrographic network. Your task is to build an aquatic Species Distribution Model (aSDM) that predicts suitability scores or species richness based on:
@@ -347,7 +347,7 @@ write.csv(results_df, "output/preh5_clima_endemics_metrics.csv", row.names = FAL
 # Manuscript Outline
 
 ## Abstract:
-Species Distribution Models (SDMs) in aquatic ecosystems present unique conceptual and technical challenges, from predicting distributions across spatially constrained networks to incorporating hydroclimatic drivers. These challenges amplify uncertainties and have hindered the development of standardized aquatic SDM frameworks. Here, we explore high-performance and efficient modelling protocols using presence-only records of freshwater organisms. Focusing on the Ichthyofauna of the Iberian Peninsula, we evaluated two hierarchical modelling structures: global-to-regional models trained at a global scale and projected regionally for widespread species, and strictly regional models trained and predicted within the region for endemic species. We systematically compare two spatial strategies for aquatic SDMs: unconstrained models, trained across the entire freshwater range of each species, and constrained models, trained only within watersheds where species are known to occur. Additionally, we evaluated different predictor combinations, ranging from individual environmental variables to hierarchical structures incorporating climatic, hydrological, and their interacting factors. Our results demonstrate that spatially constrained models significantly enhance predictive performance. Moreover, models trained with climate predictors consistently outperformed those relying solely on hydrological predictors. We conclude that all proposed modelling stages are essential for accurately predicting aquatic species distributions. This multi-stage process ensures comprehensive spatial representation, robust environmental variable selection, and optimal model configuration, thereby addressing the inherent complexity of aquatic ecosystems.
+Species Distribution Models (SDMs) have traditionally been developed in a terrestrial context, and their application to aquatic ecosystems presents unique challenges. These include predicting species distributions across spatially delineated environments, incorporating key specific environmental drivers such as hydromorphological features. In this study, we develop a multi-stage framework that explicitly addresses these challenges by combining novel hierarchical model structures, spatial strategies and flexible predictor sets. Using presence-only records of freshwater fish from the Iberian Peninsula, we investigated: the optimal spatial training extent for SDMs in freshwater ecosystems; (ii) the effect of multiple predictor combinations—from single variables to hierarchical sets integrating climatic, hydrological, and interactive factors—on predictive performance; and (iii) the interplay between climate and hydrology in predicting species distributions. By systematically cross-comparing these methodological dimensions, we show that spatially constrained models deliver markedly higher predictive accuracy, and that climate-based predictors consistently outperform purely hydrological ones. Our results highlight that no single methodological decision guarantees improved results in all circumstances. Therefore, our framework provides scope for standardising SDMs in freshwater systems, ensuring more reliable inference under the intrinsic complexity of aquatic environments.
 
 ### Keywords: 
 SDMs, freshwaters, fish, hydrology, climate, watersheds, hierarchical, aquatic species
@@ -378,6 +378,6 @@ Name: PhD Researcher - Georgios Vagenas (georgios.vagenas@mncn.csic.es | georgva
 
 Affiliation: Biogeography and Global Change Department, National Museum of Natural Sciences, CSIC, C/ Jose Gutierrez Abascal, 2, Madrid 28006, Spain
 
-**Last modified: 15/07/2025**
+**Last modified: 04/10/2025**
 
 
