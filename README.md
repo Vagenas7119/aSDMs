@@ -4,7 +4,7 @@
 
 </div>
 
-![GitHub_Logo_v2](https://github.com/user-attachments/assets/e30317cb-6f44-438a-819c-f10cb8f8798b)
+![GitHub_Logo_v2](https://github.com/user-attachments/assets/fbbf7f20-5f98-4141-a8bd-85c41445ff1b)
 
 # Repository Overview
 
