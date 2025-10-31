@@ -1,5 +1,5 @@
 ---
-title: "aSDM_Toy Problem Application"
+title: "aSDMs_Demo Application"
 author: "Georgios Vagenas"
 date: "2025-10-26"
 output: html_document
@@ -8,7 +8,7 @@ output: html_document
 ### Start of Tutorial
 aSDMs :: Aquatic Species Distribution Models - Tutorial
 
-This tutorial demonstrates a workflow for building aquatic Species Distribution Models (aSDMs) using occurrence data and environmental predictors. In this exercise, we provide a computational-light exercise with seven random species that demonstrates our methodology step-by-step, by implementing the pre-constrained h5 climate aSDMs, thus making it accessible for readers to replicate and explore. To download the repository which includes all the required files for the toy problem execution download from: https://saco.csic.es/s/Co8WNBa323ft3Qi.
+This tutorial demonstrates a workflow for building aquatic Species Distribution Models (aSDMs) using occurrence data and environmental predictors. In this exercise, we provide a computational-light exercise with seven random species that demonstrates our methodology step-by-step, by implementing the pre-constrained h5 climate aSDMs, thus making it accessible for readers to replicate and explore. To download the repository which includes all the required files for the demo execution download from: https://saco.csic.es/s/Co8WNBa323ft3Qi.
 
 ## Step 0 :: Required Packages
 ```{r}
