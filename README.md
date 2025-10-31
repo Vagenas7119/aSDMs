@@ -8,7 +8,7 @@
 
 # Repository Overview
 
-This repository contains the complete set of baseline input data, analysis scripts, and final outputs (rasters and figures) from our study. Additionally, we begin with a user-friendly "Toy Problem" tutorial - a lightweight, computational exercise that demonstrates our methodology step-by-step, making it accessible for readers to replicate and explore. The input files are included in this repository either as raw data either stored in public repositories with a link included due large sizes. The script is provided in the transferable R markdown file "aSDM_ToyProblem.Rmd".
+This repository contains the complete set of baseline input data, analysis scripts, and final outputs (rasters and figures) from our study. Additionally, we begin with a user-friendly Demo tutorial - a lightweight, computational exercise that demonstrates our methodology step-by-step, making it accessible for readers to replicate and explore. The input files are included in this repository either as raw data either stored in public repositories with a link included due large sizes. The script is provided in the transferable R markdown file "aSDMs_Demo.Rmd".
 
 # Project structure
 ```
@@ -45,7 +45,7 @@ The repository represents a stand-alone analysis package and contains the full s
 ```
 ---
 
-# 🌊Toy Problem: Predicting Habitat Suitability in Aquatic Ecosystems🌊
+# 🌊aSDM Demo: Predicting Habitat Suitability in Aquatic Ecosystems🌊
 📋 Description
 
 You are an aquatic ecologist/ecohydrological engineer and you want to predict the distribution of multiple endemic species in a hydrographic network. Your task is to build an aquatic Species Distribution Model (aSDM) that predicts suitability scores or species richness based on:
@@ -129,7 +129,7 @@ flowchart TD
 ### Start of Tutorial
 # aSDMs :: Aquatic Species Distribution Models - Tutorial
 
-This tutorial demonstrates a workflow for building aquatic Species Distribution Models (aSDMs) using occurrence data and environmental predictors. In this exercise, we provide a computational-light exercise with seven random species that demonstrates our methodology step-by-step, by implementing the pre-constrained h5 climate aSDMs, thus making it accessible for readers to replicate and explore. To download the repository which includes all the required files for the toy problem execution download from: https://saco.csic.es/s/Co8WNBa323ft3Qi.
+This tutorial demonstrates a workflow for building aquatic Species Distribution Models (aSDMs) using occurrence data and environmental predictors. In this exercise, we provide a computational-light exercise with seven random species that demonstrates our methodology step-by-step, by implementing the pre-constrained h5 climate aSDMs, thus making it accessible for readers to replicate and explore. To download the repository which includes all the required files for the demo execution download from: https://saco.csic.es/s/Co8WNBa323ft3Qi.
 
 ## Step 0 :: Required Packages
 ```r
