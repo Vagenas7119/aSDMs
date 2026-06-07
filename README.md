@@ -4,11 +4,11 @@
 
 </div>
 
-![GitHub_Logo_v2](https://github.com/user-attachments/assets/fbbf7f20-5f98-4141-a8bd-85c41445ff1b)
+<img width="2344" height="976" alt="GitHub_Logo" src="https://github.com/user-attachments/assets/be772a43-b132-47c3-8ba9-983a66a731e0" />
 
 # Repository Overview
 
-This repository contains the complete set of baseline input data, analysis scripts, and final outputs (rasters and figures) from our study. Additionally, we begin with a user-friendly Demo tutorial - a lightweight, computational exercise that demonstrates our methodology step-by-step, making it accessible for readers to replicate and explore. The input files are included in this repository either as raw data either stored in public repositories with a link included due large sizes. The script is provided in the transferable R markdown file "aSDMs_Demo.Rmd".
+This repository contains the complete set of analysis scripts, and final outputs (rasters and figures) from our study. Additionally, we begin with a user-friendly tutorial - a conceptual exercise that demonstrates our methodology step-by-step, making it accessible for readers to replicate and explore. The input files are included in this repository either as raw data either stored in public repositories with a link included due large sizes. The six sequential scripts are provided in the form of transferable R files.
 
 # Project structure
 ```
