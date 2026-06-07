@@ -446,16 +446,16 @@ Vagenas, G., Matias, M., Araujo M.B. (2025). Beyond land: a framework for modell
 
 # Figures
 
-<img width="3561" height="1965" alt="Figure1" src="https://github.com/user-attachments/assets/6e06375f-126f-47bb-a189-6693c079b525" />
+<img width="3561" height="1965" alt="Figure1" src="https://github.com/user-attachments/assets/f86acc11-8a29-40fd-bfc3-ea5c4ed98de2" />
 **Figure 1**. Spatial distribution of species richness of the dataset used for the development of the aSDMs through a (A) global (50 arc-minute grid) to (B) regional (10 arc-minute grid) approach for the 98 freshwater fish species of the study area. Colors represent gradients of species richness (low = yellow; high = red). The finer resolution map (B) highlights richness patterns in the Iberian Peninsula.
 
 [Figure_2_correct_5_0.tif](https://github.com/user-attachments/files/28685057/Figure_2_correct_5_0.tif)
 **Figure 2.** Flowchart illustrating the implementation and evaluation workflow for aquatic Species Distribution Models (aSDMs), comprising nine sequential stages (i.e., I-IX), from input data preparation and modelling through to performance evaluation and the generation of stacked suitability maps.
 
-<img width="4800" height="3900" alt="Figure3_Variables_CI" src="https://github.com/user-attachments/assets/c73e262d-a522-4f0f-87c0-273dbaf069ba" />
+<img width="2731" height="2250" alt="Figure3" src="https://github.com/user-attachments/assets/0ed55b77-5a55-449a-ac27-8e08d8f8556e" />
 **Figure 3.** Variable performarnce across different training extents and predictor settings for the freshwater fish species of the Iberian peninsula.
 
-![Figure4_jpg_cropped](https://github.com/user-attachments/assets/eee40ddf-cef8-4e8b-8110-b4582e1864c1)
+<img width="2908" height="2250" alt="Figure4" src="https://github.com/user-attachments/assets/3f6d7b95-ba46-4d55-8976-6acf2a1ebba6" />
 **Figure 4.** Stacked ensembled aSDMs for the freshwater fish species of the Iberian Peninsula. The maps represent stacked outputs derived through aSDMs using the pre-constrained h5 spatial strategy, by ensembling all the three predictor sets (i.e., climate, hydroclimatic, hydromorphology). The bottom distance-suitability trajectory chart indicates the variation of predicted suitability values across a vertical transect of the study area, indicating the baseline patterns for the thermal (orange), the hydrological (blue) and the locally influenced (green) niche for the freshwater species.
 
 # Author: Georgios Vagenas
