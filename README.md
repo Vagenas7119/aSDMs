@@ -449,7 +449,7 @@ Vagenas, G., Matias, M., Araujo M.B. (2025). Beyond land: a framework for modell
 <img width="3561" height="1965" alt="Figure1" src="https://github.com/user-attachments/assets/f86acc11-8a29-40fd-bfc3-ea5c4ed98de2" />
 **Figure 1**. Spatial distribution of species richness of the dataset used for the development of the aSDMs through a (A) global (50 arc-minute grid) to (B) regional (10 arc-minute grid) approach for the 98 freshwater fish species of the study area. Colors represent gradients of species richness (low = yellow; high = red). The finer resolution map (B) highlights richness patterns in the Iberian Peninsula.
 
-[Figure_2_correct_5_0.tif](https://github.com/user-attachments/files/28685057/Figure_2_correct_5_0.tif)
+<img width="4000" height="2250" alt="Figure2" src="https://github.com/user-attachments/assets/d06446a1-4286-485d-a31a-c9bcdb7dca0f" />
 **Figure 2.** Flowchart illustrating the implementation and evaluation workflow for aquatic Species Distribution Models (aSDMs), comprising nine sequential stages (i.e., I-IX), from input data preparation and modelling through to performance evaluation and the generation of stacked suitability maps.
 
 <img width="2731" height="2250" alt="Figure3" src="https://github.com/user-attachments/assets/0ed55b77-5a55-449a-ac27-8e08d8f8556e" />
@@ -464,6 +464,6 @@ Name: PhD Researcher - Georgios Vagenas (georgios.vagenas@mncn.csic.es | georgva
 
 Affiliation: Biogeography and Global Change Department, National Museum of Natural Sciences, CSIC, C/ Jose Gutierrez Abascal, 2, Madrid 28006, Spain
 
-**Last modified: 26/10/2025**
+**Last modified: 15/6/2026**
 
 
