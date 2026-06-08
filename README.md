@@ -8,17 +8,17 @@
 
 # Repository Overview
 
-This repository contains the complete set of analysis scripts, and final outputs (rasters and figures) from our study. Additionally, we begin with a user-friendly tutorial - a conceptual exercise that demonstrates our methodology step-by-step, making it accessible for readers to replicate and explore. The input files are included in this repository either as raw data either stored in public repositories with a link included due large sizes. The six sequential scripts are provided in the form of transferable R files.
+This repository contains the complete set of analysis scripts, and final outputs (rasters and figures) from our study. Additionally, we begin with a user-friendly tutorial - a conceptual exercise that demonstrates our methodology step-by-step, making it accessible for readers to replicate and explore. The input files are included in this repository either as raw data either stored in public repositories with a link included due large sizes. The six sequential scripts are provided in the form of transferable R files. The main pipeline is included as the fifth .R object (5_pipeline_aSDMs.R).
 
 # Project structure
 ```
-├── 📁 data/          # 🌡️ Local data (bioclimatic vars, hydrological layers)
+├── 📁 data/          # 🌡️ Local data (bioclimatic vars, hydrological layers etc.)
 ├── 📁 Scripts        # 💻 Main analysis scripts (see structure below)
-├── 📁 outputs/       # 🖨️ Generated figures & analysis results
-└── 📁 figures/       # 🖼️ Final manuscript figures
+├── 📁 outputs/       # 🖨️ Maps and auxillary outputs generated through the present analysis pipeline
+└── 📁 figures/       # 🖼️ Final figures included in the manuscript
 ```
 # 🔗 Data
-The baseline layers 🌐 and the demo data 🗺️ required for the analysis can be downloaded from the Input_Layers and the Input_dataset folder here: https://saco.csic.es/s/SYTM8qZrnY2HG5q
+The baseline layers 🌐 required for the analysis can be downloaded from the Input_Layers and the Input_dataset folder here: https://saco.csic.es/s/SYTM8qZrnY2HG5q
 
 # 💻 Scripts
 The structure of the scripts for the primary analysis set is structured as: 
@@ -27,8 +27,8 @@ The structure of the scripts for the primary analysis set is structured as:
 ├── 🐟 2_Biodata_GBIF_aSDMs.R                            # Species occurrence data extraction
 ├── 🧬 3_Taxize_Biodata_GBIF_aSDMs.R                     # Taxonomic harmonization and cleaning
 ├── 🗺️ 4_Figure1_aSDMs.R                                 # Study area and baseline visualizations
-├── ⚙️ 5_pipeline_aSDMs.R                                # Main brute-force SDM modeling framework
-└── 📈 6_PostAnalysis_Fig3_4_plus_Supplementary_aSDMs.R  # Final thresholding, metrics, and figures 
+├── ⚙️ 5_pipeline_aSDMs.R                                # Main brute-force hierarchical SDM modeling framework
+└── 📈 6_PostAnalysis_Fig3_4_plus_Supplementary_aSDMs.R  # Visualization, statistical modeling, ensembling, stacking and final figures 
 ```
 
 # 📈 Outputs
@@ -52,7 +52,7 @@ This repository is produced by the 6_PostAnalysis_Fig3_4_plus_Supplementary_aSDM
 # 🌊aSDM | Pipeline 🌊
 📋 Description
 
-You are an aquatic ecologist/ecohydrological engineer and you want to predict the distribution of multiple endemic species in a hydrographic network. Your task is to build an aquatic Species Distribution Model (aSDM) that predicts suitability scores or species richness based on:
+You are an aquatic ecologist/ecohydrological engineer and you want to predict the distribution of multiple endemic species in a hydrographic network. Your task is to build an aquatic Species Distribution Model (aSDM) that predicts suitability scores or species richness. In this demo of the main pipeline (e.g., folder "Scripts" 
 
 <div align="center">
 <table>
@@ -63,9 +63,9 @@ You are an aquatic ecologist/ecohydrological engineer and you want to predict th
     <th>Short ID</th>
   </tr>
   <tr>
-    <td>Climate aSDM</td>
+    <td>Climate aSDMs<br><em>(Widespread species)</em></td>
     <td>🌍🌡️</td>
-    <td>Global Climate variables<br><em>(Widespread species)</em></td>
+    <td>Global Climate variables</td>
     <td><code>glob_clima_aSDM</code></td>
   </tr>
   <tr>
@@ -96,15 +96,16 @@ You are an aquatic ecologist/ecohydrological engineer and you want to predict th
 </div>
 ```
 
-### Start of Tutorial
-aSDMs :: Freshwater SDMs – Complete Demo
+### Start of Tutorial | aSDMs pipeline
+
+*Some features may be missing for simplicity purposes, therefore for in-depth assessment advice the 5_pipeline_aSDMs.R script.*
 
 This tutorial demonstrates the full **aSDMs workflow**:
 
 - **Phase 1** – Global models for widespread species.
 - **Phase 2** – Regional models for all species; for widespread ones the global prediction is used as an extra covariate.
 
-The methodology is computational‑light (only 7 random species, few replicates) but exactly follows the production pipeline.  
+The methodology is computational‑light (only few artificial species, few replicates) but exactly follows the production pipeline.  
 All required files can be downloaded from: `https://saco.csic.es/s/Co8WNBa323ft3Qi`.
 
 ## Step 0 :: Required Packages
