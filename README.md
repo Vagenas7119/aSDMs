@@ -8,7 +8,7 @@
 
 # Repository Overview
 
-This repository contains the complete set of analysis scripts, and final outputs (rasters and figures) from our study. Additionally, we begin with a user-friendly tutorial - a conceptual exercise that demonstrates our methodology step-by-step, making it accessible for readers to replicate and explore. The input files are included in this repository either as raw data either stored in public repositories with a link included due large sizes. The six sequential scripts are provided in the form of transferable R files.
+This repository contains the complete set of analysis scripts, and final outputs (rasters and figures) from our study. Additionally, we begin with a user-friendly tutorial - a conceptual exercise that demonstrates our methodology step-by-step, making it accessible for readers to replicate and explore. The input files are included in this repository either as raw data either stored in public repositories with a link included due large sizes. The six sequential scripts are provided in the form of transferable R files. The main pipeline is included as the fifth .R object (5_pipeline_aSDMs.R).
 
 # Project structure
 ```
@@ -63,9 +63,9 @@ You are an aquatic ecologist/ecohydrological engineer and you want to predict th
     <th>Short ID</th>
   </tr>
   <tr>
-    <td>Climate aSDM</td>
+    <td>Climate aSDMs<br><em>(Widespread species)</em></td>
     <td>🌍🌡️</td>
-    <td>Global Climate variables<br><em>(Widespread species)</em></td>
+    <td>Global Climate variables</td>
     <td><code>glob_clima_aSDM</code></td>
   </tr>
   <tr>
@@ -96,8 +96,9 @@ You are an aquatic ecologist/ecohydrological engineer and you want to predict th
 </div>
 ```
 
-### Start of Tutorial
-aSDMs :: Freshwater SDMs – Complete Demo
+### Start of Tutorial | aSDMs pipeline
+
+*Some features may be missing for simplicity purposes, therefore for in-depth assessment advice the 5_pipeline_aSDMs.R script.*
 
 This tutorial demonstrates the full **aSDMs workflow**:
 
