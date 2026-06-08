@@ -52,7 +52,7 @@ This repository is produced by the 6_PostAnalysis_Fig3_4_plus_Supplementary_aSDM
 # 🌊aSDM | Pipeline 🌊
 📋 Description
 
-You are an aquatic ecologist/ecohydrological engineer and you want to predict the distribution of multiple endemic species in a hydrographic network. Your task is to build an aquatic Species Distribution Model (aSDM) that predicts suitability scores or species richness based on:
+You are an aquatic ecologist/ecohydrological engineer and you want to predict the distribution of multiple endemic species in a hydrographic network. Your task is to build an aquatic Species Distribution Model (aSDM) that predicts suitability scores or species richness. In this demo of the main pipeline (e.g., folder "Scripts" 
 
 <div align="center">
 <table>
