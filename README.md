@@ -458,7 +458,7 @@ Vagenas, G., Matias, M., Araujo M.B. (2025). Beyond land: a framework for modell
 
 **Figure 3.** Variable performarnce across different training extents and predictor settings for the freshwater fish species of the Iberian peninsula.
 
-<img width="2908" height="2250" alt="Figure4" src="https://github.com/user-attachments/assets/3f6d7b95-ba46-4d55-8976-6acf2a1ebba6" />
+<img width="1216" height="979" alt="Figure4" src="https://github.com/user-attachments/assets/e1b9341f-3476-406d-9d19-9335c6999bf8" />
 
 **Figure 4.** Stacked ensembled aSDMs for the freshwater fish species of the Iberian Peninsula. The maps represent stacked outputs derived through aSDMs using the pre-constrained h5 spatial strategy, by ensembling all the three predictor sets (i.e., climate, hydroclimatic, hydromorphology). The bottom distance-suitability trajectory chart indicates the variation of predicted suitability values across a vertical transect of the study area, indicating the baseline patterns for the thermal (orange), the hydrological (blue) and the locally influenced (green) niche for the freshwater species.
 
