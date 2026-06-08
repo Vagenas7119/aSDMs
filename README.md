@@ -77,19 +77,19 @@ You are an aquatic ecologist/ecohydrological engineer and you want to predict th
     <tr>
     <td>Hierarchical Climate aSDMs<br><em>(Widespread & Regional species)</em></td>
     <td>🌡️</td>
-    <td>Regional Climate variables (+ global climate niche for widespread)</td>
+    <td>Regional Climate variables<br><em>(+ global climate niche for widespread)</em></td>
     <td><code>reg_clima_aSDM</code></td>
   </tr>
      <tr>
     <td>Hierarchical Hydroclimatic aSDMs<br><em>(Widespread & Regional species)</em></td>
     <td>💧</td>
-    <td>Regional Hydroclimatic variables (+ global hydroclimatic niche for widespread species)</td>
+    <td>Regional Hydroclimatic variables<br><em>(+ global hydroclimatic niche for widespread species)</em></td>
     <td><code>reg_hydroclima_aSDM</code></td>🏞️
   </tr>
   <tr>
     <td>Hierarchical Hydromorphological aSDM<br><em>(Widespread & Regional species)</em></td>
     <td>🏞️</td>
-    <td>Regional Hydromorphological variables (+ global hydroclimatic niche for widespread species)</td>
+    <td>Regional Hydromorphological variables<br><em>(+ global hydroclimatic niche for widespread species)</em></td>
     <td><code>reg_hydromorpho_aSDM</code></td>
   </tr>
 </table>
