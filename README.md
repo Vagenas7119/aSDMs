@@ -13,35 +13,39 @@ This repository contains the complete set of analysis scripts, and final outputs
 # Project structure
 ```
 ├── 📁 data/          # 🌡️ Local data (bioclimatic vars, hydrological layers)
-├── 📁 supplementary/ # 📑 Output - Supplementary Figures
 ├── 📁 Scripts        # 💻 Main analysis scripts (see structure below)
 ├── 📁 outputs/       # 🖨️ Generated figures & analysis results
 └── 📁 figures/       # 🖼️ Final manuscript figures
 ```
 # 🔗 Data
-The baseline layers 🌐 required for the analysis can be downloaded from here: https://saco.csic.es/s/SYTM8qZrnY2HG5q
+The baseline layers 🌐 and the demo data 🗺️ required for the analysis can be downloaded from the Input_Layers and the Input_dataset folder here: https://saco.csic.es/s/SYTM8qZrnY2HG5q
 
-# 📚 Supplementary material
-All the information related to the Supplementary material of this study can be accessed by the following link: https://saco.csic.es/s/3p7n9p724kYr5jN
-
-# 💻 Fundamental Scripts
+# 💻 Scripts
 The structure of the scripts for the primary analysis set is structured as: 
 ```
-├── 🌍Post_Alien/       # i) Widespread species - Global aSDMs "Post_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Post_Regional_Alien"
-├── 🏝️Post_Endemics/    # i) Endemic species - Regional aSDMs "Post_Regional_Endemics" 
-├── 🌍Pre_Alien/        # i) Widespread species - Global aSDMs "Pre_Global_Alien" and ii) Widespread species - Global to Regional aSDMs "Pre_Regional_Alien"
-└── 🏝️Pre_Endemics/     # i) Endemic species - Regional aSDMs "Pre_Regional_Endemics"
-
-Key: 🌍 = Global scale | 🏝️ = Regional/Endemic focus  
+├── 🌦️ 1_Predictors_aSDMs.R                              # Environmental predictors preparation
+├── 🐟 2_Biodata_GBIF_aSDMs.R                            # Species occurrence data extraction
+├── 🧬 3_Taxize_Biodata_GBIF_aSDMs.R                     # Taxonomic harmonization and cleaning
+├── 🗺️ 4_Figure1_aSDMs.R                                 # Study area and baseline visualizations
+├── ⚙️ 5_pipeline_aSDMs.R                                # Main brute-force SDM modeling framework
+└── 📈 6_PostAnalysis_Fig3_4_plus_Supplementary_aSDMs.R  # Final thresholding, metrics, and figures 
 ```
 
 # 📈 Outputs
-The repository represents a stand-alone analysis package and contains the full set of initial data and the required script to generate the figures of the study:
+The repository represents a stand-alone analysis package and contains the full set of initial data and the required script to generate the figures of the study which can be downloaded here: https://saco.csic.es/s/SYTM8qZrnY2HG5q
+
+This repository is produced by the 6_PostAnalysis_Fig3_4_plus_Supplementary_aSDMs.R object.
 ```
 📁 outputs/
-├── 📁 input/                 # 🗺️ Stacked suitability maps
-├── 📁 metrics_vagenas_et_al/ # 📈 Model performance metrics
-└── 📁 Script_Metanalysis/    # 🔄 Stand-alone analysis script
+├── 📁 figures/                         # 🗺️ All the outputs produced from this study
+│   ├── 🌍 Global/                      # 🗺️ All the figure outputs produced for the native & invasive widespread species by using global aSDMs
+│   └── 🏝️ Regional/                    # 🗺️ All the figure outputs produced for the native & invasive widespread species by using either global-to-regional aSDMs (native & invasive widespread; look Figure 2 below) or strictly regional aSDMs (endemic species of the study area)
+│       ├── ⚙️ Model/                   # 🗺️ LLMs produced to overcome complexity of the outputs in a predictive fashion, not included in the paper
+│       ├── 📊 Extent_Performance/      # 🗺️ Analysis to link extent of training, performance metrics and aSDM outputs
+│       ├── 🗺️ ensembles/               # 🗺️ All the aSDM outputs for ensembled by using AUC at H5 training extent, ensembles across categories | Includes Figure 4
+│       ├── 📈 Predictor_Performance/   # 🗺️ Analysis to link the predictor sets, performance metrics and aSDM outputs
+│       └── 📉 VarImp/                  # 🗺️ Results to relate Variable Importance with the predictive outputs | Includes Figure 3
+└── 📁 tables/                          # 🔄 Statistics produced through the aforementioned paper
 ```
 ---
 
@@ -51,80 +55,45 @@ The repository represents a stand-alone analysis package and contains the full s
 You are an aquatic ecologist/ecohydrological engineer and you want to predict the distribution of multiple endemic species in a hydrographic network. Your task is to build an aquatic Species Distribution Model (aSDM) that predicts suitability scores or species richness based on:
 
 <div align="center">
-  
 <table>
   <tr>
     <th>Model Architecture</th>
     <th>Symbol</th>
-    <th>Key Variables</th>
+    <th>Predictor Sets</th>
     <th>Short ID</th>
   </tr>
   <tr>
     <td>Climate aSDM</td>
     <td>🌡️</td>
-    <td>Temperature, Precipitation</td>
+    <td>Climate variables (bio5, bio16, …)</td>
     <td><code>clima_SDM</code></td>
   </tr>
   <tr>
-    <td>Hydrological aSDM</td>
-    <td>💧</td>
-    <td>Discharge, Stream gradient</td>
-    <td><code>hydro_aSDM</code></td>
-  </tr>
-  <tr>
     <td>Hydroclimatic aSDM</td>
-    <td>🌡️ & 💧</td>
-    <td>Climate × Hydrological</td>
-    <td><code>hydroclima_aSDM</code></td>
+    <td>💧 & 🌡️</td>
+    <td>Climate + hydrological variables</td>
+    <td><code>hydroclima_SDM</code></td>
   </tr>
   <tr>
-    <td>Hierarchical Climate</td>
+    <td>Hydromorphological aSDM<br><em>(regional only)</em></td>
+    <td>🏞️</td>
+    <td>Landscape / morphology variables</td>
+    <td><code>hydromorph_SDM</code></td>
+  </tr>
+  <tr>
+    <td>Hierarchical Climate aSDM</td>
     <td>🌡️→💧</td>
-    <td>Climate + Hydro covariate</td>
-    <td><code>h_clima_aSDM</code></td>
+    <td>Regional set + global Climate suitability covariate</td>
+    <td><code>h_clima_SDM</code></td>
   </tr>
   <tr>
-    <td>Hierarchical Hydro</td>
+    <td>Hierarchical Hydroclimatic aSDM</td>
     <td>💧→🌡️</td>
-    <td>Hydro + Climate covariate</td>
-    <td><code>h_hydro_aSDM</code></td>
+    <td>Regional set + global Hydroclimatic suitability covariate</td>
+    <td><code>h_hydroclima_SDM</code></td>
   </tr>
 </table>
-
 </div>
-
-```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {
-    'fontFamily': 'Arial',
-    'primaryColor': '#333',
-    'primaryBorderColor': '#fff',
-    'primaryTextColor': '#fff',
-    'lineColor': '#fff',
-    'arrowheadColor': '#fff',
-    'textColor': '#fff'
-}}}%%
-flowchart TD
-    A(("<b>📊<br/>Aquatic SDM<br/>Predictors</b>")):::centerNode
-    B("<b>🌡️<br/>clima_aSDM</b>"):::outerNode
-    C("<b>💧<br/>hydro_aSDM</b>"):::outerNode
-    D("<b>🌡️💧<br/>hydroclima_aSDM</b>"):::outerNode
-    E("<b>🌡️→💧<br/>h_clima_aSDM</b>"):::outerNode
-    F("<b>💧→🌡️<br/>h_hydro_aSDM</b>"):::outerNode
-
-    A --o B
-    A --o C
-    A --o D
-    A --o E
-    A --o F
-    B --o F
-    C --o E
-
-    classDef centerNode stroke:#fff,stroke-width:3px,fill:#333
-    classDef outerNode stroke:#fff,stroke-width:2px,fill:#444
-    
-    linkStyle default stroke:#fff,stroke-width:2px
-    linkStyle 5,6 stroke:#fff,stroke-width:3px
-
 ```
 
 ### Start of Tutorial
@@ -483,8 +452,8 @@ Main conclusions: We used the Iberian freshwater fish as a case study. Our resul
 SDMs, freshwaters, fish, hydrology, climate, watersheds, hierarchical, aquatic species
 
 #### Citation (APA):
-Vagenas, G., Matias, M., Araujo M.B. (2025). Beyond land: a framework for modelling aquatic species distributions. (Submitted)
- 
+Vagenas, G., Matias, M., Araujo M.B. (2026). A hydroclimatic framework for the hierarchical modelling of aquatic species distributions. (Under Revision) 
+
 #### DOI:  
 [Pending]
 
