@@ -12,13 +12,13 @@ This repository contains the complete set of analysis scripts, and final outputs
 
 # Project structure
 ```
-├── 📁 data/          # 🌡️ Local data (bioclimatic vars, hydrological layers)
+├── 📁 data/          # 🌡️ Local data (bioclimatic vars, hydrological layers etc.)
 ├── 📁 Scripts        # 💻 Main analysis scripts (see structure below)
-├── 📁 outputs/       # 🖨️ Generated figures & analysis results
-└── 📁 figures/       # 🖼️ Final manuscript figures
+├── 📁 outputs/       # 🖨️ Maps and auxillary outputs generated through the present analysis pipeline
+└── 📁 figures/       # 🖼️ Final figures included in the manuscript
 ```
 # 🔗 Data
-The baseline layers 🌐 and the demo data 🗺️ required for the analysis can be downloaded from the Input_Layers and the Input_dataset folder here: https://saco.csic.es/s/SYTM8qZrnY2HG5q
+The baseline layers 🌐 required for the analysis can be downloaded from the Input_Layers and the Input_dataset folder here: https://saco.csic.es/s/SYTM8qZrnY2HG5q
 
 # 💻 Scripts
 The structure of the scripts for the primary analysis set is structured as: 
@@ -27,8 +27,8 @@ The structure of the scripts for the primary analysis set is structured as:
 ├── 🐟 2_Biodata_GBIF_aSDMs.R                            # Species occurrence data extraction
 ├── 🧬 3_Taxize_Biodata_GBIF_aSDMs.R                     # Taxonomic harmonization and cleaning
 ├── 🗺️ 4_Figure1_aSDMs.R                                 # Study area and baseline visualizations
-├── ⚙️ 5_pipeline_aSDMs.R                                # Main brute-force SDM modeling framework
-└── 📈 6_PostAnalysis_Fig3_4_plus_Supplementary_aSDMs.R  # Final thresholding, metrics, and figures 
+├── ⚙️ 5_pipeline_aSDMs.R                                # Main brute-force hierarchical SDM modeling framework
+└── 📈 6_PostAnalysis_Fig3_4_plus_Supplementary_aSDMs.R  # Visualization, statistical modeling, ensembling, stacking and final figures 
 ```
 
 # 📈 Outputs
