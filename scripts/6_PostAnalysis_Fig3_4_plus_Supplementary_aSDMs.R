@@ -1875,7 +1875,7 @@ master_plot_with_boxes <- ggdraw(composed_plot) +
   
   # Add Hydromorphology Box (Green - bottom row)
   
-  annotate("rect", xmin = 0.165, xmax = 0.965, ymin = 0.325, ymax = 0.53, 
+  annotate("rect", xmin = 0.175, xmax = 0.965, ymin = 0.325, ymax = 0.53, 
            
            color = "#009E73", fill = NA, linewidth = 1)
 
@@ -3747,11 +3747,173 @@ profile_long <- data.frame(
   pivot_longer(cols = c(Climate, Hydroclimatic, Hydromorphological,Stacked), names_to = "Driver", values_to = "Suitability") %>%
   mutate(Driver = factor(Driver, levels = c("Climate", "Hydroclimatic", "Hydromorphological","Stacked")))
 
-# ==============================================================================
-# 3. PLOT MAPS (TRANSECT TWEAKS & TEXT SIZES)
-# ==============================================================================
+# # ==============================================================================
+# # 3. PLOT MAPS (TRANSECT TWEAKS & TEXT SIZES)
+# # ==============================================================================
+# 
+# plot_map <- function(r, title, show_legend = TRUE) {
+#   p <- ggplot() +
+#     geom_spatraster(data = r) +
+#     geom_spatvector(data = iberia_mainland, fill = NA, color = "black", linewidth = 0.4) +
+#     scale_fill_gradientn(
+#       colors = yellow_to_very_dark_orange,
+#       name = "Stacked Habitat Suitability",
+#       limits = c(0, 100),
+#       breaks = seq(0, 100, by = 20),
+#       labels = paste0(seq(0, 100, by = 20), "%"),
+#       na.value = "transparent",
+#       guide = guide_colorbar(
+#         direction = "horizontal",
+#         label.position = "bottom",
+#         title.position = "top",
+#         title.hjust = 0.5,
+#         barwidth = unit(25, "cm"),
+#         barheight = unit(2, "cm"),
+#         title.theme = element_text(size = 26, face = "bold"),  # Title text size
+#         label.theme = element_text(size = 26, face = "bold")   # Break label text size
+#       )
+#     ) +
+#     labs(title = title) +
+#     theme_minimal() +
+#     theme(
+#       plot.title = element_text(hjust = 0.5, face = "bold", size = 32),
+#       axis.text = element_blank(),
+#       axis.title = element_blank(),
+#       panel.grid = element_blank(),
+#       plot.margin = margin(5, 5, 5, 5, unit = "pt"),
+#       # Make legend text bold
+#       legend.title = element_text(face = "bold",size=24),
+#       legend.text = element_text(face = "bold",size=24)
+#     )
+#   
+#   # Conditionally hide the legend
+#   if (!show_legend) {
+#     p <- p + theme(legend.position = "none")
+#   }
+#   
+#   return(p)
+# }
+# 
+# 
+# 
+# # 1) SIDE AND TOP MAPS (Margins neutralized since layout logic will handle size)
+# p_endemic  <- plot_map(r_endemic,  "Iberian Endemic (N=47)", show_legend = FALSE) +
+#   theme(plot.margin = margin(b = -20, unit = "pt")) # Pulls it slightly closer to the center
+# 
+# p_native   <- plot_map(r_native,   "Native Widespread (N=26)", show_legend = FALSE) + 
+#   theme(plot.margin = margin(t = -80, r = -20, b = 20, l = 0, unit = "pt"))
+# 
+# p_invasive <- plot_map(r_invasive, "Invasive Widespread (N=25)", show_legend = FALSE) + 
+#   theme(plot.margin = margin(t = -80, r = 0, b = 20, l = -20, unit = "pt"))
+# 
+# # 2) CENTRAL HUB (Thicker/transparent transect line & bigger A/B text)
+# p_pooled_hub <- plot_map(r_pooled, title = NULL, show_legend = TRUE) + 
+#   theme(
+#     panel.border = element_rect(color = "black", fill = NA, linewidth = 2),
+#     plot.margin = margin(t = 40, r = 40, b = 40, l = 40, unit = "pt")  # Increased all margins
+#     ) +
+#   coord_sf(expand = c(0.05, 0.05, 0.05, 0.05), clip = "off") + 
+#   # Transect line: alpha 0.4 for transparency, linewidth 2.0 for thickness
+#   geom_spatvector(data = transect_line_vect, color = "black", alpha = 0.5, linewidth = 2.5) +
+#   geom_spatvector(data = endpoints_vect, color = "black", size = 3, shape = 21, fill = "black") +
+#   # A and B Labels: size increased to 10
+#   geom_spatvector_text(data = endpoints_vect, aes(label = Label), fontface = "bold", vjust = -1.2, size = 14,
+#                        nudge_x = -0.5, nudge_y= -1.1) +
+#   annotation_custom(textGrob("All species (N=98)", x = 0.5, y = 0.96, 
+#                              gp = gpar(fontsize = 30, fontface = "bold", col = "black")))
+# 
+# 
+# # ==============================================================================
+# # 4. CREATE PROFILE PLOT, EXTRACT ITS LEGEND, AND BUILD CORRECT LAYOUT
+# # ==============================================================================
+# 
+# # --- Build the transect profile plot (no legend yet) ---
+# p_profile_lines <- ggplot(profile_long, aes(x = Distance_km, y = Suitability, color = Driver)) +
+#   geom_line(linewidth = 1.5) +
+#   scale_color_manual(values = c("Climate" = "#E69F00", 
+#                                 "Hydroclimatic" = "#56B4E9", 
+#                                 "Hydromorphological" = "#009E73","Stacked"="black")) +
+#   scale_y_continuous(
+#     limits = c(0, 100),           # Force y-axis from 0 to 100
+#     breaks = seq(0, 100, by = 25), # Breaks every 25 units
+#     labels = paste0(seq(0, 100, by = 25), "%")  # Add % to labels
+#   ) +
+#   labs(title = "Freshwater Stacked Habitat Suitability along transect A → B",
+#        x = "Distance (km)", y = "Stacked Habitat Suitability") +
+#   theme_minimal() +
+#   theme(
+#     plot.margin = margin(t = 5, r = 20, b = 10, l = 20, unit = "pt"),
+#     plot.title = element_text(hjust = 0.5, size = 32, face = "bold", margin = margin(b = 20)),
+#     axis.title = element_text(size = 27, face = "bold"),     # Already set to 27
+#     axis.title.x = element_text(size = 27, face = "bold"),   # Explicitly set x-axis title
+#     axis.title.y = element_text(size = 27, face = "bold"),   # Explicitly set y-axis title
+#     axis.text = element_text(size = 23),                     # Already set to 23
+#     axis.text.x = element_text(size = 23),                   # Explicitly set x-axis text
+#     axis.text.y = element_text(size = 23),                   # Explicitly set y-axis text
+#     legend.title = element_blank(),
+#     legend.text = element_text(size = 27),                 
+#     legend.key.width = unit(7, "cm"),
+#     # Remove the legend from the plot itself — we will place it separately
+#     legend.position = "none"
+#   ) +
+#   guides(color = guide_legend(override.aes = list(linewidth = 4)))
+# 
+# # Extract the legend from a copy that still has it
+# p_profile_legend <- cowplot::get_legend(
+#   p_profile_lines + theme(legend.position = "bottom")
+# )
+# 
+# # Stack profile plot and its legend vertically
+# profile_block <- wrap_plots(p_profile_lines, p_profile_legend, ncol = 1, heights = c(12, 1))
+# 
+# # --- Build the map panel (same as before) ---
+# row1 <- plot_spacer() + p_endemic + plot_spacer() + 
+#   plot_layout(widths = c(1.15, 1, 1.15))
+# row2 <- p_native + p_pooled_hub + p_invasive + 
+#   plot_layout(widths = c(1, 1.3, 1))
+# top_block <- row1 / row2 + 
+#   plot_layout(heights = c(1, 1.4), guides = "collect") & 
+#   theme(
+#     legend.position = "bottom", legend.justification = "center",
+#     legend.text = element_text(size = 18),
+#     legend.margin = margin(t = 15, b = 30, unit = "pt")  
+#     )
+# 
+# # --- Combine everything with wrap_plots to avoid wrap_dims error ---
+# base_figure <- wrap_plots(top_block, profile_block, ncol = 1, heights = c(3.2, 1.3)) &
+#   theme(plot.background = element_rect(fill = "white", color = NA))
+# 
+# # ==============================================================================
+# # 5. DRAW CONNECTING LINES WITH ggdraw
+# # ==============================================================================
+# final_figure <- ggdraw(base_figure) +
+#   # Central dot
+#   draw_grob(pointsGrob(x = 0.5, y = 0.705, pch = 21, gp = gpar(fill = "black", col = "black", cex = 3))) +
+#   # Line straight UP to Endemic
+#   draw_grob(segmentsGrob(x0 = 0.5, y0 = 0.705, x1 = 0.5, y1 = 0.77, gp = gpar(lwd = 3))) +
+#   # Line diagonally UP-LEFT to Native 
+#   draw_grob(segmentsGrob(x0 = 0.5, y0 = 0.705, x1 = 0.28, y1 = 0.705, gp = gpar(lwd = 3))) +
+#   # Line diagonally UP-RIGHT to Invasive 
+#   draw_grob(segmentsGrob(x0 = 0.5, y0 = 0.705, x1 = 0.74, y1 = 0.705, gp = gpar(lwd = 3)))
+# 
+# 
+# # Exporting
+# suppressWarnings({
+#   ggsave(file.path(out_dir, "Final_Aligned_Dashboard_Perfected.png"),
+#          final_figure,
+#          width = 38,
+#          height = 26,
+#          dpi = 300, bg = "white")
+# })
 
-plot_map <- function(r, title, show_legend = TRUE) {
+
+bbox <- sf::st_bbox(iberia_mainland)
+common_xlim <- c(bbox["xmin"], bbox["xmax"])
+common_ylim <- c(bbox["ymin"], bbox["ymax"])
+yrange <- diff(common_ylim)
+
+plot_map <- function(r, title, show_legend = TRUE, title_top_margin = 0,
+                     xlim = NULL, ylim = NULL) {
   p <- ggplot() +
     geom_spatraster(data = r) +
     geom_spatvector(data = iberia_mainland, fill = NA, color = "black", linewidth = 0.4) +
@@ -3763,147 +3925,154 @@ plot_map <- function(r, title, show_legend = TRUE) {
       labels = paste0(seq(0, 100, by = 20), "%"),
       na.value = "transparent",
       guide = guide_colorbar(
-        direction = "horizontal",
+        direction      = "horizontal",
         label.position = "bottom",
         title.position = "top",
-        title.hjust = 0.5,
-        barwidth = unit(25, "cm"),
-        barheight = unit(2, "cm"),
-        title.theme = element_text(size = 26, face = "bold"),  # Title text size
-        label.theme = element_text(size = 26, face = "bold")   # Break label text size
+        title.hjust    = 0.5,
+        barwidth       = unit(32, "cm"),
+        barheight      = unit(2, "cm"),
+        title.theme    = element_text(size = 50, face = "bold"),
+        label.theme    = element_text(size = 45, face = "bold")
       )
     ) +
     labs(title = title) +
+    coord_sf(xlim = xlim, ylim = ylim, clip = "off") +   # <-- FORCED COMMON EXTENT
     theme_minimal() +
     theme(
-      plot.title = element_text(hjust = 0.5, face = "bold", size = 32),
-      axis.text = element_blank(),
-      axis.title = element_blank(),
-      panel.grid = element_blank(),
-      plot.margin = margin(5, 5, 5, 5, unit = "pt"),
-      # Make legend text bold
-      legend.title = element_text(face = "bold",size=24),
-      legend.text = element_text(face = "bold",size=24)
+      plot.title   = element_text(hjust = 0.5, face = "bold", size = 64,
+                                  margin = margin(t = title_top_margin)),
+      axis.text    = element_blank(),
+      axis.title   = element_blank(),
+      panel.grid   = element_blank(),
+      plot.margin  = margin(0, 0, 0, 0, "pt"),           # zero margin – map fills cell
+      legend.title = element_text(face = "bold", size = 42),
+      legend.text  = element_text(face = "bold", size = 42)
     )
   
-  # Conditionally hide the legend
-  if (!show_legend) {
-    p <- p + theme(legend.position = "none")
-  }
-  
+  if (!show_legend) p <- p + theme(legend.position = "none")
   return(p)
 }
 
+# ----------------------------------------------------------------------
+# 3. BUILD SIDE MAPS (all forced to the same extent)
+# ----------------------------------------------------------------------
+p_endemic  <- plot_map(r_endemic,  "Iberian Endemic (N=47)",
+                       show_legend = FALSE, title_top_margin = 10,
+                       xlim = common_xlim, ylim = common_ylim)
 
+p_native   <- plot_map(r_native,   "Native Widespread (N=26)",
+                       show_legend = FALSE,
+                       xlim = common_xlim, ylim = common_ylim)
 
-# 1) SIDE AND TOP MAPS (Margins neutralized since layout logic will handle size)
-p_endemic  <- plot_map(r_endemic,  "Iberian Endemic (N=47)", show_legend = FALSE) +
-  theme(plot.margin = margin(b = -20, unit = "pt")) # Pulls it slightly closer to the center
+p_invasive <- plot_map(r_invasive, "Invasive Widespread (N=25)",
+                       show_legend = FALSE,
+                       xlim = common_xlim, ylim = common_ylim)
 
-p_native   <- plot_map(r_native,   "Native Widespread (N=26)", show_legend = FALSE) + 
-  theme(plot.margin = margin(t = -80, r = -20, b = 20, l = 0, unit = "pt"))
+# ----------------------------------------------------------------------
+# 4. CENTRAL HUB – extended y‑limit to create internal top margin
+# ----------------------------------------------------------------------
+central_ylim <- c(common_ylim[1], common_ylim[2] + 0.2 * yrange)  # +20% height
 
-p_invasive <- plot_map(r_invasive, "Invasive Widespread (N=25)", show_legend = FALSE) + 
-  theme(plot.margin = margin(t = -80, r = 0, b = 20, l = -20, unit = "pt"))
-
-# 2) CENTRAL HUB (Thicker/transparent transect line & bigger A/B text)
-p_pooled_hub <- plot_map(r_pooled, title = NULL, show_legend = TRUE) + 
+# Build the hub without the label first
+p_pooled_hub <- plot_map(r_pooled, title = NULL, show_legend = TRUE,
+                         xlim = common_xlim, ylim = central_ylim) +
   theme(
     panel.border = element_rect(color = "black", fill = NA, linewidth = 2),
-    plot.margin = margin(t = 40, r = 40, b = 40, l = 40, unit = "pt")  # Increased all margins
-    ) +
-  coord_sf(expand = c(0.05, 0.05, 0.05, 0.05), clip = "off") + 
-  # Transect line: alpha 0.4 for transparency, linewidth 2.0 for thickness
+    plot.margin  = margin(60, 60, 60, 60, "pt")   # outer space for the border
+  ) +
   geom_spatvector(data = transect_line_vect, color = "black", alpha = 0.5, linewidth = 2.5) +
   geom_spatvector(data = endpoints_vect, color = "black", size = 3, shape = 21, fill = "black") +
-  # A and B Labels: size increased to 10
-  geom_spatvector_text(data = endpoints_vect, aes(label = Label), fontface = "bold", vjust = -1.2, size = 14,
-                       nudge_x = -0.5, nudge_y= -1.1) +
-  annotation_custom(textGrob("All species (N=98)", x = 0.5, y = 0.96, 
-                             gp = gpar(fontsize = 30, fontface = "bold", col = "black")))
+  geom_spatvector_text(data = endpoints_vect, aes(label = Label),
+                       fontface = "bold", vjust = -1.2, size = 19,
+                       nudge_x = -0.5, nudge_y = -1.1) +
+  # Label at a fixed y inside the extended blank area
+  geom_text(aes(x = mean(common_xlim), y = common_ylim[2] + 0.1 * yrange,
+                label = "All species (N=98)"),
+            size = 56 / .pt, fontface = "bold", color = "black",
+            hjust = 0.5, vjust = 0.5)
 
-
-# ==============================================================================
-# 4. CREATE PROFILE PLOT, EXTRACT ITS LEGEND, AND BUILD CORRECT LAYOUT
-# ==============================================================================
-
-# --- Build the transect profile plot (no legend yet) ---
+# ----------------------------------------------------------------------
+# 5. PROFILE PLOT (unchanged large fonts)
+# ----------------------------------------------------------------------
 p_profile_lines <- ggplot(profile_long, aes(x = Distance_km, y = Suitability, color = Driver)) +
   geom_line(linewidth = 1.5) +
-  scale_color_manual(values = c("Climate" = "#E69F00", 
-                                "Hydroclimatic" = "#56B4E9", 
-                                "Hydromorphological" = "#009E73","Stacked"="black")) +
-  scale_y_continuous(
-    limits = c(0, 100),           # Force y-axis from 0 to 100
-    breaks = seq(0, 100, by = 25), # Breaks every 25 units
-    labels = paste0(seq(0, 100, by = 25), "%")  # Add % to labels
-  ) +
+  scale_color_manual(values = c("Climate" = "#E69F00",
+                                "Hydroclimatic" = "#56B4E9",
+                                "Hydromorphological" = "#009E73",
+                                "Stacked" = "black")) +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 25),
+                     labels = paste0(seq(0, 100, by = 25), "%")) +
   labs(title = "Freshwater Stacked Habitat Suitability along transect A → B",
        x = "Distance (km)", y = "Stacked Habitat Suitability") +
   theme_minimal() +
   theme(
-    plot.margin = margin(t = 5, r = 20, b = 10, l = 20, unit = "pt"),
-    plot.title = element_text(hjust = 0.5, size = 32, face = "bold", margin = margin(b = 20)),
-    axis.title = element_text(size = 27, face = "bold"),     # Already set to 27
-    axis.title.x = element_text(size = 27, face = "bold"),   # Explicitly set x-axis title
-    axis.title.y = element_text(size = 27, face = "bold"),   # Explicitly set y-axis title
-    axis.text = element_text(size = 23),                     # Already set to 23
-    axis.text.x = element_text(size = 23),                   # Explicitly set x-axis text
-    axis.text.y = element_text(size = 23),                   # Explicitly set y-axis text
-    legend.title = element_blank(),
-    legend.text = element_text(size = 27),                 
-    legend.key.width = unit(7, "cm"),
-    # Remove the legend from the plot itself — we will place it separately
-    legend.position = "none"
+    plot.margin      = margin(5, 20, 10, 20, "pt"),
+    plot.title       = element_text(hjust = 0.5, size = 60, face = "bold", margin = margin(b = 28)),
+    axis.title       = element_text(size = 46, face = "bold"),
+    axis.title.x     = element_text(size = 46, face = "bold"),
+    axis.title.y     = element_text(size = 46, face = "bold"),
+    axis.text        = element_text(size = 40),
+    axis.text.x      = element_text(size = 40),
+    axis.text.y      = element_text(size = 40),
+    legend.title     = element_blank(),
+    legend.text      = element_text(size = 44),
+    legend.key.width = unit(8, "cm"),
+    legend.position  = "none"
   ) +
-  guides(color = guide_legend(override.aes = list(linewidth = 4)))
+  guides(color = guide_legend(override.aes = list(linewidth = 5)))
 
-# Extract the legend from a copy that still has it
 p_profile_legend <- cowplot::get_legend(
   p_profile_lines + theme(legend.position = "bottom")
 )
-
-# Stack profile plot and its legend vertically
 profile_block <- wrap_plots(p_profile_lines, p_profile_legend, ncol = 1, heights = c(12, 1))
 
-# --- Build the map panel (same as before) ---
-row1 <- plot_spacer() + p_endemic + plot_spacer() + 
-  plot_layout(widths = c(1.15, 1, 1.15))
-row2 <- p_native + p_pooled_hub + p_invasive + 
-  plot_layout(widths = c(1, 1.3, 1))
-top_block <- row1 / row2 + 
-  plot_layout(heights = c(1, 1.4), guides = "collect") & 
-  theme(
-    legend.position = "bottom", legend.justification = "center",
-    legend.text = element_text(size = 18),
-    legend.margin = margin(t = 15, b = 30, unit = "pt")  
-    )
+# ----------------------------------------------------------------------
+# 6. MAP LAYOUT (equal column widths for all side maps)
+# ----------------------------------------------------------------------
+side_width <- 1
+hub_width  <- 1.6
 
-# --- Combine everything with wrap_plots to avoid wrap_dims error ---
+row1 <- plot_spacer() + p_endemic + plot_spacer() +
+  plot_layout(widths = c((side_width + hub_width)/2, side_width, (side_width + hub_width)/2))
+
+row2 <- p_native + p_pooled_hub + p_invasive +
+  plot_layout(widths = c(side_width, hub_width, side_width))
+
+top_block <- row1 / row2 +
+  plot_layout(heights = c(1.0, 1.6), guides = "collect") &
+  theme(
+    legend.position      = "bottom",
+    legend.justification = "center",
+    legend.text          = element_text(size = 34),
+    legend.margin        = margin(15, 0, 30, 0, "pt")
+  )
+
 base_figure <- wrap_plots(top_block, profile_block, ncol = 1, heights = c(3.2, 1.3)) &
   theme(plot.background = element_rect(fill = "white", color = NA))
 
-# ==============================================================================
-# 5. DRAW CONNECTING LINES WITH ggdraw
-# ==============================================================================
+# ----------------------------------------------------------------------
+# 7. CONNECTING LINES (precise centres)
+# ----------------------------------------------------------------------
+# Row2 total width: side_width + hub_width + side_width = 3.6
+# Centre of native map:   (0.5*side_width) / 3.6 = 0.1389
+# Centre of invasive map: 1 - 0.1389 = 0.8611
 final_figure <- ggdraw(base_figure) +
-  # Central dot
-  draw_grob(pointsGrob(x = 0.5, y = 0.705, pch = 21, gp = gpar(fill = "black", col = "black", cex = 3))) +
-  # Line straight UP to Endemic
-  draw_grob(segmentsGrob(x0 = 0.5, y0 = 0.705, x1 = 0.5, y1 = 0.77, gp = gpar(lwd = 3))) +
-  # Line diagonally UP-LEFT to Native 
-  draw_grob(segmentsGrob(x0 = 0.5, y0 = 0.705, x1 = 0.28, y1 = 0.705, gp = gpar(lwd = 3))) +
-  # Line diagonally UP-RIGHT to Invasive 
-  draw_grob(segmentsGrob(x0 = 0.5, y0 = 0.705, x1 = 0.74, y1 = 0.705, gp = gpar(lwd = 3)))
+  draw_grob(pointsGrob(x = 0.5, y = 0.714, pch = 21,
+                       gp = gpar(fill = "black", col = "black", cex = 3))) +
+  draw_grob(segmentsGrob(x0 = 0.5, y0 = 0.714, x1 = 0.5, y1 = 0.78,
+                         gp = gpar(lwd = 3))) +
+  draw_grob(segmentsGrob(x0 = 0.5, y0 = 0.714, x1 = 0.3, y1 = 0.714,
+                         gp = gpar(lwd = 3))) +
+  draw_grob(segmentsGrob(x0 = 0.5, y0 = 0.714, x1 = 0.74, y1 = 0.714,
+                         gp = gpar(lwd = 3)))
 
-
-# Exporting
+# ----------------------------------------------------------------------
+# 8. EXPORT
+# ----------------------------------------------------------------------
 suppressWarnings({
   ggsave(file.path(out_dir, "Final_Aligned_Dashboard_Perfected.png"),
          final_figure,
-         width = 38,
-         height = 26,
-         dpi = 300, bg = "white")
+         width = 48, height = 34, dpi = 300, bg = "white")
 })
 
 
@@ -3917,10 +4086,7 @@ suppressWarnings({
 
 
 
-
-
-
-###############################
+###################     NOTEPAD   ##################
 
 # 
 # 
