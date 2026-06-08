@@ -126,305 +126,349 @@ flowchart TD
     linkStyle 5,6 stroke:#fff,stroke-width:3px
 
 ```
-### Start of Tutorial
-# aSDMs :: Aquatic Species Distribution Models - Tutorial
 
-This tutorial demonstrates a workflow for building aquatic Species Distribution Models (aSDMs) using occurrence data and environmental predictors. In this exercise, we provide a computational-light exercise with seven random species that demonstrates our methodology step-by-step, by implementing the pre-constrained h5 climate aSDMs, thus making it accessible for readers to replicate and explore. To download the repository which includes all the required files for the demo execution download from: https://saco.csic.es/s/Co8WNBa323ft3Qi.
+### Start of Tutorial
+aSDMs :: Freshwater SDMs – Complete Demo
+
+This tutorial demonstrates the full **aSDMs workflow**:
+
+- **Phase 1** – Global models for widespread species.
+- **Phase 2** – Regional models for all species; for widespread ones the global prediction is used as an extra covariate.
+
+The methodology is computational‑light (only 7 random species, few replicates) but exactly follows the production pipeline.  
+All required files can be downloaded from: `https://saco.csic.es/s/Co8WNBa323ft3Qi`.
 
 ## Step 0 :: Required Packages
-```r
+```{r}
 # List of required packages
-pkgs <- c("sf", "sdm", "dismo", "dplyr", "tidyr", 
-          "mapview", "geodata", "raster", "RColorBrewer",
-          "terra", "usdm", "randomForest", "parallel")
 
-# Install missing packages in one command
+pkgs <- c("sf", "sdm", "terra", "dplyr", "tidyr", "mapview", "geodata", "raster",
+          "duckdb", "arrow", "vandalico")
 if (length(setdiff(pkgs, rownames(installed.packages()))) > 0) {
   install.packages(setdiff(pkgs, rownames(installed.packages())))
 }
-
 # Load all packages silently
 invisible(lapply(pkgs, library, character.only = TRUE))
 ```
 
-## Step 1 :: Data Input
-```r
-setwd("C:/XXX/XXX/")
-data_sp<-vect("random_species_subset_sp10.shp")
-terra_df <- data_sp  # Full occurrence dataset
-unique_species <- unique(terra_df$species_id)
-numbers_sp <- length(unique_species)
-numbers_sp
+## Step 1 :: Data Input & Species Filtering
+```{r}
+
+# set your working directory (adjust path)
+setwd("path/to/your/project")
+
+# 1.1 Occurrence data
+iberia_occ <- vect("enriched_iberia_vect.shp")
+global_occ <- vect("global_gbif_widespread.shp")
+
+# 1.2 Read the species dataset, a set of points regional points is provided in the data folder (treat them as Endemics) but for full scale application global (GBIF) and regional (local databases) are needed.
+species_list <- read.csv("enriched_species_grid_counts.csv")
+
+# Keep species with ≥10 occurrences
+adequate <- species_list %>% filter(Total_Grids >= 10)
+robust_sp <- adequate$Sp
+
+# subset vectors
+iberia_occ <- iberia_occ[iberia_occ$Sp %in% robust_sp, ]
+global_occ <- global_occ[global_occ$Sp %in% robust_sp, ]
+
+# separate widespread vs. endemic
+widespread_sp <- intersect(unique(iberia_occ$Sp), unique(global_occ$Sp))
+endemic_sp    <- setdiff(unique(iberia_occ$Sp), widespread_sp)
+
+cat("Widespread species:", length(widespread_sp), "\n")
+cat("Endemic species:", length(endemic_sp), "\n")
+
+# For demo, keep only a few species (optional)
+set.seed(123)
+demo_widespread <- sample(widespread_sp, 2)  # 2 widespread
+demo_endemic    <- sample(endemic_sp, 5)      # 5 endemic
+iberia_occ <- iberia_occ[iberia_occ$Sp %in% c(demo_widespread, demo_endemic), ]
+global_occ <- global_occ[global_occ$Sp %in% demo_widespread, ]
+widespread_sp <- demo_widespread
+endemic_sp    <- demo_endemic
 ```
 
-## Step 2 :: Hydroclimatic Predictors
-```r
-riveratl_global <- rast("top5_global_rivers_atlas_raster_list_30sec.tif")
-bioclim_global_rn <- rast("bioclim_global_rn_5vars_30sec.tif")
+## Step 2 :: Predictors & Spatial Extents
+```{r}
+
+# 2.1 Predictor rasters
+predictors_global   <- rast("predictors_finalized_global.tiff")
+predictors_regional <- rast("predictors_finalized_regional.tiff")
+
+# 2.2 Define predictor sets (must match raster layer names)
+#The set of predictors has occured through the analysis in the 1_Predictors.R object
+
+sets_global <- list(
+  "Climate"       = c("bio5_clima", "bio16_clima", "bio17_clima", "bio15_clima", "bio4_clima"),
+  "Hydroclimatic" = c("bio4_hydro", "bio1_hydro", "bio16_hydro", "bio17_hydro", "bio15_hydro")
+)
+
+sets_regional <- list(
+  "Climate"            = c("bio5_clima", "bio16_clima", "bio17_clima", "bio15_clima", "bio4_clima"),
+  "Hydroclimatic"      = c("bio4_hydro", "bio1_hydro", "bio16_hydro", "bio17_hydro", "bio15_hydro"),
+  "Hydromorphological" = c("lka_pc_use", "dor_pc_pva", "sgr_dk_rav", "urb_pc_use", "for_pc_use")
+)
+
+# 2.3 Spatial extents, all the files are provided
+ecoregions    <- vect("feow_hydrosheds.shp")
+hydrosheds_H5 <- vect("HydroSHEDS_H5_merged.shp")  # all H5 basins
+hydrosheds_H8 <- vect("HydroSHEDS_H8_merged.shp")
+hydrosheds_H12<- vect("HydroSHEDS_H12_merged.shp")
+study_area    <- vect("study_area_iberia.shp")
+
+# 2.4 Training extent generation function
+generate_extent <- function(occ, sp_name, eco, hydro, crop_area = NULL) {
+  sp_occ <- occ[occ$Sp == sp_name, ]
+  pts_eco <- terra::intersect(sp_occ, eco)
+  eco_ids <- unique(pts_eco$FEOW_ID)
+  sp_eco  <- eco[eco$FEOW_ID %in% eco_ids, ]
+  pts_h   <- terra::intersect(sp_occ, hydro)
+  h_ids   <- unique(pts_h$HYBAS_ID)
+  sp_h    <- hydro[hydro$HYBAS_ID %in% h_ids, ]
+  sp_poly <- crop(sp_h, sp_eco)
+  sp_poly <- mask(sp_poly, sp_eco)
+  sp_poly <- aggregate(sp_poly)
+  if (!is.null(crop_area)) sp_poly <- crop(sp_poly, crop_area)
+  return(sp_poly)
+}
+
 ```
 
-## Step 3 :: Initialize SDM Structures
-```r
-results_df <- data.frame(
-  id = integer(),
-  species_name = integer(),
-  e_AUC = numeric(),
-  e_COR = numeric(),
-  t_maxSSS = numeric(),
-  t_maxkappa = numeric(),
-  t_prevalence = numeric(),
-  CBI = numeric(),
-  maxKappa = numeric(),
-  maxTSS = numeric(),
-  obs_prevalence = numeric(),
+## Step 3 :: Build the Parquet Database (faster extraction, does not overloads memory)
+```{r}
+# 3.1 Build the database from the global predictors (do once)
+parquet_file <- "aSDMs_Full_Parquet.parquet"
+
+if (!file.exists(parquet_file)) {
+  env_df <- as.data.frame(predictors_global, cells = TRUE, xy = TRUE, na.rm = TRUE)
+  names(env_df) <- tolower(names(env_df))
+  names(env_df) <- gsub("\\.", "_", names(env_df))
+  write_parquet(env_df, parquet_file)
+  cat("Parquet database created.\n")
+} else {
+  cat("Using existing Parquet file.\n")
+}
+```
+
+## Step 4 :: Helper Function (Spatial Query + Background)
+```{r}
+get_train_data <- function(sp_name, sp_ext_poly, occ_df, t_vars, n_bg = NULL) {
+  # 4.1 Get bounding box of the polygon
+  sp_ext_coords <- as.vector(ext(sp_ext_poly))
+  xmin <- sp_ext_coords['xmin']; xmax <- sp_ext_coords['xmax']
+  ymin <- sp_ext_coords['ymin']; ymax <- sp_ext_coords['ymax']
+  
+  # 4.2 Query Parquet inside the bounding box
+  con <- dbConnect(duckdb::duckdb())
+  cols_sql <- paste(paste0("e.", t_vars), collapse = ", ")
+  q <- sprintf("SELECT e.cell, e.x, e.y, %s FROM read_parquet('%s') e WHERE e.x BETWEEN %f AND %f AND e.y BETWEEN %f AND %f",
+               cols_sql, parquet_file, xmin, xmax, ymin, ymax)
+  box_data <- dbGetQuery(con, q)
+  dbDisconnect(con)
+  names(box_data) <- tolower(names(box_data))
+  
+  # 4.3 Mask to the exact polygon
+  box_pts <- vect(box_data, geom = c("x", "y"), crs = crs(sp_ext_poly), keepgeom = TRUE)
+  inside_pts <- box_pts[sp_ext_poly, ]
+  poly_data <- as.data.frame(inside_pts)
+  
+  # 4.4 Presence points
+  pres_ids <- occ_df[occ_df$Sp == sp_name, "cell_id"]
+  valid_pres <- intersect(pres_ids, poly_data$cell)
+  df_pres <- poly_data[poly_data$cell %in% valid_pres, ]
+  df_pres$presence <- 1
+  
+  # 4.5 Background sampling (strictly from inside polygon)
+  #We proceed with 5% sampling of the training extent area based
+  #on the publication of Raussel-Moreno et al. 2025 @EcologicalModeling
+  if (is.null(n_bg)) n_bg <- max(5, round(nrow(poly_data) * 0.05))
+  set.seed(123)
+  bg_cells <- sample(setdiff(poly_data$cell, valid_pres), n_bg, replace = FALSE)
+  df_bg <- poly_data[poly_data$cell %in% bg_cells, ]
+  df_bg$presence <- 0
+  
+  train_ready <- rbind(df_pres, df_bg)
+  return(train_ready)
+}
+
+```
+## Step 5 :: Prepare Output Structures
+```{r}
+global_output_dir <- "phase1_global"
+regional_output_dir <- "phase2_regional"
+dir.create(global_output_dir, recursive = TRUE)
+dir.create(regional_output_dir, recursive = TRUE)
+
+# Results table
+results_all <- data.frame(
+  species   = character(),
+  phase     = character(),
+  extent    = character(),
+  set       = character(),
+  AUC       = numeric(),
+  COR       = numeric(),
+  maxTSS    = numeric(),
+  maxKappa  = numeric(),
+  CBI       = numeric(),
   stringsAsFactors = FALSE
 )
 
-raster_list <- list()
-combined_rasters <- rast()
-sdm_d <- list()
+algo_list <- c('glm', 'brt', 'rf')
+n_reps_demo <- 2   # low for speed (production uses 5)
+ref_raster <- predictors_regional[[1]]
 ```
 
-## Step 4 :: Spatial Processing - Allocation to watersheds
-```r
-watershed <- vect("H5_Iberian/H5_Iberian.shp") #the user should define the spatial layer, in our files the H8 and H12 alternatives are available
+## Step 6 :: Phase 1 – Global Models (widespread species)
+```{r}
 
-# CRS Handling and Conversion
-if (is.factor(terra_df$species_id)) {
-  terra_df$species_id <- as.numeric(levels(terra_df$species_id))[terra_df$species_id]
-} else {
-  terra_df$species_id <- as.numeric(terra_df$species_id)
+extents_global <- list(eco = ecoregions, H5 = hydrosheds_H5, H8 = hydrosheds_H8, H12 = hydrosheds_H12)
+
+for (sp in widespread_sp) {
+  clean_sp <- gsub(" ", "_", sp)
+  sp_global_occ <- as.data.frame(global_occ[global_occ$Sp == sp, ])
+  # compute cell IDs using the global reference raster
+  sp_global_occ$cell_id <- cellFromXY(predictors_global[[1]], crds(global_occ[global_occ$Sp == sp, ]))
+  
+  for (ext_name in names(extents_global)) {
+    ext_poly <- generate_extent(global_occ, sp, ecoregions, extents_global[[ext_name]])
+    if (is.null(ext_poly) || nrow(ext_poly) == 0) next
+    
+    for (set_name in names(sets_global)) {
+      cat(sprintf("GLOBAL | %s | %s | %s\n", sp, ext_name, set_name))
+      out_path <- file.path(global_output_dir, clean_sp, ext_name, set_name)
+      dir.create(out_path, recursive = TRUE, showWarnings = FALSE)
+      
+      t_vars <- sets_global[[set_name]]
+      train_ready <- get_train_data(sp, ext_poly, sp_global_occ, t_vars)
+      
+      d <- sdmData(as.formula(paste0("presence ~ ", paste(t_vars, collapse = "+"), " + coords(x+y)")),
+                   train = train_ready[train_ready$presence == 1, ],
+                   bg    = train_ready[train_ready$presence == 0, ])
+      
+      m <- tryCatch({
+        sdm(presence ~ ., d, methods = algo_list, replication = 'boot', n = n_reps_demo)
+      }, error = function(e) { NULL })
+      if (is.null(m)) next
+      
+      p_ens <- ensemble(m, train_ready[, c("x", "y", t_vars)],
+                        setting = list(method = 'weighted', stat = 'AUC'))
+      res_df <- data.frame(x = train_ready$x, y = train_ready$y, val = as.numeric(p_ens[[1]]))
+      global_raster <- rast(res_df, type = "xyz", crs = crs(ext_poly))
+      
+      # crop to Iberia and save
+      iberia_masked <- mask(crop(global_raster, study_area), study_area)
+      writeRaster(iberia_masked, file.path(out_path, "ensemble_global_iberia.tif"), overwrite = TRUE)
+      
+      # evaluation
+      e <- evaluates(d, p_ens)
+      b <- sdm:::.boyce(e@observed, e@predicted)
+      metrics <- data.frame(
+        species = sp, phase = "global", extent = ext_name, set = set_name,
+        AUC = as.numeric(e@statistics$AUC[1]),
+        COR = as.numeric(e@statistics$COR[1]),
+        maxTSS = max(e@threshold_based$TSS),
+        maxKappa = max(e@threshold_based$Kappa),
+        CBI = ifelse(!is.null(b$CBI), as.numeric(b$CBI[1]), NA)
+      )
+      results_all <- rbind(results_all, metrics)
+      write.csv(metrics, file.path(out_path, "eval.csv"), row.names = FALSE)
+      
+      # variable importance
+      vi <- getVarImp(m, id = "ensemble")
+      write.csv(vi, file.path(out_path, "varImp.csv"))
+      
+      rm(d, m, global_raster, iberia_masked, p_ens); gc()
+    }
+  }
 }
-crs(terra_df) <- "EPSG:4326"
-miteco_sp_vect <- terra_df
-
-# Intersect occurrences with watersheds
-miteco_sp_in <- terra::intersect(miteco_sp_vect, watershed)
-
-# Data Conversion Pipeline
-data <- as.data.frame(miteco_sp_in)
-data$geometry <- NULL
-coords <- geom(miteco_sp_in)
-terra_df_o <- cbind(coords, data)
-
-# Species Filtering (≥10 obs)
-terra_df_or <- terra_df_o %>%
-  mutate(species_id = as.numeric(factor(terra_df_o$species_id)))
-
-species_name_id <- dplyr::select(terra_df_or, "species_id", "HYBAS_ID")
-
-terra_df_filtered <- terra_df_or %>%
-  group_by(species_id) %>%
-  filter(n() >= 10) %>%
-  ungroup() %>%
-  droplevels()
-
-
-# First, convert your spatial vector data to a dataframe
-terra_df_conv <- as.data.frame(terra_df_filtered)
-
-# Now create the presence-absence matrix
-presence_absence_matrix <- terra_df_conv %>%
-  mutate(presence = 1) %>%
-  dplyr::select(species_id, HYBAS_ID, presence) %>%
-  distinct() %>%
-  pivot_wider(names_from = HYBAS_ID, values_from = presence, values_fill = list(presence = 0)) %>%
-  as.data.frame()
-
-# Order ascendingly by species_id
-presence_absence_matrix <- presence_absence_matrix[order(presence_absence_matrix$species_id),]
-
-# Convert presence-absence table back to long format
-presence_long <- presence_absence_matrix %>%
-  pivot_longer(-species_id, names_to = "HYBAS_ID", values_to = "presence")
-
-
-# Spatial Template Preparation
-iberian_watersheds <- watershed
-aggregated_vec <- aggregate(iberian_watersheds)
-resolution <- res(bioclim_global_rn)
-raster_template <- rast(ext(aggregated_vec), resolution = resolution)
-aggregated_raster <- rasterize(aggregated_vec, raster_template, field = 1, fun = "count")
-aggregated_raster[!is.na(aggregated_raster)] <- NA
-crs(aggregated_raster) <- "EPSG:4326"
-
-
-combined_rasters<-resample(combined_rasters,aggregated_raster)
-crs(combined_rasters)<- "EPSG:4326"
-
-```
-## Step 5 :: aSDM Models Prediction - Fitting
-```r
-input_cov <- bioclim_global_rn  # Primary covariates climate aSDM - in case the user wants to apply hydrological or hydroclimatic or hierarchical approaches the fundamental documentation should be followed
-
-# Initialize lists
-polygon_list <- list()
-raster_list <- list()
-sdm_d <- list()
-combined_rasters_stack <- rast()
-results_df <- data.frame()
-
-# Define the vector of numbers
-numbers_sp <- levels(as.factor(terra_df$species_id))
-
-
-for (i in 1:length(numbers_sp)) {
-  
-  #set covariates
-  input_cov <- bioclim_global_rn  # Use your primary covariates
-  
-  # Get presence data for the current species
-  species_data <- presence_long %>%
-    filter(species_id == unique(presence_long$species_id)[[i]] & presence == 1)
-  
-  # Get the watershed IDs
-  watershed_id <- species_data$HYBAS_ID
-  
-  # Get the corresponding freshwater polygon for this HYBAS_ID
-  masked_watershed <- watershed[watershed$HYBAS_ID %in% watershed_id, ]
-  
-  # Connect the watersheds produced in a single polygon
-  polygon_list[[i]] <- masked_watershed
-  
-  # Dissolve the different watersheds to function as the training region
-  dissolve <- aggregate(polygon_list[[i]], dissolve = TRUE)
-  
-  # Combine the raster objects
-  combined_raster <- c(input_cov)
-  
-  ############ RUN THE SDMs #############
-  
-  bioc_gal_in <- combined_raster
-  
-  crs(dissolve) <- "EPSG:4326"
-  
-  # Crop the bioclim to the extent of the watersheds where the species belongs to
-  bioc_gal_in_crop <- crop(bioc_gal_in, dissolve, mask = TRUE)
-  
-  # Pre-set the dataset - CORRECTED: use single brackets [i]
-  terra_df_demo <- terra_df[terra_df$species_id == numbers_sp[i], ]
-  terra_df_demo$species_id[terra_df_demo$species_id == numbers_sp[i]] <- 1
-  
-  # Convert SpatVector to data frame with coordinates
-  terra_df_demo_df <- as.data.frame(terra_df_demo, geom = "XY")
-  
-  # Create SpatialPointsDataFrame from coordinates
-  terra_df_demo_f <- SpatialPointsDataFrame(
-    coords = terra_df_demo_df[, c("x", "y")],
-    data = data.frame(species_id = rep(1, nrow(terra_df_demo_df))),
-    proj4string = CRS("+init=EPSG:4326")
-  )
-  
-  # Generate background points equal to 5% of the training area
-  background_points <- sum(freq(bioc_gal_in_crop[[1]]))* 0.05
-  
-  # Convert SpatRaster to RasterBrick
-  r_bioc_gal_in_crop <- as(bioc_gal_in_crop, "Raster")
-  
-  d <- sdmData(species_id ~ ., terra_df_demo_f, predictors = r_bioc_gal_in_crop, 
-               bg = list(method = 'gRandom', n = round(background_points), exclude = TRUE))
-  
-  # Store the background points in a vector to be evaluated at a later stage
-  sdm_d[[i]] <- d
-  
-  # SDM function to fit the models
-  m <- sdm(species_id ~ ., d, methods = c('glm', 'brt', 'rf'), replication = c('boot'),
-           test.p = 30, n = 2, parallelSetting = list(ncore = 4, method = 'parallel'))
-  
-  # Current prediction to the rest of the 30%
-  p2 <- predict(m, r_bioc_gal_in_crop)
-  
-  en1 <- ensemble(m, p2, setting = list(method = 'weighted', stat = 'auc'))
-  e <- evaluates(d, en1)
-  bc <- sdm:::.boyce(e@observed, e@predicted)
-  
-  results_df <- rbind(results_df, data.frame(
-    id = i,
-    species_id = paste("Species", i),
-    e_AUC = e@statistics$AUC,
-    e_COR = e@statistics$COR[1],
-    CBI = bc$CBI,
-    maxTSS = e@threshold_based$TSS[2],
-    maxKappa = e@threshold_based$Kappa[5],
-    t_maxSSS = e@threshold_based$threshold[2],
-    t_maxkappa = e@threshold_based$threshold[5],
-    t_prevalence = e@threshold_based$threshold[10],
-    obs_prevalence = length(d@species$species_id@presence) / 
-      (length(d@species$species_id@background) + length(d@species$species_id@presence))
-  ))
-  
-  
-  #name the raster file based on the species name
-  species_name <- terra_df$Species[terra_df$species_id == i][1]
-  names(en1) <- species_name
-  
-  #Combine the aSDM into the Iberian extent
-  crop_en1<-mask(en1,aggregated_vec)
- 
-  mask_en1<- resample(crop_en1, combined_rasters, method = "near")
-  #plot(mask_en1)
-  
-  # Reproject raster1 to the CRS of raster2
-  crs(mask_en1) = "EPSG:4326"
-  
-  #store all the species in a combon raster file
-  combined_rasters_stack <- c(combined_rasters_stack,mask_en1)
-  
-  # Define the file name for saving and NAME IT BASE ON THE SPECIES ACCORDING TO THE INTIAL LEDGER
-  file_name <- paste0("deleteplease.tif")
-  
-  # Save the raster file
-  writeRaster(en1, filename = file_name, overwrite = TRUE)
-  
-  # Print a message indicating the file has been saved
-  cat("Saved:", file_name, "for iteration:", i, "\n")
-}
-
-# Assess the number of layers and the generated habitat suitability raster layer
-nlyr(combined_rasters_stack)
-
-plot(combined_rasters_stack)
 
 ```
 
-## Step 6 :: Post-Processing - Thresholding based on prevalence
-```r
-# Threshold Application
-thresholded_rasters_list <- list()
+## Step 7 :: Phase 2 – Regional Models (all regional species)
+```{r}
+extents_regional <- list(eco = ecoregions, H5 = hydrosheds_H5, H8 = hydrosheds_H8, H12 = hydrosheds_H12)
 
-for (i in 1:max(results_df$id)) {
-  threshold_value <- results_df$obs_prevalence[i]
-  thresholded_raster <- app(
-    combined_rasters_stack[[i]], 
-    fun = function(x) ifelse(x > threshold_value, 1, 0)
-  )
-  thresholded_rasters_list[[i]] <- thresholded_raster
+# Pre‑compute cell IDs for Iberian occurrences
+iberia_occ_df <- as.data.frame(iberia_occ)
+iberia_occ_df$cell_id <- cellFromXY(ref_raster, crds(iberia_occ))
+
+for (sp in c(widespread_sp, endemic_sp)) {
+  clean_sp <- gsub(" ", "_", sp)
+  sp_occ <- iberia_occ_df[iberia_occ_df$Sp == sp, ]
+  
+  for (ext_name in names(extents_regional)) {
+    ext_poly <- generate_extent(iberia_occ, sp, ecoregions, extents_regional[[ext_name]], study_area)
+    if (is.null(ext_poly) || nrow(ext_poly) == 0) next
+    
+    for (set_name in names(sets_regional)) {
+      cat(sprintf("REGIONAL | %s | %s | %s\n", sp, ext_name, set_name))
+      out_path <- file.path(regional_output_dir, clean_sp, ext_name, set_name)
+      dir.create(out_path, recursive = TRUE, showWarnings = FALSE)
+      
+      t_vars <- sets_regional[[set_name]]
+      train_ready <- get_train_data(sp, ext_poly, sp_occ, t_vars)
+      
+      # inject global suitability if species is widespread
+      if (sp %in% widespread_sp) {
+        global_ras <- rast(file.path(global_output_dir, clean_sp, ext_name,
+                                     ifelse(set_name %in% c("Climate","Hydroclimatic"),
+                                            set_name, "Hydroclimatic"),
+                                     "ensemble_global_iberia.tif"))
+        if (file.exists(global_ras)) {
+          global_vals <- terra::extract(global_ras, cbind(train_ready$x, train_ready$y))[, 2]
+          train_ready$global_suit <- ifelse(is.na(global_vals), 0, global_vals)
+          t_vars <- c(t_vars, "global_suit")
+        }
+      }
+      
+      d <- sdmData(as.formula(paste0("presence ~ ", paste(t_vars, collapse = "+"), " + coords(x+y)")),
+                   train = train_ready[train_ready$presence == 1, ],
+                   bg    = train_ready[train_ready$presence == 0, ])
+      
+      m <- tryCatch({
+        sdm(presence ~ ., d, methods = algo_list, replication = 'boot', n = n_reps_demo)
+      }, error = function(e) { NULL })
+      if (is.null(m)) next
+      
+      p_ens <- ensemble(m, train_ready[, c("x", "y", t_vars)],
+                        setting = list(method = 'weighted', stat = 'AUC'))
+      reg_raster <- rast(data.frame(x = train_ready$x, y = train_ready$y, val = as.numeric(p_ens[[1]])),
+                         type = "xyz", crs = crs(ext_poly))
+      writeRaster(reg_raster, file.path(out_path, "ensemble_regional.tif"), overwrite = TRUE)
+      
+      e <- evaluates(d, p_ens)
+      b <- sdm:::.boyce(e@observed, e@predicted)
+      metrics <- data.frame(
+        species = sp, phase = "regional", extent = ext_name, set = set_name,
+        AUC = as.numeric(e@statistics$AUC[1]),
+        COR = as.numeric(e@statistics$COR[1]),
+        maxTSS = max(e@threshold_based$TSS),
+        maxKappa = max(e@threshold_based$Kappa),
+        CBI = ifelse(!is.null(b$CBI), as.numeric(b$CBI[1]), NA)
+      )
+      results_all <- rbind(results_all, metrics)
+      write.csv(metrics, file.path(out_path, "eval.csv"), row.names = FALSE)
+      
+      vi <- getVarImp(m, id = "ensemble")
+      write.csv(vi, file.path(out_path, "varImp.csv"))
+      
+      rm(d, m, reg_raster, p_ens); gc()
+    }
+  }
 }
 
-# Combine all at once
-thresholded_rasters_comb <- rast(thresholded_rasters_list)
-names(thresholded_rasters_comb) <- results_df$species_id[1:length(thresholded_rasters_list)]
+```
 
-# Species Richness Calculation
-masked_rasters <- lapply(thresholded_rasters_comb, function(r) {
-  r[is.na(r)] <- 0
-  return(r)
-})
-stacked_raster <- rast(masked_rasters)
-final_stack <- sum(stacked_raster)
+## Step 8 :: Final Summary
+```{r}
+write.csv(results_all, "full_evaluation_summary.csv", row.names = FALSE)
+cat("Pipeline completed. Results saved to:", global_output_dir, "and", regional_output_dir, "\n")
+cat("Evaluation summary written to full_evaluation_summary.csv\n")
 
-#Plot species richness based on thresholded prevalence per species
-plot(stacked_raster)
-
-#Plot species richness based on thresholded prevalence for all species summed
-plot(final_stack)
-
-# Final Outputs
-writeRaster(combined_rasters_stack, "preh5_clima_endemics_1km.tif", overwrite = TRUE)
-writeRaster(final_stack,"species_richness_thresholded_1km.tif",overwrite=TRUE)
-write.csv(results_df, "preh5_clima_endemics_metrics.csv", row.names = FALSE)
 ```
 ### End of Tutorial
+
 
 # Manuscript Outline
 
