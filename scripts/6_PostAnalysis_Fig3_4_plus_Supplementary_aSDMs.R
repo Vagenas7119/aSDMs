@@ -1859,7 +1859,7 @@ master_plot_with_boxes <- ggdraw(composed_plot) +
   
   # Add Climate Box (Orange - top row)
   
-  annotate("rect", xmin = 0.21, xmax = 0.96, ymin = 0.75, ymax = 0.96, 
+  annotate("rect", xmin = 0.175, xmax = 0.965, ymin = 0.75, ymax = 0.965, 
            
            color = "#E69F00", fill = NA, linewidth = 1) +
   
@@ -1867,7 +1867,7 @@ master_plot_with_boxes <- ggdraw(composed_plot) +
   
   # Add Hydroclimatic Box (Blue - middle row)
   
-  annotate("rect", xmin = 0.21, xmax = 0.96, ymin = 0.53, ymax = 0.74, 
+  annotate("rect", xmin = 0.175, xmax = 0.965, ymin = 0.54, ymax = 0.74, 
            
            color = "#56B4E9", fill = NA, linewidth = 1) +
   
@@ -1875,7 +1875,7 @@ master_plot_with_boxes <- ggdraw(composed_plot) +
   
   # Add Hydromorphology Box (Green - bottom row)
   
-  annotate("rect", xmin = 0.21, xmax = 0.96, ymin = 0.315, ymax = 0.52, 
+  annotate("rect", xmin = 0.165, xmax = 0.965, ymin = 0.325, ymax = 0.53, 
            
            color = "#009E73", fill = NA, linewidth = 1)
 
@@ -1887,7 +1887,7 @@ master_plot_with_boxes <- ggdraw(composed_plot) +
 
 ggsave("Vagenas_aSDMs/output/figures/Regional/VarImp/Figure3_Variables_CI.png", 
        
-       master_plot_with_boxes, width = 16, height = 13, dpi = 300) 
+       master_plot_with_boxes, width = 20, height = 12, dpi = 300) 
 
 
 
@@ -3901,8 +3901,8 @@ final_figure <- ggdraw(base_figure) +
 suppressWarnings({
   ggsave(file.path(out_dir, "Final_Aligned_Dashboard_Perfected.png"),
          final_figure,
-         width = 30,
-         height = 24,
+         width = 38,
+         height = 26,
          dpi = 300, bg = "white")
 })
 
