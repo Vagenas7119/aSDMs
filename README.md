@@ -49,7 +49,7 @@ This repository is produced by the 6_PostAnalysis_Fig3_4_plus_Supplementary_aSDM
 ```
 ---
 
-# 🌊aSDM Demo: Predicting Habitat Suitability in Aquatic Ecosystems🌊
+# 🌊aSDM | Pipeline 🌊
 📋 Description
 
 You are an aquatic ecologist/ecohydrological engineer and you want to predict the distribution of multiple endemic species in a hydrographic network. Your task is to build an aquatic Species Distribution Model (aSDM) that predicts suitability scores or species richness based on:
@@ -65,7 +65,7 @@ You are an aquatic ecologist/ecohydrological engineer and you want to predict th
   <tr>
     <td>Climate aSDM</td>
     <td>🌍🌡️</td>
-    <td>Global Climate aSDMs<br><em>(Widespread species)</em></td>
+    <td>Global Climate variables<br><em>(Widespread species)</em></td>
     <td><code>glob_clima_aSDM</code></td>
   </tr>
   <tr>
@@ -84,7 +84,7 @@ You are an aquatic ecologist/ecohydrological engineer and you want to predict th
     <td>Hierarchical Hydroclimatic aSDMs<br><em>(Widespread & Regional species)</em></td>
     <td>💧</td>
     <td>Regional Hydroclimatic variables<br><em>(+ global hydroclimatic niche for widespread species)</em></td>
-    <td><code>reg_hydroclima_aSDM</code></td>🏞️
+    <td><code>reg_hydroclima_aSDM</code></td>
   </tr>
   <tr>
     <td>Hierarchical Hydromorphological aSDM<br><em>(Widespread & Regional species)</em></td>
