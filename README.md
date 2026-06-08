@@ -104,7 +104,7 @@ This tutorial demonstrates the full **aSDMs workflow**:
 - **Phase 1** – Global models for widespread species.
 - **Phase 2** – Regional models for all species; for widespread ones the global prediction is used as an extra covariate.
 
-The methodology is computational‑light (only 7 random species, few replicates) but exactly follows the production pipeline.  
+The methodology is computational‑light (only few artificial species, few replicates) but exactly follows the production pipeline.  
 All required files can be downloaded from: `https://saco.csic.es/s/Co8WNBa323ft3Qi`.
 
 ## Step 0 :: Required Packages
