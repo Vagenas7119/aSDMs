@@ -64,33 +64,33 @@ You are an aquatic ecologist/ecohydrological engineer and you want to predict th
   </tr>
   <tr>
     <td>Climate aSDM</td>
+    <td>🌍🌡️</td>
+    <td>Global Climate aSDMs<br><em>(Widespread species)</em></td>
+    <td><code>glob_clima_aSDM</code></td>
+  </tr>
+  <tr>
+    <td>Hydroclimatic aSDMs<br><em>(Widespread species)</em></td>
+    <td>🌍💧</td>
+    <td>Global Hydroclimatic variables</td>
+    <td><code>glob_hydroclima_aSDM</code></td>
+  </tr>
+    <tr>
+    <td>Hierarchical Climate aSDMs<br><em>(Widespread & Regional species)</em></td>
     <td>🌡️</td>
-    <td>Climate variables (bio5, bio16, …)</td>
-    <td><code>clima_SDM</code></td>
+    <td>Regional Climate variables (+ global climate niche for widespread)</td>
+    <td><code>reg_clima_aSDM</code></td>
+  </tr>
+     <tr>
+    <td>Hierarchical Hydroclimatic aSDMs<br><em>(Widespread & Regional species)</em></td>
+    <td>💧</td>
+    <td>Regional Hydroclimatic variables (+ global hydroclimatic niche for widespread species)</td>
+    <td><code>reg_hydroclima_aSDM</code></td>🏞️
   </tr>
   <tr>
-    <td>Hydroclimatic aSDM</td>
-    <td>💧 & 🌡️</td>
-    <td>Climate + hydrological variables</td>
-    <td><code>hydroclima_SDM</code></td>
-  </tr>
-  <tr>
-    <td>Hydromorphological aSDM<br><em>(regional only)</em></td>
+    <td>Hierarchical Hydromorphological aSDM<br><em>(Widespread & Regional species)</em></td>
     <td>🏞️</td>
-    <td>Landscape / morphology variables</td>
-    <td><code>hydromorph_SDM</code></td>
-  </tr>
-  <tr>
-    <td>Hierarchical Climate aSDM</td>
-    <td>🌡️→💧</td>
-    <td>Regional set + global Climate suitability covariate</td>
-    <td><code>h_clima_SDM</code></td>
-  </tr>
-  <tr>
-    <td>Hierarchical Hydroclimatic aSDM</td>
-    <td>💧→🌡️</td>
-    <td>Regional set + global Hydroclimatic suitability covariate</td>
-    <td><code>h_hydroclima_SDM</code></td>
+    <td>Regional Hydromorphological variables (+ global hydroclimatic niche for widespread species)</td>
+    <td><code>reg_hydromorpho_aSDM</code></td>
   </tr>
 </table>
 </div>
