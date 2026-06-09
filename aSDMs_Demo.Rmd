@@ -32,6 +32,7 @@ invisible(lapply(pkgs, library, character.only = TRUE))
 ## Step 1 :: Data Input & Species Filtering
 ```{r}
 
+
 # set your working directory (adjust path)
 setwd("path/to/your/project")
 
@@ -75,15 +76,14 @@ predictors_global   <- rast("predictors_finalized_global.tiff")
 predictors_regional <- rast("predictors_finalized_regional.tiff")
 
 # 2.2 Define predictor sets (must match raster layer names)
-#The set of predictors has occured through the analysis in the 1_Predictors.R object
-
+# Note: Regional Climate uses bio6_clima instead of bio17_clima (varies by region)
 sets_global <- list(
   "Climate"       = c("bio5_clima", "bio16_clima", "bio17_clima", "bio15_clima", "bio4_clima"),
   "Hydroclimatic" = c("bio4_hydro", "bio1_hydro", "bio16_hydro", "bio17_hydro", "bio15_hydro")
 )
 
 sets_regional <- list(
-  "Climate"            = c("bio5_clima", "bio16_clima", "bio17_clima", "bio15_clima", "bio4_clima"),
+  "Climate"            = c("bio5_clima", "bio16_clima", "bio6_clima", "bio15_clima", "bio4_clima"),
   "Hydroclimatic"      = c("bio4_hydro", "bio1_hydro", "bio16_hydro", "bio17_hydro", "bio15_hydro"),
   "Hydromorphological" = c("lka_pc_use", "dor_pc_pva", "sgr_dk_rav", "urb_pc_use", "for_pc_use")
 )
@@ -111,27 +111,49 @@ generate_extent <- function(occ, sp_name, eco, hydro, crop_area = NULL) {
   return(sp_poly)
 }
 
+
 ```
 
 ## Step 3 :: Build the Parquet Database (faster extraction, does not overloads memory)
 ```{r}
-# 3.1 Build the database from the global predictors (do once)
-parquet_file <- "aSDMs_Full_Parquet.parquet"
+# 3.1 Global Parquet (for Phase 1)
+global_parquet_file <- "aSDMs_Global_Parquet.parquet"
 
-if (!file.exists(parquet_file)) {
+if (!file.exists(global_parquet_file)) {
   env_df <- as.data.frame(predictors_global, cells = TRUE, xy = TRUE, na.rm = TRUE)
   names(env_df) <- tolower(names(env_df))
   names(env_df) <- gsub("\\.", "_", names(env_df))
-  write_parquet(env_df, parquet_file)
-  cat("Parquet database created.\n")
+  write_parquet(env_df, global_parquet_file)
+  cat("Global Parquet database created.\n")
 } else {
-  cat("Using existing Parquet file.\n")
+  cat("Using existing Global Parquet file.\n")
+}
+
+# 3.2 Regional Parquet (for Phase 2) – contains hydromorphological variables
+regional_parquet_file <- "aSDMs_Regional_Parquet.parquet"
+
+if (!file.exists(regional_parquet_file)) {
+  env_df_reg <- as.data.frame(predictors_regional, cells = TRUE, xy = TRUE, na.rm = TRUE)
+  # ensure the column names match the raster layer names exactly
+  layer_names <- names(predictors_regional)
+  if (ncol(env_df_reg) == length(layer_names) + 2) {
+    names(env_df_reg)[3:ncol(env_df_reg)] <- layer_names
+  }
+  names(env_df_reg) <- tolower(names(env_df_reg))
+  names(env_df_reg) <- gsub("\\.", "_", names(env_df_reg))
+  if (!"cell" %in% names(env_df_reg)) env_df_reg$cell <- 1:nrow(env_df_reg)
+  write_parquet(env_df_reg, regional_parquet_file)
+  cat("Regional Parquet database created.\n")
+} else {
+  cat("Using existing Regional Parquet file.\n")
 }
 ```
 
 ## Step 4 :: Helper Function (Spatial Query + Background)
 ```{r}
-get_train_data <- function(sp_name, sp_ext_poly, occ_df, t_vars, n_bg = NULL) {
+
+# Generic function to fetch training data from a given Parquet file
+get_train_data <- function(sp_name, sp_ext_poly, occ_df, t_vars, parquet_path, n_bg = NULL) {
   # 4.1 Get bounding box of the polygon
   sp_ext_coords <- as.vector(ext(sp_ext_poly))
   xmin <- sp_ext_coords['xmin']; xmax <- sp_ext_coords['xmax']
@@ -141,7 +163,7 @@ get_train_data <- function(sp_name, sp_ext_poly, occ_df, t_vars, n_bg = NULL) {
   con <- dbConnect(duckdb::duckdb())
   cols_sql <- paste(paste0("e.", t_vars), collapse = ", ")
   q <- sprintf("SELECT e.cell, e.x, e.y, %s FROM read_parquet('%s') e WHERE e.x BETWEEN %f AND %f AND e.y BETWEEN %f AND %f",
-               cols_sql, parquet_file, xmin, xmax, ymin, ymax)
+               cols_sql, parquet_path, xmin, xmax, ymin, ymax)
   box_data <- dbGetQuery(con, q)
   dbDisconnect(con)
   names(box_data) <- tolower(names(box_data))
@@ -158,8 +180,6 @@ get_train_data <- function(sp_name, sp_ext_poly, occ_df, t_vars, n_bg = NULL) {
   df_pres$presence <- 1
   
   # 4.5 Background sampling (strictly from inside polygon)
-  #We proceed with 5% sampling of the training extent area based
-  #on the publication of Raussel-Moreno et al. 2025 @EcologicalModeling
   if (is.null(n_bg)) n_bg <- max(5, round(nrow(poly_data) * 0.05))
   set.seed(123)
   bg_cells <- sample(setdiff(poly_data$cell, valid_pres), n_bg, replace = FALSE)
@@ -170,9 +190,11 @@ get_train_data <- function(sp_name, sp_ext_poly, occ_df, t_vars, n_bg = NULL) {
   return(train_ready)
 }
 
+
 ```
 ## Step 5 :: Prepare Output Structures
 ```{r}
+
 global_output_dir <- "phase1_global"
 regional_output_dir <- "phase2_regional"
 dir.create(global_output_dir, recursive = TRUE)
@@ -195,6 +217,7 @@ results_all <- data.frame(
 algo_list <- c('glm', 'brt', 'rf')
 n_reps_demo <- 2   # low for speed (production uses 5)
 ref_raster <- predictors_regional[[1]]
+
 ```
 
 ## Step 6 :: Phase 1 – Global Models (widespread species)
@@ -218,7 +241,9 @@ for (sp in widespread_sp) {
       dir.create(out_path, recursive = TRUE, showWarnings = FALSE)
       
       t_vars <- sets_global[[set_name]]
-      train_ready <- get_train_data(sp, ext_poly, sp_global_occ, t_vars)
+      # Use global Parquet for Phase 1
+      train_ready <- get_train_data(sp, ext_poly, sp_global_occ, t_vars, 
+                                    parquet_path = global_parquet_file)
       
       d <- sdmData(as.formula(paste0("presence ~ ", paste(t_vars, collapse = "+"), " + coords(x+y)")),
                    train = train_ready[train_ready$presence == 1, ],
@@ -261,13 +286,14 @@ for (sp in widespread_sp) {
   }
 }
 
+
 ```
 
 ## Step 7 :: Phase 2 – Regional Models (all regional species)
 ```{r}
 extents_regional <- list(eco = ecoregions, H5 = hydrosheds_H5, H8 = hydrosheds_H8, H12 = hydrosheds_H12)
 
-# Pre‑compute cell IDs for Iberian occurrences
+# Pre‑compute cell IDs for Iberian occurrences (using regional reference raster)
 iberia_occ_df <- as.data.frame(iberia_occ)
 iberia_occ_df$cell_id <- cellFromXY(ref_raster, crds(iberia_occ))
 
@@ -285,7 +311,10 @@ for (sp in c(widespread_sp, endemic_sp)) {
       dir.create(out_path, recursive = TRUE, showWarnings = FALSE)
       
       t_vars <- sets_regional[[set_name]]
-      train_ready <- get_train_data(sp, ext_poly, sp_occ, t_vars)
+      
+      # Use regional Parquet for Phase 2
+      train_ready <- get_train_data(sp, ext_poly, sp_occ, t_vars, 
+                                    parquet_path = regional_parquet_file)
       
       # inject global suitability if species is widespread
       if (sp %in% widespread_sp) {
@@ -335,6 +364,7 @@ for (sp in c(widespread_sp, endemic_sp)) {
     }
   }
 }
+
 
 ```
 
