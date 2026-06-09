@@ -35,6 +35,9 @@ predictors_global<-rast("/Users/georgevagenas/Desktop/Vagenas_aSDMs/input/Predic
 
 
 
+library(dplyr)
+library(terra)
+
 # ==============================================================================
 # 1. IDENTIFY SPECIES WITH < 10 GRIDS & CREATE TABLES
 # ==============================================================================
@@ -259,11 +262,11 @@ out_dir <- "/Users/georgevagenas/Desktop/Vagenas_aSDMs/output/training_ext/"
 # ==============================================================================
 
 # Regional Ecoregion Only
-ext_regional_eco <- generate_training_extent(thres_iberian_vect, ecoregions, hydro_layer = NULL)
+#ext_regional_eco <- generate_training_extent(thres_iberian_vect, ecoregions, hydro_layer = NULL)
 study_area_no_islands<-vect("/Users/georgevagenas/Desktop/Vagenas_aSDMs/input/SpatialExtents/study_area_iberia.shp")
 #plot(study_area_no_islands)
-ext_regional_eco<-terra::crop(ext_regional_eco,study_area_no_islands)
-terra::crs(ext_regional_eco)<-"EPSG:4326"
+#ext_regional_eco<-terra::crop(ext_regional_eco,study_area_no_islands)
+#terra::crs(ext_regional_eco)<-"EPSG:4326"
 #writeVector(ext_regional_eco, file.path(out_dir, "ext_of_training_regional_ecoregion.gpkg"), overwrite = TRUE)
 ext_regional_eco<-vect("/Users/georgevagenas/Desktop/Vagenas_aSDMs/output/training_ext/ext_of_training_regional_ecoregion.gpkg")
 
@@ -275,8 +278,8 @@ unique(ext_regional_eco$Sp)
 
 # Regional H5
 #ext_regional_H5 <- generate_training_extent(thres_iberian_vect, ecoregions, hydrosheds_H5)
-ext_regional_H5<-terra::crop(ext_regional_H5,study_area_no_islands)
-terra::crs(ext_regional_H5)<-"EPSG:4326"
+#ext_regional_H5<-terra::crop(ext_regional_H5,study_area_no_islands)
+#terra::crs(ext_regional_H5)<-"EPSG:4326"
 #writeVector(ext_regional_H5, file.path(out_dir, "ext_of_training_regional_H5.gpkg"), overwrite = TRUE)
 ext_regional_H5<-vect("/Users/georgevagenas/Desktop/Vagenas_aSDMs/output/training_ext/ext_of_training_regional_H5.gpkg")
 
@@ -288,8 +291,8 @@ unique(ext_regional_H5$Sp)
 
 # Regional H8
 #ext_regional_H8 <- generate_training_extent(thres_iberian_vect, ecoregions, hydrosheds_H8)
-ext_regional_H8<-terra::crop(ext_regional_H8,study_area_no_islands)
-terra::crs(ext_regional_H8)<-"EPSG:4326"
+#ext_regional_H8<-terra::crop(ext_regional_H8,study_area_no_islands)
+#terra::crs(ext_regional_H8)<-"EPSG:4326"
 #writeVector(ext_regional_H8, file.path(out_dir, "ext_of_training_regional_H8.gpkg"), overwrite = TRUE)
 ext_regional_H8<-vect("/Users/georgevagenas/Desktop/Vagenas_aSDMs/output/training_ext/ext_of_training_regional_H8.gpkg")
 
@@ -299,8 +302,8 @@ unique(ext_regional_H8$Sp)
 
 # Regional H12
 #ext_regional_H12 <- generate_training_extent(thres_iberian_vect, ecoregions, hydrosheds_H12)
-ext_regional_H12<-terra::crop(ext_regional_H12,study_area_no_islands)
-terra::crs(ext_regional_H12)<-"EPSG:4326"
+#ext_regional_H12<-terra::crop(ext_regional_H12,study_area_no_islands)
+#terra::crs(ext_regional_H12)<-"EPSG:4326"
 #writeVector(ext_regional_H12, file.path(out_dir, "ext_of_training_regional_H12.gpkg"), overwrite = TRUE)
 ext_regional_H12<-vect("/Users/georgevagenas/Desktop/Vagenas_aSDMs/output/training_ext/ext_of_training_regional_H12.gpkg")
 
@@ -315,7 +318,7 @@ unique(ext_regional_H12$Sp)
 
 # Global Ecoregion Only
 #ext_global_eco <- generate_training_extent(thres_global_gbif, ecoregions, hydro_layer = NULL)
-terra::crs(ext_global_eco)<-"EPSG:4326"
+#terra::crs(ext_global_eco)<-"EPSG:4326"
 #writeVector(ext_global_eco, file.path(out_dir, "ext_of_training_global_ecoregion.gpkg"), overwrite = TRUE)
 ext_global_eco<-vect("/Users/georgevagenas/Desktop/Vagenas_aSDMs/output/training_ext/ext_of_training_global_ecoregion.gpkg")
 
@@ -326,7 +329,7 @@ unique(ext_global_eco$Sp)
 
 # Global H5
 #ext_global_H5 <- generate_training_extent(thres_global_gbif, ecoregions, hydrosheds_H5)
-terra::crs(ext_global_H5)<-"EPSG:4326"
+#terra::crs(ext_global_H5)<-"EPSG:4326"
 #writeVector(ext_global_H5, file.path(out_dir, "ext_of_training_global_H5.gpkg"), overwrite = TRUE)
 ext_global_H5<-vect("/Users/georgevagenas/Desktop/Vagenas_aSDMs/output/training_ext/ext_of_training_global_H5.gpkg")
 
@@ -336,7 +339,7 @@ ext_global_H5<-vect("/Users/georgevagenas/Desktop/Vagenas_aSDMs/output/training_
 
 # Global H8
 #ext_global_H8 <- generate_training_extent(thres_global_gbif, ecoregions, hydrosheds_H8)
-terra::crs(ext_global_H8)<-"EPSG:4326"
+#terra::crs(ext_global_H8)<-"EPSG:4326"
 #writeVector(ext_global_H8, file.path(out_dir, "ext_of_training_global_H8.gpkg"), overwrite = TRUE)
 ext_global_H8<-vect("/Users/georgevagenas/Desktop/Vagenas_aSDMs/output/training_ext/ext_of_training_global_H8.gpkg")
 
@@ -346,7 +349,7 @@ ext_global_H8<-vect("/Users/georgevagenas/Desktop/Vagenas_aSDMs/output/training_
 
 # Global H12
 #ext_global_H12 <- generate_training_extent(thres_global_gbif, ecoregions, hydrosheds_H12)
-terra::crs(ext_global_H12)<-"EPSG:4326"
+#terra::crs(ext_global_H12)<-"EPSG:4326"
 #writeVector(ext_global_H12, file.path(out_dir, "ext_of_training_global_H12.gpkg"), overwrite = TRUE)
 ext_global_H12<-vect("/Users/georgevagenas/Desktop/Vagenas_aSDMs/output/training_ext/ext_of_training_global_H12.gpkg")
 
@@ -389,7 +392,6 @@ raster_list<-list()
 # Initialize an empty SpatRaster object
 combined_rasters <- rast()
 
-#minimum_background_points=5
 
 sdm_d<-list()
 vi_list<-list() #the list for the variable importance
@@ -428,7 +430,6 @@ if(!dir.exists(regional_dir)) dir.create(regional_dir)
 #Parquet generation
 
 ## 1. Define the ABSOLUTE path where you want the Parquet file saved
-## (Adjust this folder path if you want it saved somewhere else)
 # parquet_file <- "/Users/georgevagenas/Desktop/Vagenas_aSDMs/output/aSDMs_Full_Parquet.parquet"
 # 
 # # 2. Build the optimized Parquet database from your global raster stack
@@ -464,9 +465,9 @@ sets_global <- list(
 )
 
 sets_regional <- list(
-  "Climate"            = c("bio5_clima", "bio16_clima", "bio17_clima", "bio15_clima", "bio4_clima"),
-  "Hydroclimatic"      = c("bio4_hydro", "bio1_hydro", "bio16_hydro", "bio17_hydro", "bio15_hydro"),
-  "Hydromorphological" = c("lka_pc_use", "dor_pc_pva", "sgr_dk_rav", "urb_pc_use", "for_pc_use")
+  "Climate"            = c("bio5_clima", "bio16_clima", "bio16_clima", "bio15_clima", "bio4_clima"),
+  "Hydroclimatic"      = c("bio6_hydro", "bio5_hydro", "bio16_hydro", "bio17_hydro", "bio15_hydro"),
+  "Hydromorphological" = c("lka_pc_use", "dor_pc_pva", "pac_pc_use", "urb_pc_use", "for_pc_use")
 )
 
 extents_global <- list(eco = ext_global_eco, H5 = ext_global_H5, H8 = ext_global_H8, H12 = ext_global_H12)
@@ -605,22 +606,22 @@ extract_custom_metrics <- function(obs, pred, sp_name, model_id) {
 # }
 
 
-#Advanced resetting
-
-
-# ==============================================================================
-# 🎯 OUTSIDE SETUP: Set Exact Starting Point
-# ==============================================================================
-target_sp <- "Barbatula barbatula"
-
-# 1. Chop the Species List
-idx_g <- which(global_species_list == target_sp)
-global_species_list <- global_species_list[idx_g:length(global_species_list)]
-
-# 2. Set the initial Extents and Sets to start precisely at H5 / Hydroclimatic
-run_extents <- names(extents_global)[which(names(extents_global) == "H5"):length(extents_global)]
-run_sets <- names(sets_global)[which(names(sets_global) == "Hydroclimatic"):length(sets_global)]
-# ==============================================================================
+# #Advanced resetting
+# 
+# 
+# # ==============================================================================
+# # 🎯 OUTSIDE SETUP: Set Exact Starting Point
+# # ==============================================================================
+# target_sp <- "Barbatula barbatula"
+# 
+# # 1. Chop the Species List
+# idx_g <- which(global_species_list == target_sp)
+# global_species_list <- global_species_list[idx_g:length(global_species_list)]
+# 
+# # 2. Set the initial Extents and Sets to start precisely at H5 / Hydroclimatic
+# run_extents <- names(extents_global)[which(names(extents_global) == "H5"):length(extents_global)]
+# run_sets <- names(sets_global)[which(names(sets_global) == "Hydroclimatic"):length(sets_global)]
+# # ==============================================================================
 
 
 # ==============================================================================
@@ -832,6 +833,53 @@ for (sp in global_species_list) {
 } # <-- END OF SPECIES LOOP
 
 
+
+
+
+### Modification due to absent regional parquet 9th of June ###
+## BEGIN
+
+# ==============================================================================
+# BUILD REGIONAL PARQUET DATABASE (from predictors_regional)
+# ==============================================================================
+regional_parquet_file <- "/Users/georgevagenas/Desktop/Vagenas_aSDMs/output/aSDMs_Regional_Parquet_corrected.parquet"
+
+cat("[SYSTEM] Building Regional Optimized Database...\n")
+
+env_df_regional <- as.data.frame(predictors_regional, cells = TRUE, xy = TRUE, na.rm = TRUE)
+
+# Clean column names to match the exact format used by DuckDB (lowercase, underscore)
+names(env_df_regional) <- tolower(names(env_df_regional))
+if(!"cell" %in% names(env_df_regional)) env_df_regional$cell <- 1:nrow(env_df_regional)
+names(env_df_regional) <- gsub("\\.", "_", names(env_df_regional)) 
+
+# Write regional parquet
+arrow::write_parquet(env_df_regional, regional_parquet_file)
+
+cat("[SYSTEM] Regional Parquet database built successfully at:\n", regional_parquet_file, "\n")
+
+# Verify that the hydromorphological variables are present
+cat("[SYSTEM] Regional predictors available:\n")
+print(setdiff(names(env_df_regional), c("cell", "x", "y")))
+
+#rm(env_df_regional)
+gc()
+
+# ==============================================================================
+# FRESH REGIONAL OUTPUT DIRECTORY (overwrite all previous models)
+# ==============================================================================
+# if(dir.exists(regional_dir)) {
+#   cat("[SYSTEM] Removing existing regional directory to ensure clean rebuild...\n")
+#   unlink(regional_dir, recursive = TRUE)
+# }
+# dir.create(regional_dir, recursive = TRUE)
+# cat("[SYSTEM] Fresh regional directory created.\n")
+
+## END
+
+
+
+
 # ==============================================================================
 # PHASE 2: REGIONAL MODELING (98 Species)
 # ==============================================================================
@@ -883,6 +931,12 @@ for (sp in regional_species_list) {
       
       t_vars <- sets_regional[[set_name]]
       
+      ### Modification due to absent regional parquet 9th of June ###
+      ## BEGIN (inside regional loop)
+      # Use the regional Parquet database instead of the global one
+      current_parquet <- regional_parquet_file
+      ## END
+      
       # 1. PURE SPATIAL QUERY
       sp_ext_coords <- as.vector(ext(sp_ext_poly))
       xmin <- sp_ext_coords['xmin']; xmax <- sp_ext_coords['xmax']
@@ -891,7 +945,7 @@ for (sp in regional_species_list) {
       con <- dbConnect(duckdb::duckdb())
       cols_sql <- paste(paste0("e.", t_vars), collapse = ", ")
       q_box <- sprintf("SELECT e.cell, e.x, e.y, %s FROM read_parquet('%s') e WHERE e.x BETWEEN %f AND %f AND e.y BETWEEN %f AND %f",
-                       cols_sql, parquet_file, xmin, xmax, ymin, ymax)
+                       cols_sql, current_parquet, xmin, xmax, ymin, ymax)
       box_data <- dbGetQuery(con, q_box)
       dbDisconnect(con)
       
