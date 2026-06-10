@@ -465,7 +465,7 @@ sets_global <- list(
 )
 
 sets_regional <- list(
-  "Climate"            = c("bio5_clima", "bio16_clima", "bio16_clima", "bio15_clima", "bio4_clima"),
+  "Climate"            = c("bio5_clima", "bio6_clima", "bio16_clima", "bio15_clima", "bio4_clima"),
   "Hydroclimatic"      = c("bio6_hydro", "bio5_hydro", "bio16_hydro", "bio17_hydro", "bio15_hydro"),
   "Hydromorphological" = c("lka_pc_use", "dor_pc_pva", "pac_pc_use", "urb_pc_use", "for_pc_use")
 )
