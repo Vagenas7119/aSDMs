@@ -503,11 +503,11 @@ Vagenas, G., Matias, M., Araujo M.B. (2026). A hydroclimatic framework for the h
 
 **Figure 2.** Flowchart illustrating the implementation and evaluation workflow for aquatic Species Distribution Models (aSDMs), comprising nine sequential stages (i.e., I-IX), from input data preparation and modelling through to performance evaluation and the generation of stacked suitability maps.
 
-<img width="2731" height="2250" alt="Figure3" src="https://github.com/user-attachments/assets/0ed55b77-5a55-449a-ac27-8e08d8f8556e" />
+<img width="6000" height="3600" alt="Figure3_HQ" src="https://github.com/user-attachments/assets/edf53c99-2f4a-4a6a-8f3a-8555c83c25b4" />
 
 **Figure 3.** Variable performarnce across different training extents and predictor settings for the freshwater fish species of the Iberian peninsula.
 
-<img width="1216" height="979" alt="Figure4" src="https://github.com/user-attachments/assets/e1b9341f-3476-406d-9d19-9335c6999bf8" />
+<img width="14400" height="10200" alt="Figure4_HQ" src="https://github.com/user-attachments/assets/c7e7afbd-b303-4ddc-96ae-be5fff6eb470" />
 
 **Figure 4.** Stacked ensembled aSDMs for the freshwater fish species of the Iberian Peninsula. The maps represent stacked outputs derived through aSDMs using the pre-constrained h5 spatial strategy, by ensembling all the three predictor sets (i.e., climate, hydroclimatic, hydromorphology). The bottom distance-suitability trajectory chart indicates the variation of predicted suitability values across a vertical transect of the study area, indicating the baseline patterns for the thermal (orange), the hydrological (blue) and the locally influenced (green) niche for the freshwater species.
 
