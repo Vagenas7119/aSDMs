@@ -1,3 +1,4 @@
+
 #June 2026
 
 #Development pipeline of freshwater SDMs (aSDMS)
@@ -7,6 +8,115 @@
 #Sector: Final pipeline
 
 #PhD Researcher - Georgios Vagenas (georgios.vagenas@mncn.csic.es | georgvagenas@gmail.com)
+
+
+
+#diagnostic script to check the identical structure of all the folders in my repository
+
+
+# =======================================================================
+# Diagnostic Script: Check species folder structure in "regional/"
+# =======================================================================
+
+# 1. Define paths and expected structure
+base_dir <- "C:/Users/geo_v/Desktop/Vagenas_aSDMs/output/regional/"
+# Level 2 folders (inside each species folder)
+expected_l2_folders <- c("eco", "h5", "h8", "h12")
+
+# Level 3 folders (inside eco, h5, h8, h12)
+expected_l3_folders <- c("Climate", "Hydroclimatic", "Hydromorphological")
+
+# Level 4 files (inside Climate, Hydroclimatic, Hydromorphology)
+expected_files <- c(
+  "ensemble_regional.tif", 
+  "eval_regional_iberia_strict.csv", 
+  "regional_SDM.rds", 
+  "varImp_regional.rds"
+)
+
+# 2. Check if the base directory exists
+if (!dir.exists(base_dir)) {
+  stop("Error: The base directory 'regional/' does not exist in the current working directory.")
+}
+
+# Get all species directories inside 'regional/' (excluding files)
+species_dirs <- list.dirs(base_dir, full.names = TRUE, recursive = FALSE)
+
+if (length(species_dirs) == 0) {
+  stop("Warning: 'regional/' is empty or contains no species subdirectories.")
+}
+
+# 3. Initialize a list to store diagnostic issues
+issues <- list()
+
+# 4. Iterate over the nested structure
+for (sp_dir in species_dirs) {
+  sp_name <- basename(sp_dir)
+  
+  # A. Check Level 2 (eco, h5, h8, h12)
+  for (l2_folder in expected_l2_folders) {
+    l2_path <- file.path(sp_dir, l2_folder)
+    
+    if (!dir.exists(l2_path)) {
+      issues[[length(issues) + 1]] <- data.frame(
+        Species = sp_name,
+        L2_Folder = l2_folder,
+        L3_Folder = NA,
+        Missing_Item = "ENTIRE L2 FOLDER MISSING",
+        Type = "Folder"
+      )
+      next # Skip deeper checks if the parent folder is missing
+    }
+    
+    # B. Check Level 3 (Climate, Hydroclimatic, Hydromorphology)
+    for (l3_folder in expected_l3_folders) {
+      l3_path <- file.path(l2_path, l3_folder)
+      
+      if (!dir.exists(l3_path)) {
+        issues[[length(issues) + 1]] <- data.frame(
+          Species = sp_name,
+          L2_Folder = l2_folder,
+          L3_Folder = l3_folder,
+          Missing_Item = "ENTIRE L3 FOLDER MISSING",
+          Type = "Folder"
+        )
+        next # Skip file checks if this intermediate folder is missing
+      }
+      
+      # C. Check Level 4 (The 4 final files)
+      for (file_name in expected_files) {
+        file_path <- file.path(l3_path, file_name)
+        
+        if (!file.exists(file_path)) {
+          issues[[length(issues) + 1]] <- data.frame(
+            Species = sp_name,
+            L2_Folder = l2_folder,
+            L3_Folder = l3_folder,
+            Missing_Item = file_name,
+            Type = "File"
+          )
+        }
+      }
+    }
+  }
+}
+
+# 5. Compile and report results
+if (length(issues) == 0) {
+  message("✅ SUCCESS: All species folders have the exact nested structure and contain all expected files!")
+} else {
+  # Combine the list of issues into a single data frame
+  issues_df <- do.call(rbind, issues)
+  
+  message("⚠️ ISSUES FOUND: The following nested folders/files are missing:")
+  print(issues_df)
+  
+  # Save the diagnostic report
+  write.csv(issues_df, "structural_diagnostic_report_nested.csv", row.names = FALSE)
+  message("\n-> A detailed report has been saved as 'structural_diagnostic_report_nested.csv' in your working directory.")
+}
+
+
 
 #### Pre-setting :: Libraries required to perform the analysis ####
 library(dplyr)
@@ -66,7 +176,7 @@ all_metrics <- lapply(all_eval_files, function(f) {
 # We filter only for the two sets we want to compare
 comparison_table <- all_metrics %>%
   dplyr::filter(Set %in% c("Climate", "Hydroclimatic")) %>%
- dplyr::select(Species, Extent, Set, e_AUC, CBI, maxTSS, uAUC) %>%
+  dplyr::select(Species, Extent, Set, e_AUC, CBI, maxTSS, uAUC) %>%
   pivot_wider(
     names_from = Set, 
     values_from = c(e_AUC, CBI, maxTSS, uAUC)
@@ -1655,6 +1765,7 @@ vi_master_new <- vi_master %>%
       Variable == "urb_pc_use" ~ "Urban Extent (%)",
       Variable == "for_pc_use" ~ "Forest Cover (%)",
       Variable == "sgr_dk_rav" ~ "Stream Gradient",
+      Variable == "pac_pc_use" ~ "Protected area Extent (%)",
       
       # Global Niche
       grepl("global", Variable, ignore.case = TRUE) ~ "Global Suitability",
@@ -1859,7 +1970,7 @@ master_plot_with_boxes <- ggdraw(composed_plot) +
   
   # Add Climate Box (Orange - top row)
   
-  annotate("rect", xmin = 0.175, xmax = 0.965, ymin = 0.75, ymax = 0.965, 
+  annotate("rect", xmin = 0.175, xmax = 0.965, ymin = 0.77, ymax = 0.965, 
            
            color = "#E69F00", fill = NA, linewidth = 1) +
   
@@ -1867,7 +1978,7 @@ master_plot_with_boxes <- ggdraw(composed_plot) +
   
   # Add Hydroclimatic Box (Blue - middle row)
   
-  annotate("rect", xmin = 0.175, xmax = 0.965, ymin = 0.54, ymax = 0.74, 
+  annotate("rect", xmin = 0.175, xmax = 0.965, ymin = 0.55, ymax = 0.765, 
            
            color = "#56B4E9", fill = NA, linewidth = 1) +
   
@@ -1875,7 +1986,7 @@ master_plot_with_boxes <- ggdraw(composed_plot) +
   
   # Add Hydromorphology Box (Green - bottom row)
   
-  annotate("rect", xmin = 0.175, xmax = 0.965, ymin = 0.325, ymax = 0.53, 
+  annotate("rect", xmin = 0.175, xmax = 0.965, ymin = 0.325, ymax = 0.545, 
            
            color = "#009E73", fill = NA, linewidth = 1)
 
@@ -2450,23 +2561,45 @@ for (sp in species_list) {
   sp_rasters <- list()
   
   # --- STEP A: LOAD DATA & METRICS ---
+  
+  #this is when all species are fully structured with climate, hydroclimatic, hydromorphological
+  
+  # for (i in seq_along(sets)) {
+  #   set <- sets[i]
+  #   eval_file <- file.path(base_dir, sp, "H5", set, "eval_regional_iberia_strict.csv")
+  #   raster_file <- file.path(base_dir, sp, "H5", set, "ensemble_regional.tif")
+  #   
+  #   # Extract ALL FOUR metrics but in this case only for AUC
+  #   eval_data <- read_csv(eval_file, show_col_types = FALSE)
+  #   sp_metrics$e_AUC[i]  <- eval_data$e_AUC[1]
+  #   # sp_metrics$CBI[i]    <- eval_data$CBI[1]
+  #   # sp_metrics$maxTSS[i] <- eval_data$maxTSS[1]
+  #   # sp_metrics$uAUC[i]   <- eval_data$uAUC[1]
+  #   
+  #   sp_rasters[[set]] <- rast(raster_file)
+  # }
+  
+  #modification for Lamperta planeri
+  
   for (i in seq_along(sets)) {
     set <- sets[i]
     eval_file <- file.path(base_dir, sp, "H5", set, "eval_regional_iberia_strict.csv")
     raster_file <- file.path(base_dir, sp, "H5", set, "ensemble_regional.tif")
     
-    # Extract ALL FOUR metrics but in this case only for AUC
+    # ---- Specific fix for Lampetra_planeri ----
+    if (sp == "Lampetra_planeri" && set == "Hydromorphological") {
+      sp_metrics$e_AUC[i] <- NA           # mark as missing
+      # do not load the raster – leave sp_rasters[[set]] empty
+      next
+    }
+    
     eval_data <- read_csv(eval_file, show_col_types = FALSE)
     sp_metrics$e_AUC[i]  <- eval_data$e_AUC[1]
-    # sp_metrics$CBI[i]    <- eval_data$CBI[1]
-    # sp_metrics$maxTSS[i] <- eval_data$maxTSS[1]
-    # sp_metrics$uAUC[i]   <- eval_data$uAUC[1]
-    
     sp_rasters[[set]] <- rast(raster_file)
   }
   
   # --- STEP B: NORMALIZE INDIVIDUAL RASTERS (0 TO 1) ---
-  for (set in sets) {
+  for (set in names(sp_rasters)) {
     r <- sp_rasters[[set]]
     r_minmax <- minmax(r)
     r_min <- r_minmax[1, 1]
@@ -2481,31 +2614,83 @@ for (sp in species_list) {
   
   # --- STEP C: CALCULATE MULTI-METRIC WEIGHTS ---
   # 1. Calculate proportional weights (sum to 1) for each metric individually
-  #In this case only for AUC
-  w_AUC    <- sp_metrics$e_AUC / sum(sp_metrics$e_AUC)
-  # w_CBI    <- sp_metrics$CBI / sum(sp_metrics$CBI)
-  # w_maxTSS <- sp_metrics$maxTSS / sum(sp_metrics$maxTSS)
-  # w_uAUC   <- sp_metrics$uAUC / sum(sp_metrics$uAUC)
   
-  # 2. Average the 4 proportions to enforce exactly 1/4 weight per metric
-  #In this case only for AUC
-  #final_weights <- (w_AUC + w_CBI + w_maxTSS + w_uAUC) / 4
-  final_weights<-w_AUC
-  names(final_weights) <- sets
+  #this is when all species are fully structured with climate, hydroclimatic, hydromorphological
+  
+  # #In this case only for AUC
+  # w_AUC    <- sp_metrics$e_AUC / sum(sp_metrics$e_AUC)
+  # # w_CBI    <- sp_metrics$CBI / sum(sp_metrics$CBI)
+  # # w_maxTSS <- sp_metrics$maxTSS / sum(sp_metrics$maxTSS)
+  # # w_uAUC   <- sp_metrics$uAUC / sum(sp_metrics$uAUC)
+  # 
+  # # 2. Average the 4 proportions to enforce exactly 1/4 weight per metric
+  # #In this case only for AUC
+  # #final_weights <- (w_AUC + w_CBI + w_maxTSS + w_uAUC) / 4
+  # final_weights<-w_AUC
+  # names(final_weights) <- sets
+  
+  # modification for Lampetra_planeri
+  if (sp == "Lampetra_planeri") {
+    valid_sets <- sp_metrics$Set[!is.na(sp_metrics$e_AUC)]   # "Climate","Hydroclimatic"
+    valid_auc  <- sp_metrics$e_AUC[!is.na(sp_metrics$e_AUC)]
+    w_AUC <- valid_auc / sum(valid_auc)
+    final_weights <- w_AUC
+    names(final_weights) <- valid_sets
+  } else {
+    # All other species keep the original 3‑set calculation
+    w_AUC    <- sp_metrics$e_AUC / sum(sp_metrics$e_AUC)
+    final_weights <- w_AUC
+    names(final_weights) <- sets
+  }
   
   
-  # Store percentages for the CSV
-  weights_list[[sp]] <- data.frame(
-    Species = sp,
-    Climate = final_weights["Climate"] * 100,
-    Hydroclimatic = final_weights["Hydroclimatic"] * 100,
-    Hydromorphology = final_weights["Hydromorphological"] * 100 
-  )
+  #this is when all species are fully structured with climate, hydroclimatic, hydromorphological
+  
+  # # Store percentages for the CSV
+  # weights_list[[sp]] <- data.frame(
+  #   Species = sp,
+  #   Climate = final_weights["Climate"] * 100,
+  #   Hydroclimatic = final_weights["Hydroclimatic"] * 100,
+  #   Hydromorphology = final_weights["Hydromorphological"] * 100 
+  # )
+  
+  #modification for Lamperta planeri
+  
+  if (sp == "Lampetra_planeri") {
+    weights_list[[sp]] <- data.frame(
+      Species = sp,
+      Climate = final_weights["Climate"] * 100,
+      Hydroclimatic = final_weights["Hydroclimatic"] * 100,
+      Hydromorphology = NA   # explicitly missing
+    )
+  } else {
+    weights_list[[sp]] <- data.frame(
+      Species = sp,
+      Climate = final_weights["Climate"] * 100,
+      Hydroclimatic = final_weights["Hydroclimatic"] * 100,
+      Hydromorphology = final_weights["Hydromorphological"] * 100 
+    )
+  }
   
   # --- STEP D: RASTER MAP ALGEBRA ---
-  weighted_ensemble <- (sp_rasters[["Climate"]] * final_weights["Climate"]) +
-    (sp_rasters[["Hydroclimatic"]] * final_weights["Hydroclimatic"]) +
-    (sp_rasters[["Hydromorphological"]] * final_weights["Hydromorphological"])
+  
+  #this is when all species are fully structured with climate, hydroclimatic, hydromorphological
+  
+  # weighted_ensemble <- (sp_rasters[["Climate"]] * final_weights["Climate"]) +
+  #   (sp_rasters[["Hydroclimatic"]] * final_weights["Hydroclimatic"]) +
+  #   (sp_rasters[["Hydromorphological"]] * final_weights["Hydromorphological"])
+  
+  #modification for Lamperta planeri
+  
+  if (sp == "Lampetra_planeri") {
+    # Only two sets exist
+    weighted_ensemble <- (sp_rasters[["Climate"]] * final_weights["Climate"]) +
+      (sp_rasters[["Hydroclimatic"]] * final_weights["Hydroclimatic"])
+  } else {
+    weighted_ensemble <- (sp_rasters[["Climate"]] * final_weights["Climate"]) +
+      (sp_rasters[["Hydroclimatic"]] * final_weights["Hydroclimatic"]) +
+      (sp_rasters[["Hydromorphological"]] * final_weights["Hydromorphological"])
+  }
   
   # --- STEP E: FINAL NORMALIZATION 0 TO 1 ---
   ens_minmax <- minmax(weighted_ensemble)
@@ -2756,28 +2941,28 @@ iberia_mainland <- iberia_parts[which.max(land_areas), ]
 # ==============================================================================
 build_multimetric_driver_stack <- function(spp_list, target_driver) {
   stack_list <- list()
-
+  
   for (sp in spp_list) {
     file_path <- file.path(base_reg_dir, sp, "H5", target_driver, "ensemble_regional.tif")
     eval_path <- file.path(base_reg_dir, sp, "H5", target_driver, "eval_regional_iberia_strict.csv")
-
+    
     if (file.exists(file_path) && file.exists(eval_path)) {
-
+      
       # 1. Load the Evaluation Metrics and calculate the penalty weight
       metrics <- read_csv(eval_path, show_col_types = FALSE)
       weight <- mean(metrics$e_AUC + metrics$maxTSS + metrics$CBI + metrics$uAUC, na.rm = TRUE) / 4
-
+      
       # 2. Load the RAW raster (Intentionally skipping the 0-1 stretch)
       r <- rast(file_path)
-
+      
       # 3. Apply the dynamic weight directly to the raw probabilities
       r_weighted <- r * weight
       stack_list[[sp]] <- r_weighted
     }
   }
-
+  
   if(length(stack_list) == 0) return(NULL) # Failsafe
-
+  
   # 4. Align extents across all species
   master_ext <- ext(stack_list[[1]])
   if (length(stack_list) > 1) {
@@ -2785,18 +2970,18 @@ build_multimetric_driver_stack <- function(spp_list, target_driver) {
       master_ext <- terra::union(master_ext, ext(stack_list[[i]]))
     }
   }
-
+  
   stack_aligned <- lapply(stack_list, function(r) extend(r, master_ext))
   r_stack <- rast(stack_aligned)
-
+  
   # 5. Sum all weighted species together
   r_sum <- sum(r_stack, na.rm = TRUE)
-
+  
   # 6. Crop and Mask to Iberia
   iberia_proj <- project(iberia_mainland, crs(r_sum))
   r_crop <- crop(r_sum, iberia_proj)
   r_masked <- mask(r_crop, iberia_proj)
-
+  
   # RETURN RAW SUM (Intentionally skipping the 0-100% independent stretch)
   return(r_masked)
 }
@@ -2848,10 +3033,10 @@ safe_sum_overall <- function(files) {
   }
   r_list_aligned <- lapply(r_list, function(r) extend(r, master_ext))
   r_sum <- sum(rast(r_list_aligned), na.rm = TRUE)
-
+  
   iberia_proj <- project(iberia_mainland, crs(r_sum))
   r_masked <- mask(crop(r_sum, iberia_proj), iberia_proj)
-
+  
   rmm <- minmax(r_masked)
   return( ((r_masked - rmm[1,1]) / (rmm[2,1] - rmm[1,1])) * 100 )
 }
@@ -3994,8 +4179,50 @@ p_pooled_hub <- plot_map(r_pooled, title = NULL, show_legend = TRUE,
 # ----------------------------------------------------------------------
 # 5. PROFILE PLOT (unchanged large fonts)
 # ----------------------------------------------------------------------
+
+hydro_data <- profile_long %>% filter(Driver == "Hydromorphological")
+max_point  <- hydro_data[which.max(hydro_data$Suitability), ]
+min_point  <- hydro_data[which.min(hydro_data$Suitability), ]
+
 p_profile_lines <- ggplot(profile_long, aes(x = Distance_km, y = Suitability, color = Driver)) +
   geom_line(linewidth = 1.5) +
+  
+  # Vertical dashed line at point A (x = 0)
+  annotate("segment",
+           x = 0, xend = 0,
+           y = 0, yend = 85,
+           colour = "black", linetype = "dashed", linewidth = 0.8, alpha = 0.7) +
+  # Label "A" near the top but inside the plot
+  annotate("text",
+           x = 0, y = 100,
+           label = "A",
+           size = 18, colour = "black", fontface = "bold") +
+  
+  # Vertical dashed line at point B (x = max distance)
+  annotate("segment",
+           x = max(profile_long$Distance_km), xend = max(profile_long$Distance_km),
+           y = 0, yend = 85,
+           colour = "black", linetype = "dashed", linewidth = 0.8, alpha = 0.7) +
+  # Label "B" near the top but inside the plot
+  annotate("text",
+           x = max(profile_long$Distance_km), y = 100,
+           label = "B",
+           size = 18, colour = "black", fontface = "bold") +
+  
+  # Maximum – green point + black label with "Max = "
+  geom_point(data = max_point, size = 5, colour = "#009E73", show.legend = FALSE) +
+  geom_text(data = max_point,
+            aes(label = paste0("Max = ", round(Suitability, 1), "%")),
+            nudge_y = 8, 
+            size = 18, colour = "black", fontface = "bold", show.legend = FALSE) +
+  
+  # Minimum – green point + black label with "Min = "
+  geom_point(data = min_point, size = 5, colour = "#009E73", show.legend = FALSE) +
+  geom_text(data = min_point,
+            aes(label = paste0("Min = ", round(Suitability, 1), "%")),
+            nudge_y = -8,
+            size = 18, colour = "black", fontface = "bold", show.legend = FALSE) +
+  
   scale_color_manual(values = c("Climate" = "#E69F00",
                                 "Hydroclimatic" = "#56B4E9",
                                 "Hydromorphological" = "#009E73",
@@ -4020,6 +4247,33 @@ p_profile_lines <- ggplot(profile_long, aes(x = Distance_km, y = Suitability, co
     legend.position  = "none"
   ) +
   guides(color = guide_legend(override.aes = list(linewidth = 5)))
+
+# p_profile_lines <- ggplot(profile_long, aes(x = Distance_km, y = Suitability, color = Driver)) +
+#   geom_line(linewidth = 1.5) +
+#   scale_color_manual(values = c("Climate" = "#E69F00",
+#                                 "Hydroclimatic" = "#56B4E9",
+#                                 "Hydromorphological" = "#009E73",
+#                                 "Stacked" = "black")) +
+#   scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 25),
+#                      labels = paste0(seq(0, 100, by = 25), "%")) +
+#   labs(title = "Freshwater Stacked Habitat Suitability along transect A → B",
+#        x = "Distance (km)", y = "Stacked Habitat Suitability") +
+#   theme_minimal() +
+#   theme(
+#     plot.margin      = margin(5, 20, 10, 20, "pt"),
+#     plot.title       = element_text(hjust = 0.5, size = 60, face = "bold", margin = margin(b = 28)),
+#     axis.title       = element_text(size = 46, face = "bold"),
+#     axis.title.x     = element_text(size = 46, face = "bold"),
+#     axis.title.y     = element_text(size = 46, face = "bold"),
+#     axis.text        = element_text(size = 40),
+#     axis.text.x      = element_text(size = 40),
+#     axis.text.y      = element_text(size = 40),
+#     legend.title     = element_blank(),
+#     legend.text      = element_text(size = 44),
+#     legend.key.width = unit(8, "cm"),
+#     legend.position  = "none"
+#   ) +
+#   guides(color = guide_legend(override.aes = list(linewidth = 5)))
 
 p_profile_legend <- cowplot::get_legend(
   p_profile_lines + theme(legend.position = "bottom")
@@ -4074,12 +4328,6 @@ suppressWarnings({
          final_figure,
          width = 48, height = 34, dpi = 300, bg = "white")
 })
-
-
-
-
-
-
 
 
 
