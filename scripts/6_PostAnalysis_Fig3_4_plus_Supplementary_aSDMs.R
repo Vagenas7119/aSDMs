@@ -593,7 +593,7 @@ extent_comparison_plot <- extent_comparison_plot +
        subtitle = "Adjacent pairs (bottom brackets) vs Long-jump pairs (top brackets). '>' indicates Left Extent scored higher.",
        x = "Spatial Training Extent", 
        y = "Metric Score",
-       caption = "Significance: ns (p > 0.05), * (p ≤ 0.05), ** (p ≤ 0.01), *** (p ≤ 0.001), **** (p ≤ 0.0001)") +
+       caption = "Significance: * (p ≤ 0.05), ** (p ≤ 0.01), *** (p ≤ 0.001), **** (p ≤ 0.0001)") +
   theme(plot.title = element_text(face = "bold", size = 16),
         plot.caption = element_text(hjust = 0, size = 10, face = "italic", color = "gray30"),
         legend.position = "none",
