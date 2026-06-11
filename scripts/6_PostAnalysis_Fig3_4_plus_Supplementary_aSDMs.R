@@ -1529,8 +1529,10 @@ shift_plot <- ggplot(trajectory_data, aes(x = Extent, y = Mean_Importance, group
   labs(x = NULL, y = "Mean Relative Importance (%)") +
   theme(
     strip.text.x = element_text(face = "bold", size = 14),
-    strip.text.y = element_text(face = "bold", size = 14), 
-    axis.text.x = element_text(size = 14, color = "black"), 
+    strip.text.y = element_text(face = "bold", size = 14),
+    
+    axis.text.x = element_text(size = 14, color = "black"),
+    axis.title.y = element_text(size = 16, face = "bold", margin = margin(r = 10)),
     panel.grid.minor = element_blank(),
     
     legend.position = "bottom",
@@ -1970,7 +1972,7 @@ master_plot_with_boxes <- ggdraw(composed_plot) +
   
   # Add Climate Box (Orange - top row)
   
-  annotate("rect", xmin = 0.175, xmax = 0.965, ymin = 0.75, ymax = 0.96, 
+  annotate("rect", xmin = 0.19, xmax = 0.965, ymin = 0.75, ymax = 0.96, 
            
            color = "#E69F00", fill = NA, linewidth = 1) +
   
@@ -1978,7 +1980,7 @@ master_plot_with_boxes <- ggdraw(composed_plot) +
   
   # Add Hydroclimatic Box (Blue - middle row)
   
-  annotate("rect", xmin = 0.175, xmax = 0.965, ymin = 0.53, ymax = 0.74, 
+  annotate("rect", xmin = 0.19, xmax = 0.965, ymin = 0.54, ymax = 0.74, 
            
            color = "#56B4E9", fill = NA, linewidth = 1) +
   
@@ -1986,7 +1988,7 @@ master_plot_with_boxes <- ggdraw(composed_plot) +
   
   # Add Hydromorphology Box (Green - bottom row)
   
-  annotate("rect", xmin = 0.175, xmax = 0.96, ymin = 0.315, ymax = 0.52, 
+  annotate("rect", xmin = 0.19, xmax = 0.965, ymin = 0.325, ymax = 0.53, 
            
            color = "#009E73", fill = NA, linewidth = 1)
 
