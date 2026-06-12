@@ -175,7 +175,7 @@ all_metrics <- lapply(all_eval_files, function(f) {
 # 3. Pivot to compare Climate vs Hydroclimatic
 # We filter only for the two sets we want to compare
 comparison_table <- all_metrics %>%
-  dplyr::filter(Set %in% c("Climate", "Hydroclimatic")) %>%
+  dplyr::filter(Set %in% c("Climate", "Hydroclimatic","Hydromorphological")) %>%
   dplyr::select(Species, Extent, Set, e_AUC, CBI, maxTSS, uAUC) %>%
   pivot_wider(
     names_from = Set, 
@@ -291,7 +291,7 @@ all_metrics <- lapply(all_eval_files, function(f) {
 
 # 🚨 RENAME e_AUC to AUC here
 plot_data <- all_metrics %>%
-  filter(Set %in% c("Climate", "Hydroclimatic")) %>%
+  filter(Set %in% c("Climate", "Hydroclimatic","Hydromorphological")) %>%
   dplyr::select(Species, Extent, Set, e_AUC, CBI, maxTSS, uAUC) %>%
   rename(AUC = e_AUC) %>% 
   pivot_longer(cols = c(AUC, CBI, maxTSS, uAUC), names_to = "Metric", values_to = "Score") %>%
@@ -566,8 +566,19 @@ if (nrow(stat.test) > 0) {
 }
 
 # D. Build the base plot
+
+# Define your reversed sequential purple gradient for Extents
+extent_colors <- c(
+  "eco" = "#3F007D",  # Deep Royal Purple (Stronger baseline)
+  "H5"  = "#6A51A3",  # Rich Purple
+  "H8"  = "#807DBA",  # Medium Purple (Your old H5)
+  "H12" = "#9E9AC8"   # Solid Lilac (No longer washes out to white)
+)
+
+# D. Build the base plot
 extent_comparison_plot <- ggboxplot(plot_data, x = "Extent", y = "Score", 
-                                    color = "Extent", palette = "jco",
+                                    color = "Extent", 
+                                    palette = extent_colors, # <--- CHANGED HERE
                                     facet.by = c("Metric", "Set"), scales = "free_y",
                                     short.panel.labs = FALSE) +
   stat_compare_means(method = "kruskal.test", label.y.npc = "bottom")
@@ -589,7 +600,7 @@ extent_comparison_plot <- extent_comparison_plot +
     expand = expansion(mult = c(0.18, 0.18)) # Creates padding for top and bottom brackets
   ) +
   theme_minimal() +
-  labs(title = "Performance Across Spatial Extents (Global aSDMs)",
+  labs(title = "Performance Across Spatial Extents (All native & invasive widespread species) - [Global aSDMs]",
        subtitle = "Adjacent pairs (bottom brackets) vs Long-jump pairs (top brackets). '>' indicates Left Extent scored higher.",
        x = "Spatial Training Extent", 
        y = "Metric Score",
@@ -607,6 +618,262 @@ ggsave("Vagenas_aSDMs/output/figures/Global/Extent_Alters_Performance_Global_Ove
        extent_comparison_plot, width = 14, height = 10, dpi = 300)
 
 
+
+
+
+#add the comparison between predictors at a global scale
+
+
+
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+library(rstatix)
+
+# ==============================================================================
+# 1. LOAD AND PREP FOR 2 SETS (GLOBAL)
+# ==============================================================================
+plot_data <- all_metrics %>%
+  filter(Set %in% c("Climate", "Hydroclimatic")) %>% 
+  dplyr::select(Species, Extent, Set, e_AUC, CBI, maxTSS, uAUC) %>%
+  rename(AUC = e_AUC) %>% 
+  pivot_longer(cols = c(AUC, CBI, maxTSS, uAUC), names_to = "Metric", values_to = "Score") %>%
+  filter(!is.na(Score))
+
+plot_data$Set <- factor(plot_data$Set, levels = c("Climate", "Hydroclimatic"))
+plot_data$Extent <- factor(plot_data$Extent, levels = c("eco", "H5", "H8", "H12"))
+
+# Define your exact custom colors (Only need two!)
+set_colors <- c(
+  "Climate" = "#E69F00", 
+  "Hydroclimatic" = "#56B4E9"
+)
+
+# Only ONE comparison is possible now
+my_comparisons <- list(c("Climate", "Hydroclimatic"))
+
+# ==============================================================================
+# 2. OVERALL SET COMPARISON (Custom Bracket & Directional Logic)
+# ==============================================================================
+
+means_df <- plot_data %>%
+  group_by(Metric, Extent, Set) %>%
+  summarise(Mean_Score = mean(Score, na.rm = TRUE), .groups = "drop")
+
+# Wilcox test across 'Set', grouped by 'Metric' and 'Extent'
+stat.test <- plot_data %>%
+  group_by(Metric, Extent) %>%
+  wilcox_test(Score ~ Set, comparisons = my_comparisons) %>%
+  add_significance() %>%
+  left_join(means_df, by = c("Metric", "Extent", "group1" = "Set")) %>%
+  rename(mean1 = Mean_Score) %>%
+  left_join(means_df, by = c("Metric", "Extent", "group2" = "Set")) %>%
+  rename(mean2 = Mean_Score) %>%
+  mutate(
+    direction = ifelse(mean1 > mean2, ">", "<"),
+    # CHANGED: Use p.signif instead of p.adj.signif
+    custom_label = ifelse(p.signif == "ns", "ns", paste0(p.signif, " (", direction, ")")) 
+  ) %>%
+  # CHANGED: Use p.signif instead of p.adj.signif
+  filter(p.signif != "ns") 
+
+# Add y-position for the single bracket
+if (nrow(stat.test) > 0) {
+  facet_bounds <- plot_data %>%
+    group_by(Metric, Extent) %>%
+    summarise(max_val = max(Score, na.rm = TRUE), .groups = "drop")
+  
+  stat.test <- stat.test %>%
+    left_join(facet_bounds, by = c("Metric", "Extent")) %>%
+    mutate(y.position = max_val + 0.05)
+}
+
+# ==============================================================================
+# 3. BUILD THE PLOT
+# ==============================================================================
+
+set_comparison_plot <- ggboxplot(plot_data, x = "Set", y = "Score", 
+                                 color = "Set", fill = "white", palette = set_colors,
+                                 facet.by = c("Metric", "Extent"), scales = "free_y",
+                                 short.panel.labs = FALSE) +
+  stat_compare_means(method = "wilcox.test", label.y.npc = "bottom")
+
+if (nrow(stat.test) > 0) {
+  set_comparison_plot <- set_comparison_plot + 
+    stat_pvalue_manual(stat.test, label = "custom_label", tip.length = 0.01)
+}
+
+set_comparison_plot <- set_comparison_plot + 
+  scale_y_continuous(
+    labels = function(x) ifelse(is.na(x), "", ifelse(x > 1.0, "", x)),
+    expand = expansion(mult = c(0.18, 0.18)) 
+  ) +
+  theme_minimal() +
+  labs(title = "Performance Across Predictor Sets (All native & invasive widespread species) - [Global aSDMs]",
+       subtitle = "'>' indicates Left Set scored higher.",
+       x = "Predictor Set", 
+       y = "Metric Score",
+       caption = "Significance: * (p ≤ 0.05), ** (p ≤ 0.01), *** (p ≤ 0.001), **** (p ≤ 0.0001)") +
+  theme(plot.title = element_text(face = "bold", size = 16),
+        plot.caption = element_text(hjust = 0, size = 10, face = "italic", color = "gray30"),
+        legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1), 
+        panel.spacing = unit(1, "lines"))
+
+plot(set_comparison_plot)
+
+ggsave("Vagenas_aSDMs/output/figures/Global/Set_Alters_Performance_Global_Overall.png", 
+       set_comparison_plot, width = 14, height = 10, dpi = 300)
+
+
+
+
+
+#different for invasive and widespread
+
+
+library(dplyr)
+library(readr)
+library(tidyr)
+library(ggplot2)
+library(ggpubr)
+library(rstatix)
+
+# ==============================================================================
+# 1. LOAD CLASSIFICATION AND PREP DATA (GLOBAL)
+# ==============================================================================
+
+# Load species classification
+species_class <- read_csv("Vagenas_aSDMs/input/aSDMs_species_classification.csv", show_col_types = FALSE) %>%
+  mutate(Species = gsub(" ", "_", Sp)) %>%
+  dplyr::select(Species, Category)
+
+# Merge with all_metrics and prep the data
+plot_data_full <- all_metrics %>%
+  inner_join(species_class, by = "Species") %>%  
+  mutate(Category = ifelse(is.na(Category), "Unknown", Category)) %>% 
+  filter(Set %in% c("Climate", "Hydroclimatic")) %>% 
+  dplyr::select(Species, Category, Extent, Set, e_AUC, CBI, maxTSS, uAUC) %>%
+  rename(AUC = e_AUC) %>% 
+  pivot_longer(cols = c(AUC, CBI, maxTSS, uAUC), names_to = "Metric", values_to = "Score") %>%
+  filter(!is.na(Score))
+
+# Lock in the factor levels
+plot_data_full$Set <- factor(plot_data_full$Set, levels = c("Climate", "Hydroclimatic"))
+plot_data_full$Extent <- factor(plot_data_full$Extent, levels = c("eco", "H5", "H8", "H12"))
+
+# Define custom colors
+set_colors <- c(
+  "Climate" = "#E69F00", 
+  "Hydroclimatic" = "#56B4E9"
+)
+
+# Only ONE comparison is possible
+my_comparisons <- list(c("Climate", "Hydroclimatic"))
+
+# Define the exact categories you want to loop through
+categories_to_plot <- c("Native Widespread", "Invasive Widespread")
+
+
+# ==============================================================================
+# 2. RUN THE PLOTTING LOOP
+# ==============================================================================
+
+for (cat_name in categories_to_plot) {
+  
+  cat(sprintf("\n======================================================\n"))
+  cat(sprintf("Generating plot for: %s\n", cat_name))
+  cat(sprintf("======================================================\n"))
+  
+  # A. Filter data for the current category
+  current_data <- plot_data_full %>% filter(Category == cat_name)
+  
+  # Skip if there is no data for this category to avoid crashes
+  if(nrow(current_data) == 0) {
+    cat(sprintf("Skipping %s: No data found.\n", cat_name))
+    next
+  }
+  
+  title_text <- sprintf("Performance Across Predictor Sets (%s Global aSDMs)", cat_name)
+  file_name <- sprintf("Set_Alters_Performance_Global_%s.png", gsub(" ", "_", cat_name))
+  
+  # B. Calculate Bounds and Stats
+  means_df <- current_data %>%
+    group_by(Metric, Extent, Set) %>%
+    summarise(Mean_Score = mean(Score, na.rm = TRUE), .groups = "drop")
+  
+  # Wilcox test across 'Set', grouped by 'Metric' and 'Extent'
+  stat.test <- current_data %>%
+    group_by(Metric, Extent) %>%
+    wilcox_test(Score ~ Set, comparisons = my_comparisons) %>%
+    add_significance() %>%
+    left_join(means_df, by = c("Metric", "Extent", "group1" = "Set")) %>%
+    rename(mean1 = Mean_Score) %>%
+    left_join(means_df, by = c("Metric", "Extent", "group2" = "Set")) %>%
+    rename(mean2 = Mean_Score) %>%
+    mutate(
+      direction = ifelse(mean1 > mean2, ">", "<"),
+      custom_label = ifelse(p.signif == "ns", "ns", paste0(p.signif, " (", direction, ")")) 
+    ) %>%
+    filter(p.signif != "ns") 
+  
+  # Add y-position for the single bracket
+  if (nrow(stat.test) > 0) {
+    facet_bounds <- current_data %>%
+      group_by(Metric, Extent) %>%
+      summarise(max_val = max(Score, na.rm = TRUE), .groups = "drop")
+    
+    stat.test <- stat.test %>%
+      left_join(facet_bounds, by = c("Metric", "Extent")) %>%
+      mutate(y.position = max_val + 0.05)
+  }
+  
+  # C. Build the base plot
+  p <- ggboxplot(current_data, x = "Set", y = "Score", 
+                 color = "Set", fill = "white", palette = set_colors,
+                 facet.by = c("Metric", "Extent"), scales = "free_y",
+                 short.panel.labs = FALSE) +
+    stat_compare_means(method = "wilcox.test", label.y.npc = "bottom")
+  
+  # D. Conditionally add brackets
+  if (nrow(stat.test) > 0) {
+    p <- p + stat_pvalue_manual(stat.test, label = "custom_label", tip.length = 0.01)
+  }
+  
+  # E. Apply formatting
+  p <- p + 
+    scale_y_continuous(
+      labels = function(x) ifelse(is.na(x), "", ifelse(x > 1.0, "", x)),
+      expand = expansion(mult = c(0.18, 0.18)) 
+    ) +
+    theme_minimal() +
+    labs(title = title_text,
+         subtitle = "'>' indicates Left Set scored higher.",
+         x = "Predictor Set", 
+         y = "Metric Score",
+         caption = "Significance: * (p ≤ 0.05), ** (p ≤ 0.01), *** (p ≤ 0.001), **** (p ≤ 0.0001)") +
+    theme(plot.title = element_text(face = "bold", size = 16),
+          plot.caption = element_text(hjust = 0, size = 10, face = "italic", color = "gray30"),
+          legend.position = "none",
+          axis.text.x = element_text(angle = 45, hjust = 1), 
+          panel.spacing = unit(1, "lines"))
+  
+  # F. Print and Save
+  print(p)
+  
+  save_path <- sprintf("Vagenas_aSDMs/output/figures/Global/%s", file_name)
+  ggsave(save_path, p, width = 14, height = 10, dpi = 300)
+  
+  cat(sprintf("Saved: %s\n", save_path))
+}
+
+
+
+
+
+
+
+
 # ==============================================================================
 # PART 2: SPECIES-SPECIFIC TRAJECTORIES (The "Deltas" Gradient)
 # ==============================================================================
@@ -621,7 +888,7 @@ trajectory_plot <- ggplot(plot_data, aes(x = Extent, y = Score)) +
   stat_summary(fun = mean, geom = "point", size = 3, color = "#d35400") +
   facet_grid(Metric ~ Set, scales = "free_y") +
   theme_bw() +
-  labs(title = "Species-Level Performance Trajectories Across Scales (Global aSDMs)",
+  labs(title = "Species-Level Performance Trajectories Across Scales - [Global aSDMs]",
        subtitle = "Faint lines represent individual species; bold orange line represents the mean",
        x = "Spatial Training Extent Gradient", y = "Metric Score") +
   theme(plot.title = element_text(face = "bold", size = 16),
@@ -631,6 +898,7 @@ plot(trajectory_plot)
 
 ggsave("Vagenas_aSDMs/output/figures/Global/Global_Species_Trajectories_Extent.png", 
        trajectory_plot, width = 10, height = 10, dpi = 300)
+
 
 
 
@@ -1495,6 +1763,9 @@ trajectory_data <- vi_master_new %>%
     .groups = "drop"
   )
 
+trajectory_data <- trajectory_data %>%
+  mutate(Category = factor(Category, levels = c("Iberian Endemic", "Native Widespread", "Invasive Widespread")))
+
 # ==============================================================================
 # 2.5 BUILD THE SHIFT PLOT (THE MISSING LINES)
 # ==============================================================================
@@ -1572,15 +1843,15 @@ master_plot_with_boxes <- ggdraw(composed_plot) +
   
   # Add Climate Box (Orange)
   annotate("rect", xmin = 0.06, xmax = 0.96, ymin = 0.74, ymax = 0.95, 
-           color = "#E69F00", fill = NA, linewidth = 1) +
+           color = "black", fill = NA, linewidth = 0.5) +
   
   # Add Hydroclimatic Box (Blue)
   annotate("rect", xmin = 0.06, xmax = 0.96, ymin = 0.52, ymax = 0.73, 
-           color = "#56B4E9", fill = NA, linewidth = 1) +
+           color = "black", fill = NA, linewidth = 0.5) +
   
   # Add Hydromorphology Box (Green)
   annotate("rect", xmin = 0.06, xmax = 0.96, ymin = 0.305, ymax = 0.512, 
-           color = "#009E73", fill = NA, linewidth = 1)
+           color = "black", fill = NA, linewidth = 0.5)
 
 
 varimpdir<-"/Users/geo_v/Desktop/Vagenas_aSDMs/output/figures/Regional/VarImp"
@@ -1700,15 +1971,15 @@ master_radar_with_boxes <- ggdraw(composed_radar_plot) +
   
   # Add Climate Box (Orange)
   annotate("rect", xmin = 0.11, xmax = 0.865, ymin = 0.74, ymax = 0.95, 
-           color = "#E69F00", fill = NA, linewidth = 1) +
+           color = "black", fill = NA, linewidth = 0.5) +
   
   # Add Hydroclimatic Box (Blue)
   annotate("rect", xmin = 0.11, xmax = 0.865, ymin = 0.52, ymax = 0.73, 
-           color = "#56B4E9", fill = NA, linewidth = 1) +
+           color = "black", fill = NA, linewidth = 0.5) +
   
   # Add Hydromorphology Box (Green)
   annotate("rect", xmin = 0.11, xmax = 0.865, ymin = 0.2805, ymax = 0.512, 
-           color = "#009E73", fill = NA, linewidth = 1)
+           color = "black", fill = NA, linewidth = 0.5)
 
 # print(master_radar_with_boxes)
 
@@ -1828,6 +2099,13 @@ sorted_levels <- eco_baselines %>%
 trajectory_data <- trajectory_data %>%
   mutate(Plot_Label = factor(Plot_Label, levels = sorted_levels))
 
+
+#reorder trajectory data
+
+trajectory_data <- trajectory_data %>%
+  mutate(Category = factor(Category, levels = c("Iberian Endemic", "Native Widespread", "Invasive Widespread")))
+
+
 # ==============================================================================
 
 # X-axis is Importance, Y-axis is our newly ordered unique Plot_Label
@@ -1864,11 +2142,14 @@ shift_plot <- ggplot(trajectory_data, aes(y = Plot_Label, x = Mean_Importance, c
   
   scale_y_discrete(labels = function(x) gsub("__.*", "", x)) +
   
-  
+
   
   scale_color_manual(
     
-    values = c("eco" = "#000000", "H5" = "#E69F00", "H8" = "#56B4E9", "H12" = "#009E73"),
+    values = c( "eco" = "#3F007D",  # Deep Royal Purple (Stronger baseline)
+                "H5"  = "#6A51A3",  # Rich Purple
+                "H8"  = "#807DBA",  # Medium Purple (Your old H5)
+                "H12" = "#9E9AC8"),
     
     labels = c(
       
@@ -1974,7 +2255,7 @@ master_plot_with_boxes <- ggdraw(composed_plot) +
   
   annotate("rect", xmin = 0.19, xmax = 0.965, ymin = 0.75, ymax = 0.96, 
            
-           color = "#E69F00", fill = NA, linewidth = 1) +
+           color = "black", fill = NA, linewidth = 0.5) +
   
   
   
@@ -1982,7 +2263,7 @@ master_plot_with_boxes <- ggdraw(composed_plot) +
   
   annotate("rect", xmin = 0.19, xmax = 0.965, ymin = 0.54, ymax = 0.74, 
            
-           color = "#56B4E9", fill = NA, linewidth = 1) +
+           color = "black", fill = NA, linewidth = 0.5) +
   
   
   
@@ -1990,7 +2271,7 @@ master_plot_with_boxes <- ggdraw(composed_plot) +
   
   annotate("rect", xmin = 0.19, xmax = 0.965, ymin = 0.325, ymax = 0.53, 
            
-           color = "#009E73", fill = NA, linewidth = 1)
+           color = "black", fill = NA, linewidth = 0.5)
 
 
 # print(master_plot_with_boxes)
@@ -2066,122 +2347,6 @@ adjacent_pairs <- c("eco-H5", "H5-H8", "H8-H12")
 
 # Define the loops: First pooled, then the three specific categories
 categories_to_plot <- c("Pooled", "Iberian Endemic", "Native Widespread", "Invasive Widespread")
-
-# for (cat_name in categories_to_plot) {
-#   
-#   cat(sprintf("\n======================================================\n"))
-#   cat(sprintf("Generating plot for: %s\n", cat_name))
-#   cat(sprintf("======================================================\n"))
-#   
-#   # 1. FILTER DATA AND SET TITLES DYNAMICALLY
-#   if (cat_name == "Pooled") {
-#     current_data <- plot_data_reg
-#     title_text <- "Performance Across Spatial Extents (All Species Pooled)"
-#     file_name <- "Extent_Alters_Performance_Regional_Pooled.png"
-#   } else {
-#     current_data <- plot_data_reg %>% filter(Category == cat_name)
-#     title_text <- sprintf("Performance Across Spatial Extents (%s)", cat_name)
-#     file_name <- sprintf("Extent_Alters_Performance_Regional_%s.png", gsub(" ", "_", cat_name))
-#   }
-#   
-#   # 2. CALCULATE BOUNDS AND STATS FOR CURRENT SUBSET
-#   facet_bounds <- current_data %>%
-#     group_by(Metric, Set) %>%
-#     summarise(
-#       min_val = min(Score, na.rm = TRUE),
-#       max_val = max(Score, na.rm = TRUE),
-#       .groups = "drop"
-#     )
-#   
-#   means_df <- current_data %>%
-#     group_by(Metric, Set, Extent) %>%
-#     summarise(Mean_Score = mean(Score, na.rm = TRUE), .groups = "drop")
-#   
-#   stat.test <- current_data %>%
-#     group_by(Metric, Set) %>%
-#     wilcox_test(Score ~ Extent, comparisons = my_comparisons) %>%
-#     add_significance() %>%
-#     
-#     left_join(means_df, by = c("Metric", "Set", "group1" = "Extent")) %>%
-#     rename(mean1 = Mean_Score) %>%
-#     left_join(means_df, by = c("Metric", "Set", "group2" = "Extent")) %>%
-#     rename(mean2 = Mean_Score) %>%
-#     
-#     mutate(
-#       direction = ifelse(mean1 > mean2, ">", "<"),
-#       custom_label = ifelse(p.adj.signif == "ns", "ns", paste0(p.adj.signif, " (", direction, ")")),
-#       pair_name = paste(group1, group2, sep = "-"),
-#       is_adjacent = pair_name %in% adjacent_pairs
-#     ) %>%
-#     
-#     filter(p.adj.signif != "ns") 
-#   
-#   # Initialize empty dataframes to prevent ggplot errors if no significance is found
-#   stat.test.top <- data.frame()
-#   stat.test.bot <- data.frame()
-#   
-#   # Only calculate bracket positioning if there are actually significant results
-#   if (nrow(stat.test) > 0) {
-#     stat.test <- stat.test %>%
-#       left_join(facet_bounds, by = c("Metric", "Set")) %>%
-#       group_by(Metric, Set, is_adjacent) %>%
-#       mutate(step_rank = row_number()) %>% 
-#       ungroup() %>%
-#       mutate(
-#         range = max_val - min_val,
-#         step_size = ifelse(range == 0, 0.05, range * 0.08), 
-#         y.position = ifelse(is_adjacent,
-#                             min_val - (step_size * 0.5) - (step_rank * step_size),
-#                             max_val + (step_size * 0.5) + (step_rank * step_size))
-#       )
-#     
-#     stat.test.top <- stat.test %>% filter(!is_adjacent)
-#     stat.test.bot <- stat.test %>% filter(is_adjacent)
-#   }
-#   
-#   # 3. BUILD THE BASE PLOT
-#   p <- ggboxplot(current_data, x = "Extent", y = "Score", 
-#                  color = "Extent", palette = "jco",
-#                  facet.by = c("Metric", "Set"), scales = "free_y",
-#                  short.panel.labs = FALSE) +
-#     
-#     stat_compare_means(method = "kruskal.test", label.y.npc = "bottom")
-#   
-#   # 4. CONDITIONALLY ADD BRACKETS (Only if they exist)
-#   if (nrow(stat.test.top) > 0) {
-#     p <- p + stat_pvalue_manual(stat.test.top, label = "custom_label", tip.length = 0.01)
-#   }
-#   
-#   if (nrow(stat.test.bot) > 0) {
-#     p <- p + stat_pvalue_manual(stat.test.bot, label = "custom_label", tip.length = -0.01, vjust = 1.5)
-#   }
-#   
-#   # 5. APPLY THEMING AND AXIS EXPANSION
-#   p <- p + 
-#     scale_y_continuous(
-#       labels = function(x) ifelse(is.na(x), "", ifelse(x > 1.0, "", x)),
-#       expand = expansion(mult = c(0.18, 0.18)) 
-#     ) +
-#     theme_minimal() +
-#     labs(title = title_text,
-#          subtitle = "Adjacent pairs (bottom brackets) vs Long-jump pairs (top brackets). '>' indicates Left Extent scored higher.",
-#          x = "Spatial Training Extent", 
-#          y = "Metric Score",
-#          caption = "Significance: ns (p > 0.05), * (p ≤ 0.05), ** (p ≤ 0.01), *** (p ≤ 0.001), **** (p ≤ 0.0001)") +
-#     theme(plot.title = element_text(face = "bold", size = 16),
-#           plot.caption = element_text(hjust = 0, size = 10, face = "italic", color = "gray30"),
-#           legend.position = "none",
-#           panel.spacing = unit(1, "lines"))
-#   
-#   # 6. PRINT AND SAVE
-#   # Explicitly printing inside a loop forces it to show up in the RStudio Viewer
-#   print(p)
-#   
-#   save_path <- sprintf("Vagenas_aSDMs/output/figures/Regional/%s", file_name)
-#   ggsave(save_path, p, width = 16, height = 12, dpi = 300)
-#   
-#   cat(sprintf("Saved: %s\n", save_path))
-# }
 
 
 #Extent_to_Performance_Important_Supplementary_Material
@@ -2303,8 +2468,16 @@ for (cat_name in categories_to_plot) {
   }
   
   # C. Build the base plot
+  
+  # Define your reversed sequential purple gradient for Extents
+  extent_colors <- c( "eco" = "#3F007D",  # Deep Royal Purple (Stronger baseline)
+                      "H5"  = "#6A51A3",  # Rich Purple
+                      "H8"  = "#807DBA",  # Medium Purple (Your old H5)
+                      "H12" = "#9E9AC8"
+  )
+  
   p <- ggboxplot(current_data, x = "Extent", y = "Score", 
-                 color = "Extent", palette = "jco",
+                 color = "Extent", palette = extent_colors,
                  facet.by = c("Metric", "Set"), scales = "free_y",
                  short.panel.labs = FALSE) +
     stat_compare_means(method = "kruskal.test", label.y.npc = "bottom")
@@ -2477,8 +2650,17 @@ for (cat_name in categories_to_plot) {
   
   # C. Build the base plot
   # x mapped to Set, faceted by Metric and Extent
+  
+  # Define your exact colors for the Predictor Sets
+  set_colors <- c(
+    "Climate" = "#E69F00", 
+    "Hydroclimatic" = "#56B4E9", 
+    "Hydromorphological" = "#009E73"
+  )
+  
+  
   p <- ggboxplot(current_data, x = "Set", y = "Score", 
-                 color = "Set", palette = "jco",
+                 color = "Set", palette = set_colors,
                  facet.by = c("Metric", "Extent"), scales = "free_y",
                  short.panel.labs = FALSE) +
     stat_compare_means(method = "kruskal.test", label.y.npc = "bottom")
