@@ -503,7 +503,7 @@ Vagenas, G., Matias, M., Araujo M.B. (2026). A hydroclimatic framework for the h
 
 **Figure 2.** Flowchart illustrating the implementation and evaluation workflow for aquatic Species Distribution Models (aSDMs), comprising nine sequential stages (i.e., I-IX), from input data preparation and modelling through to performance evaluation and the generation of stacked suitability maps.
 
-<img width="4000" height="2250" alt="Figure3_JPG_final" src="https://github.com/user-attachments/assets/d317c61d-371c-4fb0-83f1-1c63bfa7f979" />
+<img width="4000" height="2250" alt="Figure3_JPG_final" src="https://github.com/user-attachments/assets/d5c72037-30e0-430c-9a73-287eaa26f638" />
 
 **Figure 3.** Variable performarnce across different training extents and predictor settings for the freshwater fish species of the Iberian peninsula.
 
