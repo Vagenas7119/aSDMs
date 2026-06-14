@@ -499,7 +499,7 @@ Vagenas, G., Matias, M., Araujo M.B. (2026). A hydroclimatic framework for the h
 
 **Figure 1**. Spatial distribution of species richness of the dataset used for the development of the aSDMs through a (A) global (50 arc-minute grid) to (B) regional (10 arc-minute grid) approach for the 98 freshwater fish species of the study area. Colors represent gradients of species richness (low = yellow; high = red). The finer resolution map (B) highlights richness patterns in the Iberian Peninsula.
 
-<img width="4000" height="2250" alt="Figure2_JPG_final" src="https://github.com/user-attachments/assets/7053ceb0-f005-441e-b580-4ef6fad7cbf6" />
+<img width="4000" height="2250" alt="Figure2_JPG_final" src="https://github.com/user-attachments/assets/49addead-41f6-4943-86ea-eb7e25e808ae" />
 
 **Figure 2.** Flowchart illustrating the implementation and evaluation workflow for aquatic Species Distribution Models (aSDMs), comprising nine sequential stages (i.e., I-IX), from input data preparation and modelling through to performance evaluation and the generation of stacked suitability maps.
 
