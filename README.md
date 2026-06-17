@@ -515,8 +515,6 @@ Vagenas, G., Matias, M., Araujo M.B. (2026). A hydroclimatic framework for the h
 
 Name: ANONYMOUS Researchers
 
-Affiliation: Biogeography and Global Change Department, National Museum of Natural Sciences, CSIC, C/ Jose Gutierrez Abascal, 2, Madrid 28006, Spain
-
 **Last modified: 03/7/2026**
 
 
