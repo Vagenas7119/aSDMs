@@ -4,7 +4,7 @@
 
 </div>
 
-<img width="2344" height="976" alt="GitHub_Logo" src="https://github.com/user-attachments/assets/be772a43-b132-47c3-8ba9-983a66a731e0" />
+<img width="2623" height="901" alt="GitHub_Logo_ANONYMOUS" src="https://github.com/user-attachments/assets/e689381c-a927-4c00-bda8-25a99415eac5" />
 
 # Repository Overview
 
@@ -511,9 +511,9 @@ Vagenas, G., Matias, M., Araujo M.B. (2026). A hydroclimatic framework for the h
 
 **Figure 4.** Stacked ensemble aSDMs for the freshwater fish species of the Iberian Peninsula. The maps represent stacked outputs derived through aSDMs using the h<sub>5</sub> spatially constrained strategy (optimal performance), by ensembling all three predictor sets. The distance-suitability trajectory chart at the bottom indicates the variation of predicted suitability values across a vertical transect of the study area. The trajectories exhibit the spatial variation in climate (orange), hydroclimatic (blue), and hydromorphological (green) niche suitability for all the freshwater fish species of the Iberian Peninsula.
 
-# Author: Georgios Vagenas
+# Author: ANONYMOUS
 
-Name: PhD Researcher - Georgios Vagenas (georgios.vagenas@mncn.csic.es | georgvagenas@gmail.com)
+Name: ANONYMOUS Researchers
 
 Affiliation: Biogeography and Global Change Department, National Museum of Natural Sciences, CSIC, C/ Jose Gutierrez Abascal, 2, Madrid 28006, Spain
 
