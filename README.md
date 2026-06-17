@@ -497,7 +497,7 @@ Vagenas, G., Matias, M., Araujo M.B. (2026). A hydroclimatic framework for the h
 
 <img width="3561" height="1965" alt="Figure1" src="https://github.com/user-attachments/assets/f86acc11-8a29-40fd-bfc3-ea5c4ed98de2" />
 
-**Figure 1**. Spatial distribution of species richness of the dataset used for the development of the aSDMs through a (A) global (50 arc-minute grid) to (B) regional (10 arc-minute grid) approach for the 98 freshwater fish species of the study area. Colors represent gradients of species richness (low = yellow; high = red). The finer resolution map (B) highlights richness patterns in the Iberian Peninsula.
+**Figure 1**. Spatial distribution of species richness of the dataset used for the development of the aSDMs through a (A) global (50 arc-minute grid) to (B) regional (5 arc-minute grid) approach for the 98 freshwater fish species of the study area. Colors represent gradients of species richness (low = yellow; high = red). The finer resolution map (B) highlights richness patterns in the Iberian Peninsula.
 
 <img width="4000" height="2250" alt="Figure2_JPG_final" src="https://github.com/user-attachments/assets/49addead-41f6-4943-86ea-eb7e25e808ae" />
 
@@ -505,7 +505,7 @@ Vagenas, G., Matias, M., Araujo M.B. (2026). A hydroclimatic framework for the h
 
 <img width="4000" height="2250" alt="Figure3_JPG_final" src="https://github.com/user-attachments/assets/d5c72037-30e0-430c-9a73-287eaa26f638" />
 
-**Figure 3.** Variable performarnce across different training extents and predictor settings for the freshwater fish species of the Iberian peninsula.
+**Figure 3.** Variable performance across different training extents (ecoregional, <h5>H<sub>5</sub></h5>,<h8>H<sub>8</sub></h8>,<h12>H<sub>12</sub></h12>; dark purple to light purple) and predictor settings (Climate: top, Hydroclimatic: middle; Hydromorphological: bottom) for all the freshwater fish species of the study area (Endemic: left; Native: middle; Invasive: right). The models represent the global-to-regional (widespread) and explicitly regional (endemic) aSDMs of the Iberian peninsula.
 
 <img width="3602" height="2250" alt="Figure4_JPG_final" src="https://github.com/user-attachments/assets/3fc8342f-6218-4679-b135-becbc0cc8ad3" />
 
