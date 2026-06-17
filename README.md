@@ -505,7 +505,7 @@ Vagenas, G., Matias, M., Araujo M.B. (2026). A hydroclimatic framework for the h
 
 <img width="4000" height="2250" alt="Figure3_JPG_final" src="https://github.com/user-attachments/assets/d5c72037-30e0-430c-9a73-287eaa26f638" />
 
-**Figure 3.** Variable performance across different training extents (ecoregional, <h5>H<sub>5</sub></h5>,<h8>H<sub>8</sub></h8>,<h12>H<sub>12</sub></h12>; dark purple to light purple) and predictor settings (Climate: top, Hydroclimatic: middle; Hydromorphological: bottom) for all the freshwater fish species of the study area (Endemic: left; Native: middle; Invasive: right). The models represent the global-to-regional (widespread) and explicitly regional (endemic) aSDMs of the Iberian peninsula.
+**Figure 3.** Variable performance across different training extents (ecoregional,h<sub>5</sub>, h<sub>8</sub>, h<sub>12</sub>; dark purple to light purple) and predictor settings (Climate: top, Hydroclimatic: middle; Hydromorphological: bottom) for all the freshwater fish species of the study area (Endemic: left; Native: middle; Invasive: right). The models represent the global-to-regional (widespread) and explicitly regional (endemic) aSDMs of the Iberian peninsula.
 
 <img width="3602" height="2250" alt="Figure4_JPG_final" src="https://github.com/user-attachments/assets/3fc8342f-6218-4679-b135-becbc0cc8ad3" />
 
