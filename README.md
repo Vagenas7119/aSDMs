@@ -488,7 +488,7 @@ Main conclusions: We used the Iberian freshwater fish as a case study. Our resul
 SDMs, freshwaters, fish, hydrology, climate, watersheds, hierarchical, aquatic species
 
 #### Citation (APA):
-Vagenas, G., Matias, M., Araujo M.B. (2026). A hydroclimatic framework for the hierarchical modelling of aquatic species distributions. (Under Revision) 
+Anonymous (Under Revision) 
 
 #### DOI:  
 [Pending]
