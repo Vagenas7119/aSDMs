@@ -502,11 +502,11 @@ Anonymous (Under Revision)
 
 **Figure 2.** Flowchart illustrating the implementation and evaluation workflow for aquatic Species Distribution Models (aSDMs), comprising nine sequential stages (i.e., I-IX), from input data preparation and modelling through to performance evaluation and the generation of stacked suitability maps.
 
-<img width="4000" height="2250" alt="Figure3_JPG_final" src="https://github.com/user-attachments/assets/d5c72037-30e0-430c-9a73-287eaa26f638" />
+<img width="3815" height="2250" alt="Figure3_JPG_final" src="https://github.com/user-attachments/assets/88ba122b-0f32-4280-a5a2-8c399c102351" />
 
-**Figure 3.** Variable performance across different training extents (ecoregional,h<sub>5</sub>, h<sub>8</sub>, h<sub>12</sub>; dark purple to light purple) and predictor settings (Climate: top, Hydroclimatic: middle; Hydromorphological: bottom) for all the freshwater fish species of the study area (Endemic: left; Native: middle; Invasive: right). The models represent the global-to-regional (widespread) and explicitly regional (endemic) aSDMs of the Iberian peninsula.
+**Figure 3.** Variable performance across different training extents (ecoregional,h<sub>5</sub>, h<sub>8</sub>, h<sub>12</sub>; dark purple to light purple) and predictor settings (Climate: top, Hydroclimatic: middle; Hydromorphological: bottom) for all the freshwater fish species of the study area (Endemic: left; Native: middle; Non-native: right). The models represent the global-to-regional (widespread) and explicitly regional (endemic) aSDMs of the Iberian peninsula.
 
-<img width="3602" height="2250" alt="Figure4_JPG_final" src="https://github.com/user-attachments/assets/3fc8342f-6218-4679-b135-becbc0cc8ad3" />
+<img width="3410" height="2250" alt="Figure4_JPG_final" src="https://github.com/user-attachments/assets/ffa06acf-5621-4b39-9f17-e0f384a972d1" />
 
 **Figure 4.** Stacked ensemble aSDMs for the freshwater fish species of the Iberian Peninsula. The maps represent stacked outputs derived through aSDMs using the h<sub>5</sub> spatially constrained strategy (optimal performance), by ensembling all three predictor sets. The distance-suitability trajectory chart at the bottom indicates the variation of predicted suitability values across a vertical transect of the study area. The trajectories exhibit the spatial variation in climate (orange), hydroclimatic (blue), and hydromorphological (green) niche suitability for all the freshwater fish species of the Iberian Peninsula.
 
