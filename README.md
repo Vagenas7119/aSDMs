@@ -4,7 +4,7 @@
 
 </div>
 
-<img width="2623" height="901" alt="GitHub_Logo_ANONYMOUS" src="https://github.com/user-attachments/assets/e689381c-a927-4c00-bda8-25a99415eac5" />
+<img width="2938" height="656" alt="GitHub_Logo" src="https://github.com/user-attachments/assets/54c1eca4-90c7-48be-881a-64bc50d96624" />
 
 # Repository Overview
 
@@ -18,7 +18,7 @@ This repository contains the complete set of analysis scripts, and final outputs
 └── 📁 figures/       # 🖼️ Final figures included in the manuscript
 ```
 # 🔗 Data
-The baseline layers 🌐 required for the analysis can be downloaded from the Input_Layers and the Input_dataset folder here: https://saco.csic.es/s/SYTM8qZrnY2HG5q
+The baseline layers 🌐 required for the analysis can be downloaded from the Input_Layers and the Input_dataset folder from the Zenodo (FAIR) online repository.
 
 # 💻 Scripts
 The structure of the scripts for the primary analysis set is structured as: 
@@ -32,7 +32,7 @@ The structure of the scripts for the primary analysis set is structured as:
 ```
 
 # 📈 Outputs
-The repository represents a stand-alone analysis package and contains the full set of initial data and the required script to generate the figures of the study which can be downloaded here: https://saco.csic.es/s/SYTM8qZrnY2HG5q
+The repository represents a stand-alone analysis package and contains the full set of initial data and the required script to generate the figures of the study which can be downloaded from the Zenodo (FAIR) online repository.
 
 This repository is produced by the 6_PostAnalysis_Fig3_4_plus_Supplementary_aSDMs.R object.
 ```
@@ -511,9 +511,7 @@ Vagenas, G., Matias, M., Araujo M.B. (2026). A hydroclimatic framework for the h
 
 **Figure 4.** Stacked ensemble aSDMs for the freshwater fish species of the Iberian Peninsula. The maps represent stacked outputs derived through aSDMs using the h<sub>5</sub> spatially constrained strategy (optimal performance), by ensembling all three predictor sets. The distance-suitability trajectory chart at the bottom indicates the variation of predicted suitability values across a vertical transect of the study area. The trajectories exhibit the spatial variation in climate (orange), hydroclimatic (blue), and hydromorphological (green) niche suitability for all the freshwater fish species of the Iberian Peninsula.
 
-# Author: ANONYMOUS
-
-Name: ANONYMOUS Researchers
+# Author: Anonymous
 
 **Last modified: 03/7/2026**
 
