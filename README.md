@@ -104,8 +104,7 @@ This tutorial demonstrates the full **aSDMs workflow**:
 - **Phase 1** – Global models for widespread species.
 - **Phase 2** – Regional models for all species; for widespread ones the global prediction is used as an extra covariate.
 
-The methodology is computational‑light (only 7 random species, few replicates) but exactly follows the production pipeline.  
-All required files can be downloaded from the Zenodo (FAIR) online repository.
+All required input layers and the model structure can be downloaded from the Zenodo (FAIR) online repository.
 
 
 ## Step 0 :: Required Packages
