@@ -510,10 +510,10 @@ Anonymous (Under Revision)
 
 **Figure 4.** Stacked ensemble aSDMs for the freshwater fish species of the Iberian Peninsula. The maps represent stacked outputs derived through aSDMs using the h<sub>5</sub> spatially constrained strategy (optimal performance), by ensembling all three predictor sets. The distance-suitability trajectory chart at the bottom indicates the variation of predicted suitability values across a vertical transect of the study area. The trajectories exhibit the spatial variation in climate (orange), hydroclimatic (blue), and hydromorphological (green) niche suitability for all the freshwater fish species of the Iberian Peninsula.
 
-# Author/Ecological Modeller: Georgios Vagenas, PhD Candidate - National Museum of Natural Sciences, Madrid, Spain (2026)
-# Publication: Hierarchical modelling of aquatic species distributions
-# Journal: Global Ecology & Biogeography
-# DOI: Pending
+### Author/Ecological Modeller: Georgios Vagenas, PhD Candidate - National Museum of Natural Sciences, Madrid, Spain (2026)
+### Publication: Hierarchical modelling of aquatic species distributions
+### Journal: Global Ecology & Biogeography
+### DOI: Pending
 
 **Last modified: 18/8/2026**
 
