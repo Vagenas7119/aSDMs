@@ -1,6 +1,6 @@
 <div align="center">
 
-# aSDMs :: aquatic Species Distribution Models
+# aSDMs :: aquatic Species Distribution Models | Vagenas et al. 2026 (Global Ecology & Biogeography)
 
 </div>
 
@@ -32,7 +32,7 @@ The structure of the scripts for the primary analysis set is structured as:
 ```
 
 # 📈 Outputs
-The repository represents a stand-alone analysis package and contains the full set of initial data and the required script to generate the figures of the study which can be downloaded from the Zenodo (FAIR) online repository.
+The repository represents a stand-alone analysis package and contains the full set of initial data and the required script to generate the figures of the study which can be downloaded from the Zenodo (FAIR) online repository (https://doi.org/10.5281/zenodo.21161971).
 
 This repository is produced by the 6_PostAnalysis_Fig3_4_plus_Supplementary_aSDMs.R object.
 ```
@@ -513,7 +513,8 @@ Anonymous (Under Revision)
 ### Author/Ecological Modeller: Georgios Vagenas, PhD Candidate - National Museum of Natural Sciences, Madrid, Spain (2026)
 ### Publication: Hierarchical modelling of aquatic species distributions
 ### Journal: Global Ecology & Biogeography
-### DOI: Pending
+### DOI Manuscript: Pending
+### DOI Repository: https://doi.org/10.5281/zenodo.21161971
 
 **Last modified: 18/8/2026**
 
