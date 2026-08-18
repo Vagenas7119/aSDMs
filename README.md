@@ -4,7 +4,7 @@
 
 </div>
 
-[GitHub_Logo_Final.tif](https://github.com/user-attachments/files/31174746/GitHub_Logo_Final.tif)
+<img width="3346" height="656" alt="GitHub_Logo_final_jpg" src="https://github.com/user-attachments/assets/38b14638-b0d9-4727-9147-61553ac89f70" />
 
 # Repository Overview
 
