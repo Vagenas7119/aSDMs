@@ -18,7 +18,7 @@ This repository contains the complete set of analysis scripts, and final outputs
 └── 📁 figures/       # 🖼️ Final figures included in the manuscript
 ```
 # 🔗 Data
-The baseline layers 🌐 required for the analysis can be downloaded from the Input_Layers and the Input_dataset folder from the Zenodo (FAIR) online repository.
+The baseline layers 🌐 required for the analysis can be downloaded from the Input_Layers and the Input_dataset folder from the Zenodo (FAIR) online repository (https://doi.org/10.5281/zenodo.21161971).
 
 # 💻 Scripts
 The structure of the scripts for the primary analysis set is structured as: 
@@ -104,7 +104,7 @@ This tutorial demonstrates the full **aSDMs workflow**:
 - **Phase 1** – Global models for widespread species.
 - **Phase 2** – Regional models for all species; for widespread ones the global prediction is used as an extra covariate.
 
-All required input layers and the model structure can be downloaded from the Zenodo (FAIR) online repository.
+All required input layers and the model structure can be downloaded from the Zenodo (FAIR) online repository (https://doi.org/10.5281/zenodo.21161971).
 
 
 ## Step 0 :: Required Packages
