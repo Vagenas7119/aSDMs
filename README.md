@@ -1,6 +1,6 @@
 <div align="center">
 
-# aSDMs :: aquatic Species Distribution Models (Vagenas et al. 2026)
+# aSDMs | GEB | Vagenas et al. 2026
 
 </div>
 
