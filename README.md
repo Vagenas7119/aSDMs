@@ -476,7 +476,9 @@ cat("Evaluation summary written to full_evaluation_summary.csv\n")
 
 # Manuscript Outline
 
-## Title: Hierarchical modelling of aquatic species distributions
+## Title: Hierarchical modelling of aquatic species distributions @Global Ecology and Biogeography
+
+## DOI : https://doi.org/10.1111/geb.70301
 
 ## Abstract:
 Aim: Species Distribution Models (SDMs) have traditionally been developed in a terrestrial context, and their application to aquatic ecosystems presents unique challenges. These include predicting species distributions across spatially constrained environments, and incorporating environmental drivers that operate across nested spatial scales. We address these challenges by exploring various spatially-explicit model training strategies and novel hierarchical global-to-regional model structures to assess the scaling of environmental filters across climatic (broad), hydroclimatic (regional) and hydromorphological (local) gradients. Our goal is to establish a method for modelling aquatic species distributions that accounts for the distinct biogeography of freshwater systems.
@@ -513,7 +515,7 @@ SDMs, freshwaters, fish, hydrology, climate, watersheds, hierarchical, aquatic s
 ### Authors: Georgios Vagenas, Miguel Matias, Miguel Bastos Araújo
 ### Publication: Hierarchical modelling of aquatic species distributions
 ### Journal: Global Ecology & Biogeography
-### DOI Manuscript: [Pending]
+### DOI Manuscript: https://doi.org/10.1111/geb.70301
 ### DOI Repository: https://doi.org/10.5281/zenodo.21161971
 
 **Last modified: 18/8/2026**
